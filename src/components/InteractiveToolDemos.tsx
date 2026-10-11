@@ -44,7 +44,7 @@ interface InteractiveToolDemosProps {
 }
 
 export const InteractiveToolDemos: React.FC<InteractiveToolDemosProps> = ({ lang = 'en' }) => {
-  const [activeTab, setActiveTab] = useState<'system_one' | 'flutter_scene' | 'gittrack' | 'register_red' | 'mad' | 'mddd'>('system_one');
+  const [activeTab, setActiveTab] = useState<'system_one' | 'register_red' | 'flutter_scene' | 'gittrack' | 'mad' | 'mddd'>('system_one');
 
   return (
     <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 sm:p-6 lg:p-8 backdrop-blur-xl shadow-2xl">
@@ -57,12 +57,12 @@ export const InteractiveToolDemos: React.FC<InteractiveToolDemosProps> = ({ lang
           </h3>
           <p className="text-xs text-zinc-400 mt-1">
             {lang === 'pt'
-              ? 'Interaja diretamente com a avaliação neural em tempo real do system_one (ONNX Runtime Web / Wasm SIMD), o renderizador 3D do Flutter Scene, o GitTrack (Rastreamento & IA VIP), o Register-red (Pipeline Apple Numbers & Drive), o MAD-cli (Doc Viva) e o mddd-cli (Spec-Driven Dev).'
-              : 'Directly test real-time neural evaluation of system_one (ONNX Runtime Web / Wasm SIMD), Flutter Scene 3D Shaders, GitTrack (Commit Tracking & VIP AI), Register-red (Apple Numbers & Drive Pipeline), MAD-cli (Auto-Doccing), and mddd-cli (Spec-Driven Dev).'}
+              ? 'Interaja diretamente com a avaliação neural em tempo real do system_one (ONNX Runtime Web / Wasm SIMD), o Register-red (Pipeline Apple Numbers, Drive & Polling E-mails), o renderizador 3D do Flutter Scene, o GitTrack (Rastreamento & IA VIP), o MAD-cli (Doc Viva) e o mddd-cli (Spec-Driven Dev).'
+              : 'Directly test real-time neural evaluation of system_one (ONNX Runtime Web / Wasm SIMD), Register-red (Apple Numbers, Drive & Email Polling), Flutter Scene 3D Shaders, GitTrack (Commit Tracking & VIP AI), MAD-cli (Auto-Doccing), and mddd-cli (Spec-Driven Dev).'}
           </p>
         </div>
 
-        {/* Tab Switcher - Ordered: system_one, Flutter_scene, GitTrack, Register-red, MAD-cli, mddd-cli */}
+        {/* Tab Switcher - Ordered: system_one, Register-red, Flutter_scene, GitTrack, MAD-cli, mddd-cli */}
         <div className="flex flex-wrap items-center gap-1 p-1 bg-zinc-900 border border-zinc-800 rounded-lg">
           <button
             type="button"
@@ -73,6 +73,16 @@ export const InteractiveToolDemos: React.FC<InteractiveToolDemosProps> = ({ lang
           >
             <Activity className="w-3.5 h-3.5 text-amber-400" />
             <span>system_one (HUD)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('register_red')}
+            className={`px-3 py-1.5 text-xs font-mono rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'register_red' ? 'bg-zinc-800 text-[#f87171] font-bold shadow-sm' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-[#f87171]" />
+            <span>Register-red (Numbers)</span>
           </button>
           <button
             type="button"
@@ -91,16 +101,6 @@ export const InteractiveToolDemos: React.FC<InteractiveToolDemosProps> = ({ lang
             }`}
           >
             {lang === 'pt' ? 'GitTrack (Rastreamento & IA)' : 'GitTrack (Tracking & AI)'}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('register_red')}
-            className={`px-3 py-1.5 text-xs font-mono rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
-              activeTab === 'register_red' ? 'bg-zinc-800 text-[#f87171] font-bold shadow-sm' : 'text-zinc-400 hover:text-white'
-            }`}
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-[#f87171]" />
-            <span>Register-red (Numbers)</span>
           </button>
           <button
             type="button"
@@ -126,14 +126,14 @@ export const InteractiveToolDemos: React.FC<InteractiveToolDemosProps> = ({ lang
       {/* Tab 1: system_one High-Definition HUD & Real Telemetry */}
       {activeTab === 'system_one' && <SystemOneHudDemo lang={lang} />}
 
-      {/* Tab 2: flutter_scene 3D Canvas */}
+      {/* Tab 2: Register-red Apple Numbers & Google Drive Financial Pipeline */}
+      {activeTab === 'register_red' && <RegisterRedDemo lang={lang} />}
+
+      {/* Tab 3: flutter_scene 3D Canvas */}
       {activeTab === 'flutter_scene' && <FlutterSceneDemo lang={lang} />}
 
-      {/* Tab 3: GitTrack Telemetry */}
+      {/* Tab 4: GitTrack Telemetry */}
       {activeTab === 'gittrack' && <GitTrackDemo lang={lang} />}
-
-      {/* Tab 4: Register-red Apple Numbers & Google Drive Financial Pipeline */}
-      {activeTab === 'register_red' && <RegisterRedDemo lang={lang} />}
 
       {/* Tab 5: MAD-cli Mermaid Auto-Doccing with MAD Tags */}
       {activeTab === 'mad' && <MadCliDemo lang={lang} />}
