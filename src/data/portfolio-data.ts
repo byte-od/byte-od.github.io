@@ -163,7 +163,7 @@ export const PROJECTS: ProjectData[] = [
       'Engineered custom shader pipelines and memory buffer optimizations for real-time 3D asset rendering.',
       'Demonstrates deep fluency in low-level rendering (C++, shaders) seamlessly unified with high-level mobile applications (Dart/Flutter).'
     ],
-    techStack: ['Dart', 'C++', 'Flutter Scene', 'Metal/Vulkan', 'GLSL/MSL Shaders', 'Scene Animations'],
+    techStack: ['Dart', 'C++', 'Flutter Scene fork', 'Metal/Vulkan', 'GLSL/MSL Shaders', 'Scene Animations'],
     githubUrl: 'https://github.com/byte-od/flutter_scene',
     interactiveType: 'graphics_demo',
     metrics: [
@@ -326,7 +326,7 @@ export function getProjects(lang: 'en' | 'pt' = 'en'): ProjectData[] {
         'Engenharia de pipelines customizados de shaders e otimizações de buffer de memória para renderização de ativos 3D em tempo real.',
         'Demonstra fluência profunda em renderização de baixo nível (C++, shaders) unificada de forma transparente a aplicações mobile de alto nível (Dart/Flutter).'
       ],
-      techStack: ['Dart', 'C++', 'Flutter Scene', 'Metal/Vulkan', 'Shaders GLSL/MSL', 'Animações de Scenes'],
+      techStack: ['Dart', 'C++', 'Flutter Scene fork', 'Metal/Vulkan', 'Shaders GLSL/MSL', 'Animações de Scenes'],
       githubUrl: 'https://github.com/byte-od/flutter_scene',
       interactiveType: 'graphics_demo',
       metrics: [

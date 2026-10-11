@@ -35,7 +35,7 @@ export const TokenizerPlayground: React.FC<TokenizerPlaygroundProps> = ({
         text: 'classDiagram DomainModel <|-- RepositoryInterface : implements Clean Architecture',
       },
       {
-        label: 'Flutter Scene 3D',
+        label: 'Flutter Scene fork 3D',
         text: 'FragmentShader sceneShader = loadShader("shaders/spatial_viewport.frag");',
       },
       {

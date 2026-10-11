@@ -57,8 +57,8 @@ export const InteractiveToolDemos: React.FC<InteractiveToolDemosProps> = ({ lang
           </h3>
           <p className="text-xs text-zinc-400 mt-1">
             {lang === 'pt'
-              ? 'Interaja diretamente com a avaliação neural em tempo real do system_one (ONNX Runtime Web / Wasm SIMD), o Register-red (Pipeline Apple Numbers, Drive & Polling E-mails), o renderizador 3D do Flutter Scene, o GitTrack (Rastreamento & IA VIP), o MAD-cli (Doc Viva) e o mddd-cli (Spec-Driven Dev).'
-              : 'Directly test real-time neural evaluation of system_one (ONNX Runtime Web / Wasm SIMD), Register-red (Apple Numbers, Drive & Email Polling), Flutter Scene 3D Shaders, GitTrack (Commit Tracking & VIP AI), MAD-cli (Auto-Doccing), and mddd-cli (Spec-Driven Dev).'}
+              ? 'Interaja diretamente com a avaliação neural em tempo real do system_one (ONNX Runtime Web / Wasm SIMD), o Register-red (Pipeline Apple Numbers, Drive & Polling E-mails), o renderizador 3D do Flutter Scene fork, o GitTrack (Rastreamento & IA VIP), o MAD-cli (Doc Viva) e o mddd-cli (Spec-Driven Dev).'
+              : 'Directly test real-time neural evaluation of system_one (ONNX Runtime Web / Wasm SIMD), Register-red (Apple Numbers, Drive & Email Polling), Flutter Scene fork 3D Shaders, GitTrack (Commit Tracking & VIP AI), MAD-cli (Auto-Doccing), and mddd-cli (Spec-Driven Dev).'}
           </p>
         </div>
 
@@ -91,7 +91,7 @@ export const InteractiveToolDemos: React.FC<InteractiveToolDemosProps> = ({ lang
               activeTab === 'flutter_scene' ? 'bg-zinc-800 text-[#38bdf8] font-bold shadow-sm' : 'text-zinc-400 hover:text-white'
             }`}
           >
-            Flutter Scene (3D)
+            Flutter Scene fork (3D)
           </button>
           <button
             type="button"
@@ -269,7 +269,7 @@ const FlutterSceneDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
           <div className="w-full flex items-center justify-between pb-3 mb-2 border-b border-zinc-800 text-xs font-mono text-zinc-400">
             <span className="flex items-center gap-1.5 text-[#38bdf8] font-bold">
               <Box className="w-4 h-4" />
-              <span>Flutter Scene Mesh Viewport</span>
+              <span>Flutter Scene fork Mesh Viewport</span>
             </span>
             <span className="text-emerald-400 font-bold">60 FPS · Metal/Vulkan</span>
           </div>

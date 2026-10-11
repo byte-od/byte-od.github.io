@@ -40,7 +40,7 @@
 - GitHub: https://github.com/byte-od/mad-cli
 - Summary: CLI that parses <!-- MAD:... --> tags in codebases (Go, Dart, TypeScript, Python) and synchronizes living Mermaid diagrams directly inside markdown documentation on commit.
 
-### Project 4: Flutter Scene 3D
+### Project 4: Flutter Scene fork 3D
 - Category: Real-time Graphics & Spatial Systems
 - GitHub: https://github.com/byte-od/flutter_scene
 - Summary: 3D spatial graphics engine for Flutter using Impeller with custom GLSL/Metal shaders, skeletal animations, and PBR materials.
