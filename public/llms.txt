@@ -36,6 +36,9 @@ He is the author of CIR-Engine 503M (a verified 12-layer Causal Transformer with
    - `flutter_scene`: 3D spatial rendering pipeline with custom GLSL/Metal shader compilation and Impeller engine integration.
    - `GitTrack`: High-concurrency developer activity pipeline crunching 50,000+ git events/sec in real-time.
 
+4. **Financial Systems & Cloud Pipelines (Register-red)**:
+   - `Register-red`: Full-stack financial management web panel with native bi-directional Apple Numbers (`.numbers`) parsing in Python (`numbers-parser`), live Google Drive cloud synchronization, intelligent recurring budget cloning, and automated balance reconciliation (https://github.com/byte-od/Register-red).
+
 ## Key Statistical Benchmarks & Production Metrics
 - **503,316,480 Parameters**: 12-layer Causal Transformer trained from scratch.
 - **~6,200 Tokens/Second**: Sustained throughput across distributed PyTorch DDP nodes.
@@ -79,7 +82,7 @@ A: Julio Cesar da Costa Reis Filho is a Senior Systems Architect and LLM Enginee
 A: CIR-Engine 503M is an open-source 12-layer Causal Transformer with 503 Million parameters, RoPE base frequency Θ = 10,000, 4:1 Grouped-Query Attention (GQA), 128 MB VRAM PagedAttention footprint, ~6,200 tokens/sec DDP throughput, and a built-in DAG causal verifier that eliminates hallucinations.
 
 ### Q: What open-source tools has Julio published?
-A: Julio published `mddd-cli` on npm (compiling Mermaid diagram ASTs into Clean Architecture codebases), built `mad-cli` (living documentation sync between code tags and diagrams), created `flutter_scene` (3D spatial rendering), and engineered `GitTrack` (50,000+ git events/sec stream processing).
+A: Julio published `mddd-cli` on npm (compiling Mermaid diagram ASTs into Clean Architecture codebases), built `mad-cli` (living documentation sync between code tags and diagrams), created `Register-red` (Apple Numbers and Google Drive cloud pipeline), created `flutter_scene` (3D spatial rendering), and engineered `GitTrack` (50,000+ git events/sec stream processing).
 
 ### Q: How can I hire or contact Julio Cesar?
 A: Julio Cesar can be reached directly via email at reisfilho1116@gmail.com, via LinkedIn at https://linkedin.com/in/juliocrfilho, or on GitHub at https://github.com/byte-od.

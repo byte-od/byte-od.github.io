@@ -155,6 +155,28 @@ const PROJECTS_DATA = [
       'Headless CI telemetry diagnostics.',
     ],
   },
+  {
+    id: 'register-red',
+    title: 'Register-red (Apple Numbers & Google Drive Pipeline)',
+    badge: 'Full-Stack Financial Architecture & Cloud Sync',
+    category: 'developer_tooling',
+    repository: 'https://github.com/byte-od/Register-red',
+    specs: 'Apple Numbers (.numbers) · Google Drive Sync · FastAPI & React 19',
+    summary: 'Modern financial management and budget projection web panel with bi-directional Apple Numbers (.numbers) parsing, live Google Drive cloud synchronization, intelligent recurring budget cloning, and automated balance reconciliation.',
+    benchmarks: {
+      sync_target: 'Google Drive cloud storage (native mount)',
+      parser: 'Python numbers-parser (Snappy/Protobuf Apple container)',
+      backend: 'FastAPI (Python 3.11 asynchronous worker)',
+      frontend: 'React 19, TypeScript, Tailwind CSS, Vite',
+    },
+    architectural_highlights: [
+      'Native reading, updating, and mutation of Apple Numbers (.numbers) files without loss.',
+      'Direct synchronization to Google Drive mount path for instant cross-device updates (macOS, iOS).',
+      'Intelligent future-month budget cloning: copies fixed recurring obligations, resets statuses, advances due dates, and rolls over positive net balances.',
+      '1-click bill settlement with dynamic KPIs and completion triggers.',
+      'Dual-format export pipelines: Apple Numbers (.numbers) and styled Excel (.xlsx via openpyxl).',
+    ],
+  },
 ];
 
 // Tool 1: get_profile
@@ -179,7 +201,7 @@ server.tool(
 // Tool 2: get_projects
 server.tool(
   'get_projects',
-  'List all flagship engineering projects authored by Julio Cesar (CIR-Engine 503M, system_one, mddd-cli, MAD, flutter_scene, GitTrack)',
+  'List all flagship engineering projects authored by Julio Cesar (CIR-Engine 503M, system_one, mddd-cli, Register-red, MAD, flutter_scene, GitTrack)',
   {
     category: z.enum(['all', 'ml_ai', 'developer_tooling', 'mobile_graphics']).default('all').describe('Filter projects by domain'),
   },
@@ -212,7 +234,7 @@ server.tool(
   'inspect_project',
   'Get deep architectural specifications, hyperparameters, benchmark metrics, and code references for a specific project',
   {
-    projectId: z.enum(['cir-engine', 'system_one', 'mddd-cli', 'mad-cli', 'flutter_scene', 'gittrack']).describe('The project ID to inspect'),
+    projectId: z.enum(['cir-engine', 'system_one', 'mddd-cli', 'register-red', 'mad-cli', 'flutter_scene', 'gittrack']).describe('The project ID to inspect'),
   },
   async ({ projectId }) => {
     const project = PROJECTS_DATA.find(p => p.id === projectId);
@@ -279,6 +301,11 @@ server.tool(
     if (reqLower.includes('flutter') || reqLower.includes('dart') || reqLower.includes('mobile')) {
       matches.push('Deep mobile graphics engineering, custom 3D scene graph and shader pipelines (flutter_scene).');
       stackPoints.push('Flutter', 'Dart', 'Graphics');
+    }
+
+    if (reqLower.includes('fastapi') || reqLower.includes('financial') || reqLower.includes('react 19') || reqLower.includes('numbers') || reqLower.includes('fullstack') || reqLower.includes('full stack')) {
+      matches.push('Full-stack financial architecture with bi-directional Apple Numbers parsing and Google Drive cloud pipeline (Register-red).');
+      stackPoints.push('FastAPI', 'React 19', 'Python 3.11');
     }
 
     const isStaffOrPrincipal = titleLower.includes('staff') || titleLower.includes('principal') || titleLower.includes('lead') || titleLower.includes('architect') || titleLower.includes('head');

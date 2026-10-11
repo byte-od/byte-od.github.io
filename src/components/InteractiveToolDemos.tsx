@@ -30,6 +30,11 @@ import {
   ExternalLink,
   Key,
   Sparkles,
+  DollarSign,
+  CloudUpload,
+  FileSpreadsheet,
+  ArrowRight,
+  Plus,
 } from 'lucide-react';
 import { SystemOneHudDemo } from './SystemOneHudDemo';
 
@@ -38,7 +43,7 @@ interface InteractiveToolDemosProps {
 }
 
 export const InteractiveToolDemos: React.FC<InteractiveToolDemosProps> = ({ lang = 'en' }) => {
-  const [activeTab, setActiveTab] = useState<'system_one' | 'flutter_scene' | 'gittrack' | 'mad' | 'mddd'>('system_one');
+  const [activeTab, setActiveTab] = useState<'system_one' | 'flutter_scene' | 'gittrack' | 'register_red' | 'mad' | 'mddd'>('system_one');
 
   return (
     <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 sm:p-6 lg:p-8 backdrop-blur-xl shadow-2xl">
@@ -51,12 +56,12 @@ export const InteractiveToolDemos: React.FC<InteractiveToolDemosProps> = ({ lang
           </h3>
           <p className="text-xs text-zinc-400 mt-1">
             {lang === 'pt'
-              ? 'Interaja diretamente com a avaliação neural em tempo real do system_one (ONNX Runtime Web / Wasm SIMD), o renderizador 3D do Flutter Scene, o GitTrack (Rastreamento & IA VIP), o MAD-cli (Doc Viva) e o mddd-cli (Spec-Driven Dev).'
-              : 'Directly test real-time neural evaluation of system_one (ONNX Runtime Web / Wasm SIMD), Flutter Scene 3D Shaders, GitTrack (Commit Tracking & VIP AI), MAD-cli (Auto-Doccing), and mddd-cli (Spec-Driven Dev).'}
+              ? 'Interaja diretamente com a avaliação neural em tempo real do system_one (ONNX Runtime Web / Wasm SIMD), o renderizador 3D do Flutter Scene, o GitTrack (Rastreamento & IA VIP), o Register-red (Pipeline Apple Numbers & Drive), o MAD-cli (Doc Viva) e o mddd-cli (Spec-Driven Dev).'
+              : 'Directly test real-time neural evaluation of system_one (ONNX Runtime Web / Wasm SIMD), Flutter Scene 3D Shaders, GitTrack (Commit Tracking & VIP AI), Register-red (Apple Numbers & Drive Pipeline), MAD-cli (Auto-Doccing), and mddd-cli (Spec-Driven Dev).'}
           </p>
         </div>
 
-        {/* Tab Switcher - Ordered: system_one, Flutter_scene, GitTrack, MAD-cli, mddd-cli */}
+        {/* Tab Switcher - Ordered: system_one, Flutter_scene, GitTrack, Register-red, MAD-cli, mddd-cli */}
         <div className="flex flex-wrap items-center gap-1 p-1 bg-zinc-900 border border-zinc-800 rounded-lg">
           <button
             type="button"
@@ -88,6 +93,16 @@ export const InteractiveToolDemos: React.FC<InteractiveToolDemosProps> = ({ lang
           </button>
           <button
             type="button"
+            onClick={() => setActiveTab('register_red')}
+            className={`px-3 py-1.5 text-xs font-mono rounded-md transition-colors cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'register_red' ? 'bg-zinc-800 text-[#f87171] font-bold shadow-sm' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-[#f87171]" />
+            <span>Register-red (Numbers)</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setActiveTab('mad')}
             className={`px-3 py-1.5 text-xs font-mono rounded-md transition-colors cursor-pointer ${
               activeTab === 'mad' ? 'bg-zinc-800 text-[#34d399] font-bold shadow-sm' : 'text-zinc-400 hover:text-white'
@@ -116,10 +131,13 @@ export const InteractiveToolDemos: React.FC<InteractiveToolDemosProps> = ({ lang
       {/* Tab 3: GitTrack Telemetry */}
       {activeTab === 'gittrack' && <GitTrackDemo lang={lang} />}
 
-      {/* Tab 4: MAD-cli Mermaid Auto-Doccing with MAD Tags */}
+      {/* Tab 4: Register-red Apple Numbers & Google Drive Financial Pipeline */}
+      {activeTab === 'register_red' && <RegisterRedDemo lang={lang} />}
+
+      {/* Tab 5: MAD-cli Mermaid Auto-Doccing with MAD Tags */}
       {activeTab === 'mad' && <MadCliDemo lang={lang} />}
 
-      {/* Tab 5: mddd-cli Spec-Driven Development (Diagram + Decision Matrix) */}
+      {/* Tab 6: mddd-cli Spec-Driven Development (Diagram + Decision Matrix) */}
       {activeTab === 'mddd' && <MdddCliDemo lang={lang} />}
     </div>
   );
@@ -573,7 +591,514 @@ const GitTrackDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
 };
 
 /* =========================================================================
-   3. MAD-CLI (AUTO-DOCCING) DEMO
+   4. REGISTER-RED APPLE NUMBERS & GOOGLE DRIVE PIPELINE DEMO
+   ========================================================================= */
+interface BillItem {
+  id: string;
+  description: string;
+  category: 'Casa' | 'Dev / Nuvem' | 'Serviços' | 'Operação' | 'Saúde' | 'Rollover';
+  dueDate: string;
+  amount: number;
+  paid: boolean;
+}
+
+const DEFAULT_OCTOBER_BILLS: BillItem[] = [
+  { id: '1', description: 'Aluguel & Condomínio', category: 'Casa', dueDate: '10/10', amount: 3200, paid: true },
+  { id: '2', description: 'Servidor Cloud & GCP', category: 'Dev / Nuvem', dueDate: '15/10', amount: 850, paid: true },
+  { id: '3', description: 'Internet Fibra Óptica 1Gbps', category: 'Serviços', dueDate: '18/10', amount: 180, paid: true },
+  { id: '4', description: 'Contabilidade & DAS PJ', category: 'Operação', dueDate: '20/10', amount: 650, paid: false },
+  { id: '5', description: 'Energia Elétrica COPEL', category: 'Casa', dueDate: '22/10', amount: 340, paid: false },
+  { id: '6', description: 'Saúde & Academia', category: 'Saúde', dueDate: '25/10', amount: 220, paid: false },
+];
+
+const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
+  const [currentMonth, setCurrentMonth] = useState<'Outubro 2026' | 'Novembro 2026'>('Outubro 2026');
+  const [bills, setBills] = useState<BillItem[]>(DEFAULT_OCTOBER_BILLS);
+  const [income, setIncome] = useState<number>(18500);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>('18:05:06');
+  const [syncAlert, setSyncAlert] = useState<string | null>(null);
+  const [activeSideTab, setActiveSideTab] = useState<'architecture' | 'logs' | 'export'>('architecture');
+  const [exportedFormat, setExportedFormat] = useState<string | null>(null);
+
+  const [apiLogs, setApiLogs] = useState<string[]>([
+    '[FASTAPI] Uvicorn worker running on http://127.0.0.1:8000 (v0.115.0)',
+    '[GOOGLE-DRIVE] Direct mount ~/Library/CloudStorage/.../Numbers connected',
+    '[NUMBERS-PARSER] 18 .numbers sheets indexed. Cache initialized.',
+    '[GET /api/months] HTTP 200 OK — Active dataset: Outubro 2026',
+  ]);
+
+  // Derived financial metrics
+  const totalExpenses = useMemo(() => bills.reduce((acc, b) => acc + b.amount, 0), [bills]);
+  const totalPaid = useMemo(() => bills.filter((b) => b.paid).reduce((acc, b) => acc + b.amount, 0), [bills]);
+  const totalPending = useMemo(() => bills.filter((b) => !b.paid).reduce((acc, b) => acc + b.amount, 0), [bills]);
+  const netBalance = useMemo(() => income - totalExpenses, [income, totalExpenses]);
+  const allPaid = useMemo(() => bills.length > 0 && bills.every((b) => b.paid), [bills]);
+
+  const togglePaid = (id: string) => {
+    setBills((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, paid: !item.paid } : item))
+    );
+  };
+
+  const handleSyncGoogleDrive = () => {
+    setIsSyncing(true);
+    setSyncAlert(null);
+    setTimeout(() => {
+      const now = new Date().toLocaleTimeString();
+      setIsSyncing(false);
+      setLastSyncTime(now);
+      const msg =
+        lang === 'pt'
+          ? `Planilha '${currentMonth}.numbers' regravada no Google Drive com sucesso!`
+          : `Spreadsheet '${currentMonth}.numbers' synchronized with Google Drive!`;
+      setSyncAlert(msg);
+      setApiLogs((logs) => [
+        `[${now}] [POST /api/sync-drive] HTTP 200 OK — Flush to ~/Library/CloudStorage/.../${currentMonth.replace(' ', '_')}.numbers`,
+        ...logs.slice(0, 7),
+      ]);
+      setTimeout(() => setSyncAlert(null), 4000);
+    }, 700);
+  };
+
+  const handleCloneMonth = () => {
+    if (currentMonth === 'Novembro 2026') {
+      // Reset back to October
+      setCurrentMonth('Outubro 2026');
+      setBills(DEFAULT_OCTOBER_BILLS);
+      setIncome(18500);
+      const now = new Date().toLocaleTimeString();
+      setApiLogs((logs) => [
+        `[${now}] [GET /api/months/outubro-2026] Restored October baseline`,
+        ...logs.slice(0, 7),
+      ]);
+      return;
+    }
+
+    // Clone into November
+    const rolloverSavings = Math.max(0, netBalance);
+    const clonedBills: BillItem[] = DEFAULT_OCTOBER_BILLS.map((item) => ({
+      ...item,
+      id: `nov-${item.id}`,
+      dueDate: item.dueDate.replace('/10', '/11'),
+      paid: false,
+    }));
+
+    setCurrentMonth('Novembro 2026');
+    setBills(clonedBills);
+    setIncome(18500 + rolloverSavings);
+
+    const now = new Date().toLocaleTimeString();
+    setSyncAlert(
+      lang === 'pt'
+        ? `Novembro 2026 gerado com sucesso! Economias transferidas: R$ ${rolloverSavings.toLocaleString('pt-BR')},00`
+        : `November 2026 generated! Rollover balance carried forward: R$ ${rolloverSavings.toLocaleString('pt-BR')},00`
+    );
+    setApiLogs((logs) => [
+      `[${now}] [POST /api/months/clone] Created 'Novembro 2026'. Propagated 6 fixed recurring bills. Reset statuses.`,
+      `[${now}] [ROLLOVER] Rolled over positive balance R$ ${rolloverSavings.toFixed(2)} into new month baseline.`,
+      `[${now}] [NUMBERS-WRITE] Created new file ~/GoogleDrive/Numbers/Novembro_2026.numbers`,
+      ...logs.slice(0, 6),
+    ]);
+    setTimeout(() => setSyncAlert(null), 4500);
+  };
+
+  const handleExport = (fmt: 'numbers' | 'xlsx') => {
+    setExportedFormat(fmt);
+    const now = new Date().toLocaleTimeString();
+    setApiLogs((logs) => [
+      `[${now}] [DOWNLOAD] Generated ${fmt === 'numbers' ? 'Apple Numbers (.numbers)' : 'Excel (.xlsx via openpyxl)'} file package for ${currentMonth}`,
+      ...logs.slice(0, 7),
+    ]);
+    setTimeout(() => setExportedFormat(null), 2500);
+  };
+
+  return (
+    <div className="mt-6 space-y-6">
+      {/* Top Banner: Month Selector, Sync CTA & Clone CTA */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-xl bg-zinc-900/70 border border-zinc-800">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-[#f87171]">
+              <FileSpreadsheet className="w-4 h-4" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-mono font-bold text-white">{currentMonth}</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-red-500/15 text-[#f87171] border border-red-500/30 font-semibold">
+                  .numbers Native
+                </span>
+              </div>
+              <span className="text-[11px] text-zinc-400 font-mono">
+                {lang === 'pt' ? 'Planilha integrada ao Google Drive' : 'Spreadsheet connected to Google Drive'}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Sync Button */}
+          <button
+            type="button"
+            onClick={handleSyncGoogleDrive}
+            disabled={isSyncing}
+            className="px-3.5 py-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 border border-red-500/40 text-[#f87171] hover:text-white text-xs font-mono font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
+          >
+            <CloudUpload className={`w-3.5 h-3.5 ${isSyncing ? 'animate-bounce' : ''}`} />
+            <span>
+              {isSyncing
+                ? (lang === 'pt' ? 'Sincronizando...' : 'Syncing...')
+                : (lang === 'pt' ? 'Sincronizar no Google Drive' : 'Sync to Google Drive')}
+            </span>
+          </button>
+
+          {/* Smart Clone Button */}
+          <button
+            type="button"
+            onClick={handleCloneMonth}
+            className="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 hover:text-white text-xs font-mono font-bold flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5 text-[#adff2f]" />
+            <span>
+              {currentMonth === 'Outubro 2026'
+                ? (lang === 'pt' ? '+ Novo Mês (Clonagem Inteligente)' : '+ New Month (Smart Clone)')
+                : (lang === 'pt' ? 'Voltar para Outubro 2026' : 'Restore October Baseline')}
+            </span>
+          </button>
+
+          {lastSyncTime && (
+            <span className="text-[10px] font-mono text-zinc-500 self-center hidden sm:inline">
+              {lang === 'pt' ? `Última sincronia: ${lastSyncTime}` : `Last sync: ${lastSyncTime}`}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Sync Alert Banner */}
+      {syncAlert && (
+        <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 text-xs font-mono flex items-center justify-between animate-in fade-in">
+          <span className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{syncAlert}</span>
+          </span>
+          <span className="text-[10px] text-emerald-400/80">Google Drive · 200 OK</span>
+        </div>
+      )}
+
+      {/* KPI Cards Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
+            {lang === 'pt' ? 'Entradas do Mês' : 'Monthly Income'}
+          </span>
+          <div className="text-base sm:text-lg font-mono font-bold text-emerald-400 mt-1 tabular-nums">
+            R$ {income.toLocaleString('pt-BR')},00
+          </div>
+          <span className="text-[10px] text-zinc-500 font-mono">
+            {currentMonth === 'Novembro 2026'
+              ? (lang === 'pt' ? 'Base + Economias' : 'Base + Rollover')
+              : (lang === 'pt' ? 'Receita Total' : 'Gross Revenue')}
+          </span>
+        </div>
+
+        <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
+            {lang === 'pt' ? 'Total Despesas' : 'Total Expenses'}
+          </span>
+          <div className="text-base sm:text-lg font-mono font-bold text-red-400 mt-1 tabular-nums">
+            R$ {totalExpenses.toLocaleString('pt-BR')},00
+          </div>
+          <span className="text-[10px] text-zinc-500 font-mono">
+            {bills.length} {lang === 'pt' ? 'contas listadas' : 'accounts'}
+          </span>
+        </div>
+
+        <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
+            {lang === 'pt' ? 'Total Pago' : 'Total Paid'}
+          </span>
+          <div className="text-base sm:text-lg font-mono font-bold text-[#38bdf8] mt-1 tabular-nums">
+            R$ {totalPaid.toLocaleString('pt-BR')},00
+          </div>
+          <span className="text-[10px] text-zinc-500 font-mono">
+            {bills.filter((b) => b.paid).length} {lang === 'pt' ? 'quitadas' : 'settled'}
+          </span>
+        </div>
+
+        <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
+            {lang === 'pt' ? 'Pendente a Pagar' : 'Pending to Pay'}
+          </span>
+          <div className="text-base sm:text-lg font-mono font-bold text-amber-400 mt-1 tabular-nums">
+            R$ {totalPending.toLocaleString('pt-BR')},00
+          </div>
+          <span className="text-[10px] text-zinc-500 font-mono">
+            {bills.filter((b) => !b.paid).length} {lang === 'pt' ? 'pendentes' : 'open'}
+          </span>
+        </div>
+
+        <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 col-span-2 sm:col-span-1">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-400">
+            {lang === 'pt' ? 'Saldo Restante' : 'Net Surplus'}
+          </span>
+          <div className="text-base sm:text-lg font-mono font-bold text-[#adff2f] mt-1 tabular-nums">
+            R$ {netBalance.toLocaleString('pt-BR')},00
+          </div>
+          <span className="text-[10px] text-zinc-500 font-mono">
+            {lang === 'pt' ? 'Disponível p/ poupar' : 'Free cash flow'}
+          </span>
+        </div>
+      </div>
+
+      {/* Main Grid: Interactive Table + Architectural Sub-panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left 7 cols: Table of Accounts & Payment Actions */}
+        <div className="lg:col-span-7 bg-zinc-900/60 border border-zinc-800 rounded-xl p-4 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+            <span className="text-xs font-mono font-bold text-white flex items-center gap-2">
+              <Table className="w-4 h-4 text-[#f87171]" />
+              <span>{lang === 'pt' ? 'Contas do Mês & Baixa Rápida' : 'Monthly Bills & 1-Click Settlement'}</span>
+            </span>
+            <span className="text-[11px] font-mono text-zinc-400">
+              {lang === 'pt' ? 'Clique no status para liquidar' : 'Click status to toggle payment'}
+            </span>
+          </div>
+
+          {/* Celebratory Banner if 100% Paid */}
+          {allPaid && (
+            <div className="p-3 rounded-lg bg-[#adff2f]/10 border border-[#adff2f]/40 text-[#adff2f] text-xs font-mono flex items-center gap-2 animate-pulse">
+              <Award className="w-4 h-4 shrink-0" />
+              <span>
+                {lang === 'pt'
+                  ? '🎉 Todas as contas do mês foram liquidadas com sucesso!'
+                  : '🎉 100% Cleared! All bills for this month have been settled.'}
+              </span>
+            </div>
+          )}
+
+          {/* Bills List */}
+          <div className="space-y-2">
+            {bills.map((bill) => (
+              <div
+                key={bill.id}
+                className={`p-2.5 rounded-lg border transition-all flex items-center justify-between gap-3 text-xs font-mono ${
+                  bill.paid
+                    ? 'bg-zinc-950/60 border-zinc-850 opacity-90'
+                    : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700 shadow-xs'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => togglePaid(bill.id)}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition cursor-pointer shrink-0 ${
+                      bill.paid
+                        ? 'bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/25'
+                        : 'bg-amber-500/15 border border-amber-500/40 text-amber-300 hover:bg-amber-500/25'
+                    }`}
+                    title={lang === 'pt' ? 'Clique para alternar PAGO / PENDENTE' : 'Click to toggle PAID / PENDING'}
+                  >
+                    {bill.paid ? (lang === 'pt' ? '✓ PAGO' : '✓ PAID') : (lang === 'pt' ? 'PENDENTE' : 'PENDING')}
+                  </button>
+
+                  <div className="min-w-0">
+                    <span className={`block font-sans text-xs font-medium truncate ${bill.paid ? 'text-zinc-400 line-through' : 'text-zinc-100'}`}>
+                      {bill.description}
+                    </span>
+                    <span className="text-[10px] text-zinc-500">
+                      {bill.category} · {lang === 'pt' ? `Vence ${bill.dueDate}` : `Due ${bill.dueDate}`}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <span className={`font-mono font-bold tabular-nums ${bill.paid ? 'text-zinc-400' : 'text-white'}`}>
+                    R$ {bill.amount.toLocaleString('pt-BR')},00
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-850 flex items-center justify-between text-[11px] font-mono text-zinc-400">
+            <span>
+              {lang === 'pt' ? 'Formato de gravação em disco:' : 'Disk write format:'}
+            </span>
+            <code className="text-[#f87171] bg-red-950/30 px-2 py-0.5 rounded border border-red-500/20">
+              Numbers v13+ (.numbers package directory)
+            </code>
+          </div>
+        </div>
+
+        {/* Right 5 cols: Architecture, API Logs & Multi-format Export */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-3">
+            {/* Sub-tab Switcher */}
+            <div className="flex items-center gap-1 p-1 bg-zinc-950 border border-zinc-800 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setActiveSideTab('architecture')}
+                className={`flex-1 py-1 text-[11px] font-mono rounded transition cursor-pointer ${
+                  activeSideTab === 'architecture'
+                    ? 'bg-zinc-800 text-white font-bold'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                {lang === 'pt' ? 'Arquitetura' : 'Architecture'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSideTab('logs')}
+                className={`flex-1 py-1 text-[11px] font-mono rounded transition cursor-pointer ${
+                  activeSideTab === 'logs'
+                    ? 'bg-zinc-800 text-[#38bdf8] font-bold'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                {lang === 'pt' ? 'Logs FastAPI' : 'FastAPI Logs'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSideTab('export')}
+                className={`flex-1 py-1 text-[11px] font-mono rounded transition cursor-pointer ${
+                  activeSideTab === 'export'
+                    ? 'bg-zinc-800 text-[#adff2f] font-bold'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                {lang === 'pt' ? 'Exportar' : 'Export'}
+              </button>
+            </div>
+
+            {/* Sub-tab 1: Architecture Highlights */}
+            {activeSideTab === 'architecture' && (
+              <div className="space-y-3 font-mono text-xs">
+                <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-850 space-y-2">
+                  <div className="text-[#f87171] font-bold flex items-center gap-1.5">
+                    <span>▹</span>
+                    <span>{lang === 'pt' ? 'Leitura & Escrita Nativa Apple Numbers' : 'Native Apple Numbers I/O'}</span>
+                  </div>
+                  <p className="text-zinc-300 font-sans text-xs leading-relaxed">
+                    {lang === 'pt'
+                      ? 'Utiliza numbers-parser em Python para decodificar diretamente o container Snappy/Protobuf do formato .numbers proprietário da Apple, recalculando somas sem passar por intermediários.'
+                      : 'Leverages Python numbers-parser to inspect Apple’s proprietary Snappy/Protobuf container, modifying tables and recalculating formulas with zero loss.'}
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-850 space-y-2">
+                  <div className="text-[#38bdf8] font-bold flex items-center gap-1.5">
+                    <span>▹</span>
+                    <span>{lang === 'pt' ? 'Sincronização com Google Drive' : 'Google Drive Cloud Sync'}</span>
+                  </div>
+                  <p className="text-zinc-300 font-sans text-xs leading-relaxed">
+                    {lang === 'pt'
+                      ? 'Integrado diretamente ao diretório de montagem do Google Drive no macOS, regravando a planilha original na nuvem para visualização instantânea no iPhone, iPad e Mac.'
+                      : 'Directly hooks into Google Drive mount paths on macOS, flushing atomic writes to cloud storage for instant reflection across Apple ecosystem devices.'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                  <div className="p-2 rounded bg-zinc-950 border border-zinc-850">
+                    <span className="text-zinc-500 block">Backend</span>
+                    <span className="text-white font-bold">FastAPI / Python 3.11</span>
+                  </div>
+                  <div className="p-2 rounded bg-zinc-950 border border-zinc-850">
+                    <span className="text-zinc-500 block">Frontend</span>
+                    <span className="text-[#f87171] font-bold">React 19 / Vite</span>
+                  </div>
+                  <div className="p-2 rounded bg-zinc-950 border border-zinc-850">
+                    <span className="text-zinc-500 block">Parser Core</span>
+                    <span className="text-white font-bold">numbers-parser</span>
+                  </div>
+                  <div className="p-2 rounded bg-zinc-950 border border-zinc-850">
+                    <span className="text-zinc-500 block">Excel Export</span>
+                    <span className="text-emerald-400 font-bold">openpyxl</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sub-tab 2: FastAPI Logs Stream */}
+            {activeSideTab === 'logs' && (
+              <div className="space-y-2 font-mono text-[11px]">
+                <div className="flex items-center justify-between pb-1 text-zinc-500 text-[10px]">
+                  <span>stdout / uvicorn.log</span>
+                  <span className="text-emerald-400">● LIVE</span>
+                </div>
+                <div className="p-3 rounded-lg bg-black/90 border border-zinc-800 space-y-1.5 max-h-[220px] overflow-y-auto">
+                  {apiLogs.map((log, idx) => (
+                    <div key={idx} className="text-zinc-300 leading-tight">
+                      <span className="text-zinc-600 mr-1.5">$</span>
+                      <span className={log.includes('200') || log.includes('201') ? 'text-emerald-400' : log.includes('FASTAPI') ? 'text-sky-400' : 'text-zinc-300'}>
+                        {log}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sub-tab 3: Multi-format Export Actions */}
+            {activeSideTab === 'export' && (
+              <div className="space-y-3 font-mono text-xs">
+                <p className="text-zinc-400 font-sans text-xs">
+                  {lang === 'pt'
+                    ? 'Baixe a planilha ativa em formatos nativos para edição offline ou compartilhamento corporativo:'
+                    : 'Download active dataset in native formats for offline analysis or team distribution:'}
+                </p>
+
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => handleExport('numbers')}
+                    className="w-full p-2.5 rounded-lg bg-zinc-950 hover:bg-zinc-850 border border-zinc-800 hover:border-zinc-700 text-zinc-200 flex items-center justify-between transition cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2">
+                      <FileSpreadsheet className="w-4 h-4 text-[#f87171]" />
+                      <span>{currentMonth}.numbers (Apple Numbers)</span>
+                    </span>
+                    <span className="text-[10px] text-zinc-500">
+                      {exportedFormat === 'numbers' ? '✓ Gerado' : 'Download'}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleExport('xlsx')}
+                    className="w-full p-2.5 rounded-lg bg-zinc-950 hover:bg-zinc-850 border border-zinc-800 hover:border-zinc-700 text-zinc-200 flex items-center justify-between transition cursor-pointer"
+                  >
+                    <span className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-emerald-400" />
+                      <span>{currentMonth}.xlsx (Microsoft Excel)</span>
+                    </span>
+                    <span className="text-[10px] text-zinc-500">
+                      {exportedFormat === 'xlsx' ? '✓ Gerado' : 'Download'}
+                    </span>
+                  </button>
+                </div>
+
+                <div className="pt-2 flex items-center justify-between text-[11px] text-zinc-400">
+                  <a
+                    href="https://github.com/byte-od/Register-red"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#f87171] hover:underline flex items-center gap-1"
+                  >
+                    <span>Ver repositório Register-red no GitHub</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* =========================================================================
+   5. MAD-CLI (AUTO-DOCCING) DEMO
    ========================================================================= */
 const MadCliDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);

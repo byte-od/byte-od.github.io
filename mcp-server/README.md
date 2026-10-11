@@ -48,7 +48,7 @@ npx -y @smithery/cli install byte-od-portfolio-mcp --client claude
 | Tool | Description |
 | :--- | :--- |
 | `get_profile` | Returns full canonical biography, seniority level, contact info, and core stack. |
-| `get_projects` | Lists flagship projects (CIR-Engine 503M, system_one, mddd-cli, MAD, flutter_scene, GitTrack). |
+| `get_projects` | Lists flagship projects (CIR-Engine 503M, system_one, mddd-cli, Register-red, MAD, flutter_scene, GitTrack). |
 | `inspect_project` | Deep-dive architectural specs, parameter counts, attention mechanisms (RoPE, GQA), and DDP throughput benchmarks (~6,200 tokens/s). |
 | `evaluate_job_fit` | Evaluates Julio's candidate fit against a target job title and requirement specs. |
 | `get_contact_info` | Returns direct email, LinkedIn, and hiring availability. |

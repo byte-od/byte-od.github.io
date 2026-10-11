@@ -76,8 +76,8 @@ export const Navbar: React.FC<NavbarProps> = ({
       badge: lang === 'pt' ? 'INTERATIVO' : 'INTERACTIVE',
       desc:
         lang === 'pt'
-          ? 'HUD system_one, Flutter Scene 3D, GitTrack, MAD-cli & mddd-cli'
-          : 'system_one HUD, Flutter Scene 3D, GitTrack, MAD-cli & mddd-cli',
+          ? 'HUD system_one, Flutter Scene 3D, GitTrack, Register-red, MAD-cli & mddd-cli'
+          : 'system_one HUD, Flutter Scene 3D, GitTrack, Register-red, MAD-cli & mddd-cli',
       icon: FlaskConical,
       accent: '#adff2f',
       glowBorder: 'border-[#adff2f]/50 hover:border-[#adff2f]',
@@ -125,7 +125,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     {
       href: '#repositories',
       label: lang === 'pt' ? 'Repositórios Open Source' : 'Open Source Repositories',
-      desc: lang === 'pt' ? 'mddd-cli, MAD-cli, flutter_scene (fork), gittrack' : 'mddd-cli, MAD-cli, flutter_scene (fork), gittrack',
+      desc: lang === 'pt' ? 'mddd-cli, Register-red, MAD-cli, flutter_scene, gittrack' : 'mddd-cli, Register-red, MAD-cli, flutter_scene, gittrack',
       icon: GitBranch,
       tag: '04',
     },

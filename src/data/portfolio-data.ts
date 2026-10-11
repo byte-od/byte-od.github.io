@@ -194,6 +194,30 @@ export const PROJECTS: ProjectData[] = [
       { label: 'Engine', value: 'Golang Core' },
     ],
   },
+  {
+    id: 'register-red',
+    title: 'Register-red',
+    badge: 'Full-Stack Financial Architecture',
+    category: 'developer_tooling',
+    specs: 'Apple Numbers (.numbers) · Google Drive Sync · FastAPI & React 19',
+    summary: 'Modern financial management and budget projection web panel with bi-directional Apple Numbers (.numbers) parsing and live Google Drive cloud synchronization, intelligent recurring budget cloning, and automated balance reconciliation.',
+    details: [
+      'Native parsing, updating, and mutation of Apple Numbers (.numbers) files via Python (numbers-parser) and styled Excel (.xlsx) exports via openpyxl.',
+      'Direct integration with Google Drive cloud storage for real-time synchronization, instant cloud saves, and automated directory indexing.',
+      'Intelligent multi-month budget cloning: auto-propagates recurring fixed obligations (rent, utilities, tuition, accounting), resets statuses, recalculates due dates, and carries forward positive rollover balances.',
+      'Interactive one-click payment reconciliation with dynamic KPI cards (Income, Outflows, Paid, Pending, Net Surplus) and festive celebration triggers.',
+      'Category distribution analytics (Home vs. Personal vs. Credit), Top 5 expense ranking, and 31-day accumulated timeline projection.',
+      'High-performance full-stack architecture pairing a FastAPI asynchronous backend with React 19, TypeScript, Tailwind CSS, and Vite.'
+    ],
+    techStack: ['Python 3.11', 'FastAPI', 'numbers-parser', 'Google Drive API', 'React 19', 'TypeScript', 'Tailwind CSS', 'openpyxl'],
+    githubUrl: 'https://github.com/byte-od/Register-red',
+    metrics: [
+      { label: 'Sync Pipeline', value: 'Google Drive' },
+      { label: 'Format', value: '.numbers Native' },
+      { label: 'Backend', value: 'FastAPI Async' },
+      { label: 'Frontend', value: 'React 19' },
+    ],
+  },
 ];
 
 export function getProjects(lang: 'en' | 'pt' = 'en'): ProjectData[] {
@@ -329,6 +353,30 @@ export function getProjects(lang: 'en' | 'pt' = 'en'): ProjectData[] {
         { label: 'Repos Privados', value: 'Acesso via Token' },
         { label: 'Análise de IA', value: 'Plano VIP' },
         { label: 'Motor', value: 'Núcleo em Golang' },
+      ],
+    },
+    {
+      id: 'register-red',
+      title: 'Register-red',
+      badge: 'Gestão Financeira & Nuvem',
+      category: 'developer_tooling',
+      specs: 'Apple Numbers (.numbers) · Sincronia Google Drive · FastAPI & React 19',
+      summary: 'Painel web moderno de gestão financeira e projeção orçamentária com integração bidirecional nativa para planilhas Apple Numbers (.numbers) no Google Drive, clonagem inteligente de despesas e reconciliação em tempo real.',
+      details: [
+        'Leitura e mutação nativa de arquivos Apple Numbers (.numbers) com Python (numbers-parser) e exportação em Excel estilizado (.xlsx) via openpyxl.',
+        'Sincronização direta com Google Drive em nuvem para gravação atômica na planilha original e indexação contínua de diretórios.',
+        'Clonagem inteligente de próximos meses: replica despesas fixas recorrentes, reseta pendências, ajusta vencimentos e transfere economias remanescentes como saldo do mês anterior.',
+        'Controle de liquidação e baixa de contas em 1 clique com atualização instantânea de KPIs (Entradas, Despesas, Pago, Pendente, Saldo Restante) e animações festivas de conclusão.',
+        'Métricas visuais com distribuição por categorias (Casa, Pessoal, Crédito), ranking Top 5 despesas e cronograma diário acumulado de vencimentos.',
+        'Arquitetura full-stack combinando backend assíncrono em FastAPI e interface reativa moderna em React 19, TypeScript, Tailwind CSS e Vite.'
+      ],
+      techStack: ['Python 3.11', 'FastAPI', 'numbers-parser', 'Google Drive API', 'React 19', 'TypeScript', 'Tailwind CSS', 'openpyxl'],
+      githubUrl: 'https://github.com/byte-od/Register-red',
+      metrics: [
+        { label: 'Pipeline Sync', value: 'Google Drive' },
+        { label: 'Formato', value: '.numbers Nativo' },
+        { label: 'Backend', value: 'FastAPI Async' },
+        { label: 'Frontend', value: 'React 19' },
       ],
     },
   ];

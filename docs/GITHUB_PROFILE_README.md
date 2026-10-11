@@ -31,6 +31,7 @@
 - **[system_one](https://github.com/byte-od/system_one)** — Fast-path heuristic inference kernel (<10ms local evaluation) operating as the low-latency companion layer to deliberate causal reasoning.
 - **[mermaid-diagram-driven-development (mddd-cli)](https://github.com/byte-od/mermaid-diagram-driven-development)** — Spec-Driven Development (SDD) framework compiling architectural diagrams and decision matrices into production Clean Architecture ([npm package](https://www.npmjs.com/package/mddd-cli)).
 - **[mad](https://github.com/byte-od/mad)** — Living documentation engine synchronizing code comment tags (`<!-- MAD:... -->`) with auto-updating Mermaid diagrams on git commits.
+- **[Register-red](https://github.com/byte-od/Register-red)** — Financial management web panel with native bi-directional Apple Numbers (`.numbers`) parsing in Python, real-time Google Drive cloud sync, multi-month budget cloning, and automated balance reconciliation.
 - **[flutter_scene](https://github.com/byte-od/flutter_scene)** — High-performance 3D fork with contributions focused on scene animation pipelines, keyframes, and custom shader optimizations.
 
 ---

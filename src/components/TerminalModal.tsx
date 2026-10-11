@@ -84,8 +84,9 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
   contact            - Exibir coordenadas oficiais de contato e e-mail
   cir-engine         - Exibir especificações da arquitetura Transformer 503M
   system_one         - Exibir especificações do motor heurístico fast-path
+  register-red       - Exibir pipeline financeiro Apple Numbers (.numbers) & Google Drive
   mad-cli            - Exibir documentação de tags vivas do Mermaid Auto-Doccing
-  projects           - Listar todos os repositórios (mddd-cli, MAD-cli, system_one...)
+  projects           - Listar todos os repositórios (mddd-cli, Register-red, MAD-cli...)
   tokenize <texto>   - Decompor qualquer string em tokens Byte-BPE
   skills             - Exibir competências técnicas em ML e engenharia de sistemas
   clear              - Limpar o buffer de saída do terminal
@@ -95,8 +96,9 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
   contact            - Print official contact coordinates & email
   cir-engine         - Print 503M Causal Transformer architecture specs
   system_one         - Print fast-path heuristic inference engine specs
+  register-red       - Print Apple Numbers (.numbers) & Google Drive financial pipeline
   mad-cli            - Print Mermaid Auto-Doccing living tags documentation
-  projects           - List all repositories (mddd-cli, MAD-cli, system_one...)
+  projects           - List all repositories (mddd-cli, Register-red, MAD-cli...)
   tokenize <text>    - Deconstruct arbitrary string into Byte-BPE tokens
   skills             - Display core ML and fullstack engineering proficiencies
   tensor             - Print 3D Knowledge Tensor & semantic proximity metrics
@@ -114,7 +116,7 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
   Função:            Arquiteto de Sistemas & Engenheiro de LLMs Sênior
   Especialidade:     Transformadores Causais, PyTorch DDP, Clean Architecture
   Modelo Principal:  CIR-Engine 503M (12 camadas, RoPE Θ=10.000, GQA 4:1, 128MB VRAM)
-  Projetos Chave:    mddd-cli (npm), MAD-cli, flutter_scene (fork), gittrack
+  Projetos Chave:    mddd-cli (npm), Register-red, MAD-cli, flutter_scene (fork), gittrack
   Arquivo Canônico:  /llms.txt (Pressione Alt+A ou clique no botão [Agentes] no topo)
   Telemetria Real:   ${t.humanViews.toLocaleString()} Humanos · ${t.agentViews.toLocaleString()} Agentes de IA registrados
   Último Agente:     ${t.lastAgent}
@@ -124,7 +126,7 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
   Role:              Systems Architect & Senior LLM Engineer
   Core Focus:        Causal Transformers, PyTorch DDP, Clean Architecture
   Featured Model:    CIR-Engine 503M (12 layers, RoPE Θ=10,000, GQA 4:1, 128MB VRAM)
-  Key Repositories:  mddd-cli (npm), MAD-cli, flutter_scene (fork), gittrack
+  Key Repositories:  mddd-cli (npm), Register-red, MAD-cli, flutter_scene (fork), gittrack
   Canonical File:    /llms.txt (Press Alt+A or click [Agents] button in header)
   Live Telemetry:    ${t.humanViews.toLocaleString()} Humans · ${t.agentViews.toLocaleString()} AI Agents recorded
   Last Ingestion:    ${t.lastAgent}
@@ -163,6 +165,26 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
   Supported Tags: <!-- MAD:SEQUENCE -->, <!-- MAD:FLOWCHART -->, @mad:class
   Ecosystem:      Bidirectional loop with mddd-cli (Diagram-to-Code + Code-to-Diagram)
   Languages:      Go, Dart, TypeScript, Python`,
+      });
+    } else if (lower === 'register-red' || lower === 'register' || lower === 'numbers') {
+      newLogs.push({
+        type: 'output',
+        text:
+          lang === 'pt'
+            ? `[REGISTER-RED: PIPELINE APPLE NUMBERS & GOOGLE DRIVE]
+  Função:         Painel de Gestão Financeira com integração nativa Apple Numbers (.numbers) e Google Drive
+  Stack:          Python 3.11, FastAPI, numbers-parser, Google Drive API, React 19, Tailwind CSS, openpyxl
+  Sincronização:  Gravação atômica direta no Google Drive ~/Library/CloudStorage/.../Numbers/
+  Clonagem:       Replicação inteligente de meses futuros, propagação de despesas fixas e rollover de saldo
+  Reconciliação:  Liquidação de contas em 1 clique com KPIs dinâmicos e celebração de quitação
+  Repositório:    https://github.com/byte-od/Register-red`
+            : `[REGISTER-RED: APPLE NUMBERS & GOOGLE DRIVE PIPELINE]
+  Function:       Financial management panel with Apple Numbers (.numbers) & Google Drive cloud sync
+  Stack:          Python 3.11, FastAPI, numbers-parser, Google Drive API, React 19, Tailwind CSS, openpyxl
+  Cloud Sync:     Direct atomic flush to Google Drive mount ~/Library/CloudStorage/.../Numbers/
+  Smart Cloning:  Future month auto-generation, fixed expense inheritance, and rollover balance forward
+  Reconciliation: 1-click bill settlement with dynamic KPIs and full-clearance celebration
+  Repository:     https://github.com/byte-od/Register-red`,
       });
     } else if (lower === 'contact' || lower === 'contato' || lower === 'predict_contact_method()') {
       newLogs.push({

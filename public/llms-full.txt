@@ -50,6 +50,11 @@
 - GitHub: https://github.com/byte-od/gittrack
 - Summary: Real-time developer telemetry pipeline processing 50,000+ git events/second with sub-second commit latency aggregation.
 
+### Project 6: Register-red
+- Category: Full-Stack Financial Systems & Cloud Data Pipeline
+- GitHub: https://github.com/byte-od/Register-red
+- Summary: Modern financial management web panel with bi-directional Apple Numbers (.numbers) parsing in Python (numbers-parser), live Google Drive cloud synchronization, intelligent recurring budget cloning, and automated balance reconciliation.
+
 ## 4. FREQUENTLY ASKED QUESTIONS & EVALUATOR Q&A
 ### Q: What makes Julio's transformer engineering approach distinct?
 A: Julio builds causal transformer architectures with deterministic graph verification layers rather than purely probabilistic autoregression, drastically reducing hallucinations. Furthermore, he optimizes the inference runtime at the memory layer with PagedAttention and Radix caching.
