@@ -19,6 +19,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
 
   const projects = getProjects(lang);
   const filteredProjects = projects.filter((p) => filter === 'all' || p.category === filter);
+  const activeProject = activeProjectModal ? (projects.find((p) => p.id === activeProjectModal.id) ?? activeProjectModal) : null;
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -192,16 +193,16 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
       </div>
 
       {/* Project Detail Modal */}
-      {activeProjectModal && (
+      {activeProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
           <div className="relative w-full max-w-2xl bg-zinc-950 border border-zinc-750 rounded-2xl p-6 lg:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-start justify-between pb-4 border-b border-zinc-800">
               <div>
-                <span className="text-xs font-mono text-[#adff2f]">{activeProjectModal.badge}</span>
-                <h3 className="text-2xl font-bold text-white mt-1">{activeProjectModal.title}</h3>
-                {activeProjectModal.specs && (
-                  <p className="text-xs font-mono text-[#38bdf8] mt-0.5">{activeProjectModal.specs}</p>
+                <span className="text-xs font-mono text-[#adff2f]">{activeProject.badge}</span>
+                <h3 className="text-2xl font-bold text-white mt-1">{activeProject.title}</h3>
+                {activeProject.specs && (
+                  <p className="text-xs font-mono text-[#38bdf8] mt-0.5">{activeProject.specs}</p>
                 )}
               </div>
               <button
@@ -220,7 +221,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
                 <h5 className="text-xs font-mono uppercase text-zinc-500 tracking-wider mb-2">
                   {lang === 'pt' ? 'Visão Geral' : 'Overview'}
                 </h5>
-                <p className="text-sm text-zinc-300 leading-relaxed">{activeProjectModal.summary}</p>
+                <p className="text-sm text-zinc-300 leading-relaxed">{activeProject.summary}</p>
               </div>
 
               {/* Architectural Highlights */}
@@ -229,7 +230,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
                   {lang === 'pt' ? 'Arquitetura Técnica & Conquistas' : 'Technical Architecture & Achievements'}
                 </h5>
                 <ul className="space-y-2">
-                  {activeProjectModal.details.map((detail, idx) => (
+                  {activeProject.details.map((detail, idx) => (
                     <li key={idx} className="text-xs text-zinc-300 flex items-start gap-2 leading-relaxed">
                       <span className="text-[#adff2f] font-mono mt-0.5">▹</span>
                       <span>{detail}</span>
@@ -244,7 +245,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
                   {lang === 'pt' ? 'Stack Tecnológica' : 'Tech Stack'}
                 </h5>
                 <div className="flex flex-wrap gap-1.5">
-                  {activeProjectModal.techStack.map((tech) => (
+                  {activeProject.techStack.map((tech) => (
                     <span
                       key={tech}
                       className="text-xs font-mono text-zinc-300 bg-zinc-900 border border-zinc-800 px-2.5 py-1 rounded"
@@ -258,9 +259,9 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
 
             {/* Modal Footer */}
             <div className="pt-4 border-t border-zinc-850 flex items-center justify-between">
-              {activeProjectModal.githubUrl ? (
+              {activeProject.githubUrl ? (
                 <a
-                  href={activeProjectModal.githubUrl}
+                  href={activeProject.githubUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 px-4 py-2 bg-white text-black font-mono text-xs font-bold rounded-lg hover:bg-zinc-200 transition-colors"

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "updated_at": 1791743813.688639,
-  "updated_at_str": "11/10/2026 15:36:53",
+  "updated_at": 1791748027.5226119,
+  "updated_at_str": "11/10/2026 16:47:07",
   "models": {
     "acrobot": {
       "key": "acrobot",
@@ -125,8 +125,8 @@
       "file": "s1_rubiks_atomic.onnx",
       "size_mb": 3.18,
       "size_bytes": 3336041,
-      "mtime": 1791743813.6199472,
-      "mtime_str": "11/10/2026 15:36:53",
+      "mtime": 1791748027.4182246,
+      "mtime_str": "11/10/2026 16:47:07",
       "checkpoint_source": "s1_rubikscube_v0_trained_v12.pt",
       "checkpoint_version": "v12"
     },

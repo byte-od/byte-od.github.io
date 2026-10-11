@@ -595,24 +595,87 @@ const GitTrackDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
    ========================================================================= */
 interface BillItem {
   id: string;
-  description: string;
-  category: 'Casa' | 'Dev / Nuvem' | 'Serviços' | 'Operação' | 'Saúde' | 'Rollover';
-  dueDate: string;
+  descriptionPt: string;
+  descriptionEn: string;
+  categoryPt: string;
+  categoryEn: string;
+  dueDatePt: string;
+  dueDateEn: string;
   amount: number;
   paid: boolean;
 }
 
 const DEFAULT_OCTOBER_BILLS: BillItem[] = [
-  { id: '1', description: 'Aluguel & Condomínio', category: 'Casa', dueDate: '10/10', amount: 3200, paid: true },
-  { id: '2', description: 'Servidor Cloud & GCP', category: 'Dev / Nuvem', dueDate: '15/10', amount: 850, paid: true },
-  { id: '3', description: 'Internet Fibra Óptica 1Gbps', category: 'Serviços', dueDate: '18/10', amount: 180, paid: true },
-  { id: '4', description: 'Contabilidade & DAS PJ', category: 'Operação', dueDate: '20/10', amount: 650, paid: false },
-  { id: '5', description: 'Energia Elétrica COPEL', category: 'Casa', dueDate: '22/10', amount: 340, paid: false },
-  { id: '6', description: 'Saúde & Academia', category: 'Saúde', dueDate: '25/10', amount: 220, paid: false },
+  {
+    id: '1',
+    descriptionPt: 'Aluguel & Condomínio',
+    descriptionEn: 'Rent & HOA Fees',
+    categoryPt: 'Casa',
+    categoryEn: 'Housing',
+    dueDatePt: '10/10',
+    dueDateEn: 'Oct 10',
+    amount: 3200,
+    paid: true,
+  },
+  {
+    id: '2',
+    descriptionPt: 'Servidor Cloud & GCP',
+    descriptionEn: 'Cloud Server & GCP',
+    categoryPt: 'Dev / Nuvem',
+    categoryEn: 'Dev / Cloud',
+    dueDatePt: '15/10',
+    dueDateEn: 'Oct 15',
+    amount: 850,
+    paid: true,
+  },
+  {
+    id: '3',
+    descriptionPt: 'Internet Fibra Óptica 1Gbps',
+    descriptionEn: 'Gigabit Fiber Internet',
+    categoryPt: 'Serviços',
+    categoryEn: 'Utilities',
+    dueDatePt: '18/10',
+    dueDateEn: 'Oct 18',
+    amount: 180,
+    paid: true,
+  },
+  {
+    id: '4',
+    descriptionPt: 'Contabilidade & DAS PJ',
+    descriptionEn: 'Corporate Accounting & Taxes',
+    categoryPt: 'Operação',
+    categoryEn: 'Operations',
+    dueDatePt: '20/10',
+    dueDateEn: 'Oct 20',
+    amount: 650,
+    paid: false,
+  },
+  {
+    id: '5',
+    descriptionPt: 'Energia Elétrica COPEL',
+    descriptionEn: 'Electric Utility COPEL',
+    categoryPt: 'Casa',
+    categoryEn: 'Housing',
+    dueDatePt: '22/10',
+    dueDateEn: 'Oct 22',
+    amount: 340,
+    paid: false,
+  },
+  {
+    id: '6',
+    descriptionPt: 'Saúde & Academia',
+    descriptionEn: 'Healthcare & Fitness',
+    categoryPt: 'Saúde',
+    categoryEn: 'Health',
+    dueDatePt: '25/10',
+    dueDateEn: 'Oct 25',
+    amount: 220,
+    paid: false,
+  },
 ];
 
-const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
-  const [currentMonth, setCurrentMonth] = useState<'Outubro 2026' | 'Novembro 2026'>('Outubro 2026');
+const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
+  const [monthKey, setMonthKey] = useState<'oct' | 'nov'>('oct');
   const [bills, setBills] = useState<BillItem[]>(DEFAULT_OCTOBER_BILLS);
   const [income, setIncome] = useState<number>(18500);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
@@ -621,12 +684,39 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
   const [activeSideTab, setActiveSideTab] = useState<'architecture' | 'logs' | 'export'>('architecture');
   const [exportedFormat, setExportedFormat] = useState<string | null>(null);
 
-  const [apiLogs, setApiLogs] = useState<string[]>([
+  const currentMonth = useMemo(() => {
+    if (monthKey === 'oct') {
+      return lang === 'pt' ? 'Outubro 2026' : 'October 2026';
+    }
+    return lang === 'pt' ? 'Novembro 2026' : 'November 2026';
+  }, [monthKey, lang]);
+
+  const [apiLogs, setApiLogs] = useState<string[]>(() => [
     '[FASTAPI] Uvicorn worker running on http://127.0.0.1:8000 (v0.115.0)',
     '[GOOGLE-DRIVE] Direct mount ~/Library/CloudStorage/.../Numbers connected',
     '[NUMBERS-PARSER] 18 .numbers sheets indexed. Cache initialized.',
-    '[GET /api/months] HTTP 200 OK — Active dataset: Outubro 2026',
+    lang === 'pt'
+      ? '[GET /api/months] HTTP 200 OK — Conjunto ativo: Outubro 2026'
+      : '[GET /api/months] HTTP 200 OK — Active dataset: October 2026',
   ]);
+
+  // Sync API log language when lang toggles if user switches language
+  useEffect(() => {
+    setApiLogs([
+      lang === 'pt'
+        ? '[FASTAPI] Uvicorn worker rodando em http://127.0.0.1:8000 (v0.115.0)'
+        : '[FASTAPI] Uvicorn worker running on http://127.0.0.1:8000 (v0.115.0)',
+      lang === 'pt'
+        ? '[GOOGLE-DRIVE] Ponto de montagem ~/Library/CloudStorage/.../Numbers conectado'
+        : '[GOOGLE-DRIVE] Direct mount ~/Library/CloudStorage/.../Numbers connected',
+      lang === 'pt'
+        ? '[NUMBERS-PARSER] 18 planilhas .numbers indexadas. Cache inicializado.'
+        : '[NUMBERS-PARSER] 18 .numbers sheets indexed. Cache initialized.',
+      lang === 'pt'
+        ? `[GET /api/months] HTTP 200 OK — Conjunto ativo: ${monthKey === 'oct' ? 'Outubro 2026' : 'Novembro 2026'}`
+        : `[GET /api/months] HTTP 200 OK — Active dataset: ${monthKey === 'oct' ? 'October 2026' : 'November 2026'}`,
+    ]);
+  }, [lang, monthKey]);
 
   // Derived financial metrics
   const totalExpenses = useMemo(() => bills.reduce((acc, b) => acc + b.amount, 0), [bills]);
@@ -634,6 +724,13 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
   const totalPending = useMemo(() => bills.filter((b) => !b.paid).reduce((acc, b) => acc + b.amount, 0), [bills]);
   const netBalance = useMemo(() => income - totalExpenses, [income, totalExpenses]);
   const allPaid = useMemo(() => bills.length > 0 && bills.every((b) => b.paid), [bills]);
+
+  const formatCurrency = (val: number) => {
+    if (lang === 'pt') {
+      return `R$ ${val.toLocaleString('pt-BR')},00`;
+    }
+    return `R$ ${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
 
   const togglePaid = (id: string) => {
     setBills((prev) =>
@@ -662,14 +759,16 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
   };
 
   const handleCloneMonth = () => {
-    if (currentMonth === 'Novembro 2026') {
+    if (monthKey === 'nov') {
       // Reset back to October
-      setCurrentMonth('Outubro 2026');
+      setMonthKey('oct');
       setBills(DEFAULT_OCTOBER_BILLS);
       setIncome(18500);
       const now = new Date().toLocaleTimeString();
       setApiLogs((logs) => [
-        `[${now}] [GET /api/months/outubro-2026] Restored October baseline`,
+        lang === 'pt'
+          ? `[${now}] [GET /api/months/outubro-2026] Linha de base de Outubro restaurada`
+          : `[${now}] [GET /api/months/october-2026] Restored October baseline`,
         ...logs.slice(0, 7),
       ]);
       return;
@@ -680,24 +779,31 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
     const clonedBills: BillItem[] = DEFAULT_OCTOBER_BILLS.map((item) => ({
       ...item,
       id: `nov-${item.id}`,
-      dueDate: item.dueDate.replace('/10', '/11'),
+      dueDatePt: item.dueDatePt.replace('/10', '/11'),
+      dueDateEn: item.dueDateEn.replace('Oct', 'Nov'),
       paid: false,
     }));
 
-    setCurrentMonth('Novembro 2026');
+    setMonthKey('nov');
     setBills(clonedBills);
     setIncome(18500 + rolloverSavings);
 
     const now = new Date().toLocaleTimeString();
     setSyncAlert(
       lang === 'pt'
-        ? `Novembro 2026 gerado com sucesso! Economias transferidas: R$ ${rolloverSavings.toLocaleString('pt-BR')},00`
-        : `November 2026 generated! Rollover balance carried forward: R$ ${rolloverSavings.toLocaleString('pt-BR')},00`
+        ? `Novembro 2026 gerado com sucesso! Economias transferidas: ${formatCurrency(rolloverSavings)}`
+        : `November 2026 generated! Rollover balance carried forward: ${formatCurrency(rolloverSavings)}`
     );
     setApiLogs((logs) => [
-      `[${now}] [POST /api/months/clone] Created 'Novembro 2026'. Propagated 6 fixed recurring bills. Reset statuses.`,
-      `[${now}] [ROLLOVER] Rolled over positive balance R$ ${rolloverSavings.toFixed(2)} into new month baseline.`,
-      `[${now}] [NUMBERS-WRITE] Created new file ~/GoogleDrive/Numbers/Novembro_2026.numbers`,
+      lang === 'pt'
+        ? `[${now}] [POST /api/months/clone] Criado 'Novembro 2026'. Propagadas 6 despesas fixas recorrentes. Status resetados.`
+        : `[${now}] [POST /api/months/clone] Created 'November 2026'. Propagated 6 fixed recurring bills. Reset statuses.`,
+      lang === 'pt'
+        ? `[${now}] [ROLLOVER] Saldo positivo de ${formatCurrency(rolloverSavings)} transferido como saldo inicial.`
+        : `[${now}] [ROLLOVER] Rolled over positive balance ${formatCurrency(rolloverSavings)} into new month baseline.`,
+      lang === 'pt'
+        ? `[${now}] [NUMBERS-WRITE] Novo arquivo criado ~/GoogleDrive/Numbers/Novembro_2026.numbers`
+        : `[${now}] [NUMBERS-WRITE] Created new file ~/GoogleDrive/Numbers/November_2026.numbers`,
       ...logs.slice(0, 6),
     ]);
     setTimeout(() => setSyncAlert(null), 4500);
@@ -707,7 +813,9 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
     setExportedFormat(fmt);
     const now = new Date().toLocaleTimeString();
     setApiLogs((logs) => [
-      `[${now}] [DOWNLOAD] Generated ${fmt === 'numbers' ? 'Apple Numbers (.numbers)' : 'Excel (.xlsx via openpyxl)'} file package for ${currentMonth}`,
+      lang === 'pt'
+        ? `[${now}] [DOWNLOAD] Pacote de arquivo ${fmt === 'numbers' ? 'Apple Numbers (.numbers)' : 'Excel (.xlsx via openpyxl)'} gerado para ${currentMonth}`
+        : `[${now}] [DOWNLOAD] Generated ${fmt === 'numbers' ? 'Apple Numbers (.numbers)' : 'Excel (.xlsx via openpyxl)'} file package for ${currentMonth}`,
       ...logs.slice(0, 7),
     ]);
     setTimeout(() => setExportedFormat(null), 2500);
@@ -760,7 +868,7 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
           >
             <Plus className="w-3.5 h-3.5 text-[#adff2f]" />
             <span>
-              {currentMonth === 'Outubro 2026'
+              {monthKey === 'oct'
                 ? (lang === 'pt' ? '+ Novo Mês (Clonagem Inteligente)' : '+ New Month (Smart Clone)')
                 : (lang === 'pt' ? 'Voltar para Outubro 2026' : 'Restore October Baseline')}
             </span>
@@ -792,10 +900,10 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
             {lang === 'pt' ? 'Entradas do Mês' : 'Monthly Income'}
           </span>
           <div className="text-base sm:text-lg font-mono font-bold text-emerald-400 mt-1 tabular-nums">
-            R$ {income.toLocaleString('pt-BR')},00
+            {formatCurrency(income)}
           </div>
           <span className="text-[10px] text-zinc-500 font-mono">
-            {currentMonth === 'Novembro 2026'
+            {monthKey === 'nov'
               ? (lang === 'pt' ? 'Base + Economias' : 'Base + Rollover')
               : (lang === 'pt' ? 'Receita Total' : 'Gross Revenue')}
           </span>
@@ -806,10 +914,10 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
             {lang === 'pt' ? 'Total Despesas' : 'Total Expenses'}
           </span>
           <div className="text-base sm:text-lg font-mono font-bold text-red-400 mt-1 tabular-nums">
-            R$ {totalExpenses.toLocaleString('pt-BR')},00
+            {formatCurrency(totalExpenses)}
           </div>
           <span className="text-[10px] text-zinc-500 font-mono">
-            {bills.length} {lang === 'pt' ? 'contas listadas' : 'accounts'}
+            {bills.length} {lang === 'pt' ? 'contas listadas' : 'accounts listed'}
           </span>
         </div>
 
@@ -818,7 +926,7 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
             {lang === 'pt' ? 'Total Pago' : 'Total Paid'}
           </span>
           <div className="text-base sm:text-lg font-mono font-bold text-[#38bdf8] mt-1 tabular-nums">
-            R$ {totalPaid.toLocaleString('pt-BR')},00
+            {formatCurrency(totalPaid)}
           </div>
           <span className="text-[10px] text-zinc-500 font-mono">
             {bills.filter((b) => b.paid).length} {lang === 'pt' ? 'quitadas' : 'settled'}
@@ -830,7 +938,7 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
             {lang === 'pt' ? 'Pendente a Pagar' : 'Pending to Pay'}
           </span>
           <div className="text-base sm:text-lg font-mono font-bold text-amber-400 mt-1 tabular-nums">
-            R$ {totalPending.toLocaleString('pt-BR')},00
+            {formatCurrency(totalPending)}
           </div>
           <span className="text-[10px] text-zinc-500 font-mono">
             {bills.filter((b) => !b.paid).length} {lang === 'pt' ? 'pendentes' : 'open'}
@@ -842,7 +950,7 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
             {lang === 'pt' ? 'Saldo Restante' : 'Net Surplus'}
           </span>
           <div className="text-base sm:text-lg font-mono font-bold text-[#adff2f] mt-1 tabular-nums">
-            R$ {netBalance.toLocaleString('pt-BR')},00
+            {formatCurrency(netBalance)}
           </div>
           <span className="text-[10px] text-zinc-500 font-mono">
             {lang === 'pt' ? 'Disponível p/ poupar' : 'Free cash flow'}
@@ -903,17 +1011,17 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
 
                   <div className="min-w-0">
                     <span className={`block font-sans text-xs font-medium truncate ${bill.paid ? 'text-zinc-400 line-through' : 'text-zinc-100'}`}>
-                      {bill.description}
+                      {lang === 'pt' ? bill.descriptionPt : bill.descriptionEn}
                     </span>
                     <span className="text-[10px] text-zinc-500">
-                      {bill.category} · {lang === 'pt' ? `Vence ${bill.dueDate}` : `Due ${bill.dueDate}`}
+                      {lang === 'pt' ? bill.categoryPt : bill.categoryEn} · {lang === 'pt' ? `Vence ${bill.dueDatePt}` : `Due ${bill.dueDateEn}`}
                     </span>
                   </div>
                 </div>
 
                 <div className="text-right shrink-0">
                   <span className={`font-mono font-bold tabular-nums ${bill.paid ? 'text-zinc-400' : 'text-white'}`}>
-                    R$ {bill.amount.toLocaleString('pt-BR')},00
+                    {formatCurrency(bill.amount)}
                   </span>
                 </div>
               </div>
@@ -1058,7 +1166,7 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
                       <span>{currentMonth}.numbers (Apple Numbers)</span>
                     </span>
                     <span className="text-[10px] text-zinc-500">
-                      {exportedFormat === 'numbers' ? '✓ Gerado' : 'Download'}
+                      {exportedFormat === 'numbers' ? (lang === 'pt' ? '✓ Gerado' : '✓ Generated') : 'Download'}
                     </span>
                   </button>
 
@@ -1072,7 +1180,7 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
                       <span>{currentMonth}.xlsx (Microsoft Excel)</span>
                     </span>
                     <span className="text-[10px] text-zinc-500">
-                      {exportedFormat === 'xlsx' ? '✓ Gerado' : 'Download'}
+                      {exportedFormat === 'xlsx' ? (lang === 'pt' ? '✓ Gerado' : '✓ Generated') : 'Download'}
                     </span>
                   </button>
                 </div>
@@ -1084,7 +1192,7 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang }) => {
                     rel="noopener noreferrer"
                     className="text-[#f87171] hover:underline flex items-center gap-1"
                   >
-                    <span>Ver repositório Register-red no GitHub</span>
+                    <span>{lang === 'pt' ? 'Ver repositório Register-red no GitHub' : 'View Register-red repository on GitHub'}</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
