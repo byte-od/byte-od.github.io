@@ -76,14 +76,14 @@ const FAQ_ITEMS: FaqItem[] = [
       'Julio Cesar criou e publicou a ferramenta mddd-cli no npm para Diagram-Driven Development via Mermaid, desenvolveu o MAD-cli para documentação viva, criou o Register-red para gestão orçamentária integrada nativamente a Apple Numbers (.numbers) e Google Drive, contribuiu com o motor flutter_scene (com foco em animações de scenes e pipelines de shaders) e criou o GitTrack para rastreamento detalhado de commits com suporte a token de repositórios privados e análise detalhada por IA no plano VIP.',
     detailsEn: [
       'mddd-cli (npm): Parses Mermaid diagram ASTs to automatically generate Clean Architecture directory structures, domain entities, and TypeScript/gRPC contracts.',
-      'Register-red: Full-stack financial management panel with native bi-directional Apple Numbers (.numbers) parsing in Python and real-time Google Drive cloud synchronization.',
+      'Register-red: Full-stack financial management panel with native bi-directional Apple Numbers (.numbers) parsing in Python, real-time Google Drive sync, and automated bank email polling with decimal-precise reconciliation.',
       'mad-cli: Bidirectional living documentation engine that synchronizes code comment tags (<!-- MAD:SEQUENCE -->) in Go and TypeScript with architecture diagrams during git commits.',
       'flutter_scene (Fork): 3D spatial rendering fork with contributions in scene animations, keyframe transforms, and custom GLSL/Metal shader integration.',
       'GitTrack: Detailed developer commit tracking platform with personal access token integration for private repos and on-demand VIP AI commit analysis.',
     ],
     detailsPt: [
       'mddd-cli (npm): Analisa ASTs de diagramas Mermaid para gerar automaticamente árvores de Clean Architecture, entidades de domínio e contratos TypeScript/gRPC.',
-      'Register-red: Painel web full-stack de gestão financeira com parsing bidirecional nativo de planilhas Apple Numbers (.numbers) em Python e sincronização contínua com o Google Drive.',
+      'Register-red: Painel web full-stack de gestão financeira com parsing bidirecional nativo de planilhas Apple Numbers (.numbers) em Python, sincronização contínua com o Google Drive e automação de polling de e-mails bancários com baixa inteligente.',
       'mad-cli: Motor de documentação viva bidirecional que sincroniza tags de comentários de código (<!-- MAD:SEQUENCE -->) em Go e TypeScript com diagramas de arquitetura no git commit.',
       'flutter_scene (Fork): Fork de renderização espacial 3D com contribuições em animações de scenes, transformações de keyframes e integração de shaders GLSL/Metal.',
       'GitTrack: Plataforma de rastreamento detalhado de commits para devs com suporte a token para repositórios privados e análise aprofundada por IA no plano VIP.',

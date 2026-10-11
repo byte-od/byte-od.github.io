@@ -84,7 +84,7 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
   contact            - Exibir coordenadas oficiais de contato e e-mail
   cir-engine         - Exibir especificações da arquitetura Transformer 503M
   system_one         - Exibir especificações do motor heurístico fast-path
-  register-red       - Exibir pipeline financeiro Apple Numbers (.numbers) & Google Drive
+  register-red       - Exibir pipeline Apple Numbers (.numbers), Google Drive & Polling de E-mails
   mad-cli            - Exibir documentação de tags vivas do Mermaid Auto-Doccing
   projects           - Listar todos os repositórios (mddd-cli, Register-red, MAD-cli...)
   tokenize <texto>   - Decompor qualquer string em tokens Byte-BPE
@@ -96,7 +96,7 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
   contact            - Print official contact coordinates & email
   cir-engine         - Print 503M Causal Transformer architecture specs
   system_one         - Print fast-path heuristic inference engine specs
-  register-red       - Print Apple Numbers (.numbers) & Google Drive financial pipeline
+  register-red       - Print Apple Numbers (.numbers), Google Drive & Email Polling pipeline
   mad-cli            - Print Mermaid Auto-Doccing living tags documentation
   projects           - List all repositories (mddd-cli, Register-red, MAD-cli...)
   tokenize <text>    - Deconstruct arbitrary string into Byte-BPE tokens
@@ -175,6 +175,7 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
   Função:         Painel de Gestão Financeira com integração nativa Apple Numbers (.numbers) e Google Drive
   Stack:          Python 3.11, FastAPI, numbers-parser, Google Drive API, React 19, Tailwind CSS, openpyxl
   Sincronização:  Gravação atômica direta no Google Drive ~/Library/CloudStorage/.../Numbers/
+  Automação:      Worker de Polling de e-mails bancários (Nubank/IMAP), extração com centavos e baixa inteligente
   Clonagem:       Replicação inteligente de meses futuros, propagação de despesas fixas e rollover de saldo
   Reconciliação:  Liquidação de contas em 1 clique com KPIs dinâmicos e celebração de quitação
   Repositório:    https://github.com/byte-od/Register-red`
@@ -182,6 +183,7 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
   Function:       Financial management panel with Apple Numbers (.numbers) & Google Drive cloud sync
   Stack:          Python 3.11, FastAPI, numbers-parser, Google Drive API, React 19, Tailwind CSS, openpyxl
   Cloud Sync:     Direct atomic flush to Google Drive mount ~/Library/CloudStorage/.../Numbers/
+  Automation:     Bank email polling worker (Nubank/IMAP), decimal-precise regex parser, and auto-settlement
   Smart Cloning:  Future month auto-generation, fixed expense inheritance, and rollover balance forward
   Reconciliation: 1-click bill settlement with dynamic KPIs and full-clearance celebration
   Repository:     https://github.com/byte-od/Register-red`,

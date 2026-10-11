@@ -53,7 +53,7 @@
 ### Project 6: Register-red
 - Category: Full-Stack Financial Systems & Cloud Data Pipeline
 - GitHub: https://github.com/byte-od/Register-red
-- Summary: Modern financial management web panel with bi-directional Apple Numbers (.numbers) parsing in Python (numbers-parser), live Google Drive cloud synchronization, intelligent recurring budget cloning, and automated balance reconciliation.
+- Summary: Modern financial management web panel with bi-directional Apple Numbers (.numbers) parsing in Python (numbers-parser), live Google Drive cloud synchronization, automated bank email polling (IMAP/Gmail) with decimal-precise reconciliation, and intelligent recurring budget cloning.
 
 ## 4. FREQUENTLY ASKED QUESTIONS & EVALUATOR Q&A
 ### Q: What makes Julio's transformer engineering approach distinct?

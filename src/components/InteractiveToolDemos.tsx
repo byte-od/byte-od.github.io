@@ -35,6 +35,7 @@ import {
   FileSpreadsheet,
   ArrowRight,
   Plus,
+  Mail,
 } from 'lucide-react';
 import { SystemOneHudDemo } from './SystemOneHudDemo';
 
@@ -679,9 +680,10 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
   const [bills, setBills] = useState<BillItem[]>(DEFAULT_OCTOBER_BILLS);
   const [income, setIncome] = useState<number>(18500);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [isPollingEmail, setIsPollingEmail] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>('18:05:06');
   const [syncAlert, setSyncAlert] = useState<string | null>(null);
-  const [activeSideTab, setActiveSideTab] = useState<'architecture' | 'logs' | 'export'>('architecture');
+  const [activeSideTab, setActiveSideTab] = useState<'architecture' | 'email' | 'logs' | 'export'>('architecture');
   const [exportedFormat, setExportedFormat] = useState<string | null>(null);
 
   const currentMonth = useMemo(() => {
@@ -694,6 +696,7 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
   const [apiLogs, setApiLogs] = useState<string[]>(() => [
     '[FASTAPI] Uvicorn worker running on http://127.0.0.1:8000 (v0.115.0)',
     '[GOOGLE-DRIVE] Direct mount ~/Library/CloudStorage/.../Numbers connected',
+    '[EMAIL-POLL] IMAP/Gmail worker active. Polling interval: 60s.',
     '[NUMBERS-PARSER] 18 .numbers sheets indexed. Cache initialized.',
     lang === 'pt'
       ? '[GET /api/months] HTTP 200 OK — Conjunto ativo: Outubro 2026'
@@ -709,6 +712,9 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
       lang === 'pt'
         ? '[GOOGLE-DRIVE] Ponto de montagem ~/Library/CloudStorage/.../Numbers conectado'
         : '[GOOGLE-DRIVE] Direct mount ~/Library/CloudStorage/.../Numbers connected',
+      lang === 'pt'
+        ? '[EMAIL-POLL] Worker em background IMAP/Gmail ativo. Intervalo de polling: 60s.'
+        : '[EMAIL-POLL] IMAP/Gmail background worker active. Polling interval: 60s.',
       lang === 'pt'
         ? '[NUMBERS-PARSER] 18 planilhas .numbers indexadas. Cache inicializado.'
         : '[NUMBERS-PARSER] 18 .numbers sheets indexed. Cache initialized.',
@@ -809,6 +815,68 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
     setTimeout(() => setSyncAlert(null), 4500);
   };
 
+  const handleSimulateEmailPoll = () => {
+    setIsPollingEmail(true);
+    setSyncAlert(null);
+
+    setTimeout(() => {
+      setIsPollingEmail(false);
+      const now = new Date().toLocaleTimeString();
+
+      // Find the first pending bill to reconcile
+      const pendingBill = bills.find((b) => !b.paid);
+
+      if (pendingBill) {
+        setBills((prev) =>
+          prev.map((item) => (item.id === pendingBill.id ? { ...item, paid: true } : item))
+        );
+        const billName = lang === 'pt' ? pendingBill.descriptionPt : pendingBill.descriptionEn;
+        const alertMsg =
+          lang === 'pt'
+            ? `📧 Polling Nubank: E-mail de transação processado! Conta '${billName}' (${formatCurrency(pendingBill.amount)}) baixada automaticamente!`
+            : `📧 Nubank Polling: Transaction email processed! Bill '${billName}' (${formatCurrency(pendingBill.amount)}) automatically reconciled & paid!`;
+        setSyncAlert(alertMsg);
+
+        setApiLogs((logs) => [
+          lang === 'pt'
+            ? `[${now}] [NUMBERS-SYNC] Planilha '${currentMonth}.numbers' atualizada com baixa automática no Google Drive`
+            : `[${now}] [NUMBERS-SYNC] Spreadsheet '${currentMonth}.numbers' updated with automatic settlement in Google Drive`,
+          lang === 'pt'
+            ? `[${now}] [RECONCILER] Reconciliação inteligente: Conta planejada '${billName}' identificada (tolerância ≤ R$ 150). Status alterado para PAGO.`
+            : `[${now}] [RECONCILER] Smart reconciliation: Planned bill '${billName}' identified (tolerance ≤ R$ 150). Status flipped to PAID.`,
+          lang === 'pt'
+            ? `[${now}] [REGEX-PARSER] Extraído valor: ${formatCurrency(pendingBill.amount)} | Favorecido identificado pós 'para': '${billName}'`
+            : `[${now}] [REGEX-PARSER] Extracted amount: ${formatCurrency(pendingBill.amount)} | Recipient identified after 'para': '${billName}'`,
+          lang === 'pt'
+            ? `[${now}] [HTML-SANITIZER] clean_email_html(): Tags removidas, zero-width chars limpos (\\u200c, \\ufeff), centavos preservados.`
+            : `[${now}] [HTML-SANITIZER] clean_email_html(): Stripped styling tags and zero-width chars (\\u200c, \\ufeff), preserved centavos.`,
+          lang === 'pt'
+            ? `[${now}] [EMAIL-POLLER] Polling IMAP/Gmail executado: 1 novo e-mail bancário do Nubank detectado`
+            : `[${now}] [EMAIL-POLLER] IMAP/Gmail polling executed: 1 new Nubank notification email detected`,
+          ...logs.slice(0, 5),
+        ]);
+      } else {
+        const alertMsg =
+          lang === 'pt'
+            ? '📧 Polling Nubank: Todas as contas planejadas já estavam quitadas. Proteção anti-duplicação ativada!'
+            : '📧 Nubank Polling: All planned bills were already settled. Anti-duplication guard activated!';
+        setSyncAlert(alertMsg);
+
+        setApiLogs((logs) => [
+          lang === 'pt'
+            ? `[${now}] [EMAIL-POLLER] E-mail de confirmação processado. Nenhuma despesa duplicada criada (Anti-duplicação OK).`
+            : `[${now}] [EMAIL-POLLER] Confirmation email parsed. Zero duplicate expenses generated (Anti-duplication OK).`,
+          lang === 'pt'
+            ? `[${now}] [RECONCILER] Verificação concluída: Todas as despesas do mês já se encontram quitadas.`
+            : `[${now}] [RECONCILER] Check completed: All monthly expenses are already settled.`,
+          ...logs.slice(0, 6),
+        ]);
+      }
+
+      setTimeout(() => setSyncAlert(null), 5000);
+    }, 600);
+  };
+
   const handleExport = (fmt: 'numbers' | 'xlsx') => {
     setExportedFormat(fmt);
     const now = new Date().toLocaleTimeString();
@@ -845,6 +913,22 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Email Polling Simulation Button */}
+          <button
+            type="button"
+            onClick={handleSimulateEmailPoll}
+            disabled={isPollingEmail}
+            className="px-3.5 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/40 text-[#38bdf8] hover:text-white text-xs font-mono font-bold flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
+            title={lang === 'pt' ? 'Simular detecção de e-mail bancário via polling e baixa automática' : 'Simulate bank email polling detection and automated settlement'}
+          >
+            <Mail className={`w-3.5 h-3.5 ${isPollingEmail ? 'animate-spin' : ''}`} />
+            <span>
+              {isPollingEmail
+                ? (lang === 'pt' ? 'Consultando E-mail...' : 'Polling Email...')
+                : (lang === 'pt' ? 'Simular Polling de E-mail' : 'Simulate Email Polling')}
+            </span>
+          </button>
+
           {/* Sync Button */}
           <button
             type="button"
@@ -1056,14 +1140,25 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
               </button>
               <button
                 type="button"
-                onClick={() => setActiveSideTab('logs')}
+                onClick={() => setActiveSideTab('email')}
                 className={`flex-1 py-1 text-[11px] font-mono rounded transition cursor-pointer ${
-                  activeSideTab === 'logs'
+                  activeSideTab === 'email'
                     ? 'bg-zinc-800 text-[#38bdf8] font-bold'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                {lang === 'pt' ? 'Logs FastAPI' : 'FastAPI Logs'}
+                {lang === 'pt' ? 'Polling E-mail' : 'Email Polling'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSideTab('logs')}
+                className={`flex-1 py-1 text-[11px] font-mono rounded transition cursor-pointer ${
+                  activeSideTab === 'logs'
+                    ? 'bg-zinc-800 text-amber-300 font-bold'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                {lang === 'pt' ? 'Logs' : 'Logs'}
               </button>
               <button
                 type="button"
@@ -1105,7 +1200,19 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-850 space-y-2">
+                  <div className="text-amber-400 font-bold flex items-center gap-1.5">
+                    <span>▹</span>
+                    <span>{lang === 'pt' ? 'Worker de Polling de E-mails Bancários' : 'Bank Email Polling Worker'}</span>
+                  </div>
+                  <p className="text-zinc-300 font-sans text-xs leading-relaxed">
+                    {lang === 'pt'
+                      ? 'Daemon assíncrono que consulta continuamente novas mensagens bancárias (Nubank/IMAP), higieniza o HTML preservando centavos, isola beneficiários pós-"para" e realiza a reconciliação inteligente das contas planejadas.'
+                      : 'Asynchronous daemon continuously monitoring bank notifications (Nubank/IMAP), sanitizing HTML while retaining centavos, isolating recipients after "para", and executing automated reconciliation.'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px]">
                   <div className="p-2 rounded bg-zinc-950 border border-zinc-850">
                     <span className="text-zinc-500 block">Backend</span>
                     <span className="text-white font-bold">FastAPI / Python 3.11</span>
@@ -1119,6 +1226,14 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
                     <span className="text-white font-bold">numbers-parser</span>
                   </div>
                   <div className="p-2 rounded bg-zinc-950 border border-zinc-850">
+                    <span className="text-zinc-500 block">Cloud Sync</span>
+                    <span className="text-[#38bdf8] font-bold">Google Drive</span>
+                  </div>
+                  <div className="p-2 rounded bg-zinc-950 border border-zinc-850">
+                    <span className="text-zinc-500 block">{lang === 'pt' ? 'Automação' : 'Automation'}</span>
+                    <span className="text-amber-400 font-bold">IMAP / Polling</span>
+                  </div>
+                  <div className="p-2 rounded bg-zinc-950 border border-zinc-850">
                     <span className="text-zinc-500 block">Excel Export</span>
                     <span className="text-emerald-400 font-bold">openpyxl</span>
                   </div>
@@ -1126,18 +1241,76 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
               </div>
             )}
 
-            {/* Sub-tab 2: FastAPI Logs Stream */}
+            {/* Sub-tab 2: Email Polling Pipeline Architecture */}
+            {activeSideTab === 'email' && (
+              <div className="space-y-3 font-mono text-xs">
+                <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-850 space-y-2">
+                  <div className="text-[#38bdf8] font-bold flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-[#38bdf8]" />
+                      <span>{lang === 'pt' ? 'Pipeline de Polling & Reconciliação' : 'Polling & Reconciliation Pipeline'}</span>
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-sky-950/60 border border-sky-500/30 text-sky-300">IMAP / Daemon</span>
+                  </div>
+                  <p className="text-zinc-300 font-sans text-xs leading-relaxed">
+                    {lang === 'pt'
+                      ? 'Processamento autônomo de comprovantes de transação do Nubank e outros bancos sem intervenção manual:'
+                      : 'Autonomous processing of bank and Nubank transaction notifications with zero manual friction:'}
+                  </p>
+                </div>
+
+                <div className="space-y-2 text-[11px]">
+                  <div className="p-2.5 rounded-lg bg-zinc-950/80 border border-zinc-850 space-y-1">
+                    <div className="text-emerald-400 font-bold flex items-center gap-1.5">
+                      <span>1.</span>
+                      <span>{lang === 'pt' ? 'Higienização HTML & Zero-Width' : 'HTML Sanitization & Zero-Width'}</span>
+                    </div>
+                    <p className="text-zinc-400 font-sans text-[11px] leading-relaxed">
+                      {lang === 'pt'
+                        ? 'O helper clean_email_html() remove caracteres de largura zero (\\u200c, \\ufeff) comuns em templates do Nubank e reconecta centavos fracionados em spans (96<span>,99</span> → R$ 96,99).'
+                        : 'Helper clean_email_html() eliminates zero-width characters (\\u200c, \\ufeff) in Nubank templates and merges split centavo spans (96<span>,99</span> → R$ 96.99).'}
+                    </p>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-zinc-950/80 border border-zinc-850 space-y-1">
+                    <div className="text-sky-400 font-bold flex items-center gap-1.5">
+                      <span>2.</span>
+                      <span>{lang === 'pt' ? 'Regex com Precisão de Centavos' : 'Decimal-Precise Regex Parsing'}</span>
+                    </div>
+                    <p className="text-zinc-400 font-sans text-[11px] leading-relaxed">
+                      {lang === 'pt'
+                        ? 'Captura estrita de quantias monetárias com 2 casas decimais e extração do destinatário prioritariamente após o termo "para" (Pix, transferência, boleto, compras no crédito/débito).'
+                        : 'Strict monetary parsing capturing exact 2 decimal places and isolating payee entities positioned immediately after "para" (Pix, transfers, utility bills, card charges).'}
+                    </p>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-zinc-950/80 border border-zinc-850 space-y-1">
+                    <div className="text-amber-400 font-bold flex items-center gap-1.5">
+                      <span>3.</span>
+                      <span>{lang === 'pt' ? 'Reconciliação com Tolerância (R$ 150)' : 'Smart Reconciliation & Tolerance'}</span>
+                    </div>
+                    <p className="text-zinc-400 font-sans text-[11px] leading-relaxed">
+                      {lang === 'pt'
+                        ? 'Compara com contas pendentes na planilha. Admite variação de até R$ 150 para contas de consumo (energia, água, condomínio), protege contra duplicação e roteia gastos avulsos para "Gastos".'
+                        : 'Matches against open bills with up to R$ 150 variance tolerance for utility bills, activates anti-duplication guards if already paid, and routes unplanned charges to "Gastos".'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sub-tab 3: FastAPI & Email Polling Logs Stream */}
             {activeSideTab === 'logs' && (
               <div className="space-y-2 font-mono text-[11px]">
                 <div className="flex items-center justify-between pb-1 text-zinc-500 text-[10px]">
-                  <span>stdout / uvicorn.log</span>
+                  <span>stdout / uvicorn.log &amp; worker.log</span>
                   <span className="text-emerald-400">● LIVE</span>
                 </div>
                 <div className="p-3 rounded-lg bg-black/90 border border-zinc-800 space-y-1.5 max-h-[220px] overflow-y-auto">
                   {apiLogs.map((log, idx) => (
                     <div key={idx} className="text-zinc-300 leading-tight">
                       <span className="text-zinc-600 mr-1.5">$</span>
-                      <span className={log.includes('200') || log.includes('201') ? 'text-emerald-400' : log.includes('FASTAPI') ? 'text-sky-400' : 'text-zinc-300'}>
+                      <span className={log.includes('200') || log.includes('201') || log.includes('PAGO') || log.includes('PAID') ? 'text-emerald-400' : log.includes('EMAIL') || log.includes('RECONCILER') ? 'text-sky-400' : log.includes('FASTAPI') ? 'text-sky-400' : log.includes('REGEX') ? 'text-amber-300' : 'text-zinc-300'}>
                         {log}
                       </span>
                     </div>

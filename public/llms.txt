@@ -37,7 +37,7 @@ He is the author of CIR-Engine 503M (a verified 12-layer Causal Transformer with
    - `GitTrack`: High-concurrency developer activity pipeline crunching 50,000+ git events/sec in real-time.
 
 4. **Financial Systems & Cloud Pipelines (Register-red)**:
-   - `Register-red`: Full-stack financial management web panel with native bi-directional Apple Numbers (`.numbers`) parsing in Python (`numbers-parser`), live Google Drive cloud synchronization, intelligent recurring budget cloning, and automated balance reconciliation (https://github.com/byte-od/Register-red).
+   - `Register-red`: Full-stack financial management web panel with native bi-directional Apple Numbers (`.numbers`) parsing in Python (`numbers-parser`), live Google Drive cloud synchronization, automated bank email polling (IMAP/Gmail) with decimal-precise reconciliation, and intelligent recurring budget cloning (https://github.com/byte-od/Register-red).
 
 ## Key Statistical Benchmarks & Production Metrics
 - **503,316,480 Parameters**: 12-layer Causal Transformer trained from scratch.
