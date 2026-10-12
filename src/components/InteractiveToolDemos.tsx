@@ -675,6 +675,55 @@ const DEFAULT_OCTOBER_BILLS: BillItem[] = [
   },
 ];
 
+interface DemoAction {
+  id: string;
+  title: string;
+  amount: number;
+  category: string;
+  source: 'gmail' | 'gemini_ai' | 'manual';
+  status: string;
+  time: string;
+}
+
+const INITIAL_DEMO_ACTIONS: DemoAction[] = [
+  {
+    id: 'act-1',
+    title: 'Uber *Viagem',
+    amount: 28.50,
+    category: 'Pessoal',
+    source: 'gmail',
+    status: 'Concluído',
+    time: '2m atrás',
+  },
+  {
+    id: 'act-2',
+    title: 'Copel (Energia)',
+    amount: 180.00,
+    category: 'Casa',
+    source: 'manual',
+    status: 'Pago',
+    time: '45m atrás',
+  },
+  {
+    id: 'act-3',
+    title: 'Almoço Executivo',
+    amount: 45.00,
+    category: 'Gastos',
+    source: 'gemini_ai',
+    status: 'Concluído',
+    time: 'Hoje 12:40',
+  },
+  {
+    id: 'act-4',
+    title: 'PIX Marketplace',
+    amount: 212.61,
+    category: 'Gastos',
+    source: 'gmail',
+    status: 'Concluído',
+    time: 'Ontem',
+  },
+];
+
 const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
   const [monthKey, setMonthKey] = useState<'oct' | 'nov'>('oct');
   const [bills, setBills] = useState<BillItem[]>(DEFAULT_OCTOBER_BILLS);
@@ -683,8 +732,9 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
   const [isPollingEmail, setIsPollingEmail] = useState<boolean>(false);
   const [lastSyncTime, setLastSyncTime] = useState<string | null>('18:05:06');
   const [syncAlert, setSyncAlert] = useState<string | null>(null);
-  const [activeSideTab, setActiveSideTab] = useState<'architecture' | 'email' | 'logs' | 'export'>('architecture');
+  const [activeSideTab, setActiveSideTab] = useState<'architecture' | 'email' | 'actions' | 'logs' | 'export'>('architecture');
   const [exportedFormat, setExportedFormat] = useState<string | null>(null);
+  const [recentActions, setRecentActions] = useState<DemoAction[]>(INITIAL_DEMO_ACTIONS);
 
   const currentMonth = useMemo(() => {
     if (monthKey === 'oct') {
@@ -694,9 +744,10 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
   }, [monthKey, lang]);
 
   const [apiLogs, setApiLogs] = useState<string[]>(() => [
-    '[FASTAPI] Uvicorn worker running on http://127.0.0.1:8000 (v0.115.0)',
+    '[FASTAPI] Uvicorn worker running on http://0.0.0.0:8000 · Wi-Fi: 192.168.1.250',
     '[GOOGLE-DRIVE] Direct mount ~/Library/CloudStorage/.../Numbers connected',
-    '[EMAIL-POLL] IMAP/Gmail worker active. Polling interval: 60s.',
+    '[EMAIL-DAEMON] GmailWatcher 24h active (reisfilho1116@gmail.com). Polling interval: 20s.',
+    '[HUD-FEED] ActionHistory initialized with real-time sync (polling 15s).',
     '[NUMBERS-PARSER] 18 .numbers sheets indexed. Cache initialized.',
     lang === 'pt'
       ? '[GET /api/months] HTTP 200 OK — Conjunto ativo: Outubro 2026'
@@ -707,14 +758,17 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
   useEffect(() => {
     setApiLogs([
       lang === 'pt'
-        ? '[FASTAPI] Uvicorn worker rodando em http://127.0.0.1:8000 (v0.115.0)'
-        : '[FASTAPI] Uvicorn worker running on http://127.0.0.1:8000 (v0.115.0)',
+        ? '[FASTAPI] Uvicorn worker rodando em http://0.0.0.0:8000 · Wi-Fi: 192.168.1.250'
+        : '[FASTAPI] Uvicorn worker running on http://0.0.0.0:8000 · Wi-Fi: 192.168.1.250',
       lang === 'pt'
         ? '[GOOGLE-DRIVE] Ponto de montagem ~/Library/CloudStorage/.../Numbers conectado'
         : '[GOOGLE-DRIVE] Direct mount ~/Library/CloudStorage/.../Numbers connected',
       lang === 'pt'
-        ? '[EMAIL-POLL] Worker em background IMAP/Gmail ativo. Intervalo de polling: 60s.'
-        : '[EMAIL-POLL] IMAP/Gmail background worker active. Polling interval: 60s.',
+        ? '[EMAIL-DAEMON] Daemon 24h no Mac ativo (reisfilho1116@gmail.com). Polling: 20s.'
+        : '[EMAIL-DAEMON] 24/7 Mac daemon active (reisfilho1116@gmail.com). Polling interval: 20s.',
+      lang === 'pt'
+        ? '[HUD-FEED] ActionHistory sincronizado em tempo real (polling 15s).'
+        : '[HUD-FEED] ActionHistory synchronized in real-time (polling 15s).',
       lang === 'pt'
         ? '[NUMBERS-PARSER] 18 planilhas .numbers indexadas. Cache inicializado.'
         : '[NUMBERS-PARSER] 18 .numbers sheets indexed. Cache initialized.',
@@ -740,7 +794,29 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
 
   const togglePaid = (id: string) => {
     setBills((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, paid: !item.paid } : item))
+      prev.map((item) => {
+        if (item.id === id) {
+          const nextPaid = !item.paid;
+          const desc = lang === 'pt' ? item.descriptionPt : item.descriptionEn;
+          const cat = lang === 'pt' ? item.categoryPt : item.categoryEn;
+          if (nextPaid) {
+            setRecentActions((acts) => [
+              {
+                id: `act-${Date.now()}`,
+                title: desc,
+                amount: item.amount,
+                category: cat,
+                source: 'manual',
+                status: lang === 'pt' ? 'Pago' : 'Paid',
+                time: lang === 'pt' ? 'Agora' : 'Just now',
+              },
+              ...acts.slice(0, 5),
+            ]);
+          }
+          return { ...item, paid: nextPaid };
+        }
+        return item;
+      })
     );
   };
 
@@ -831,6 +907,19 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
           prev.map((item) => (item.id === pendingBill.id ? { ...item, paid: true } : item))
         );
         const billName = lang === 'pt' ? pendingBill.descriptionPt : pendingBill.descriptionEn;
+        const billCat = lang === 'pt' ? pendingBill.categoryPt : pendingBill.categoryEn;
+        setRecentActions((acts) => [
+          {
+            id: `act-${Date.now()}`,
+            title: billName,
+            amount: pendingBill.amount,
+            category: billCat,
+            source: 'gmail',
+            status: lang === 'pt' ? 'Pago' : 'Paid',
+            time: lang === 'pt' ? 'Agora' : 'Just now',
+          },
+          ...acts.slice(0, 5),
+        ]);
         const alertMsg =
           lang === 'pt'
             ? `📧 Polling Nubank: E-mail de transação processado! Conta '${billName}' (${formatCurrency(pendingBill.amount)}) baixada automaticamente!`
@@ -1126,11 +1215,11 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
         <div className="lg:col-span-5 space-y-4">
           <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-3">
             {/* Sub-tab Switcher */}
-            <div className="flex items-center gap-1 p-1 bg-zinc-950 border border-zinc-800 rounded-lg">
+            <div className="flex items-center gap-1 p-1 bg-zinc-950 border border-zinc-800 rounded-lg overflow-x-auto">
               <button
                 type="button"
                 onClick={() => setActiveSideTab('architecture')}
-                className={`flex-1 py-1 text-[11px] font-mono rounded transition cursor-pointer ${
+                className={`flex-1 py-1 px-1.5 text-[11px] font-mono rounded transition cursor-pointer whitespace-nowrap ${
                   activeSideTab === 'architecture'
                     ? 'bg-zinc-800 text-white font-bold'
                     : 'text-zinc-400 hover:text-white'
@@ -1141,18 +1230,30 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
               <button
                 type="button"
                 onClick={() => setActiveSideTab('email')}
-                className={`flex-1 py-1 text-[11px] font-mono rounded transition cursor-pointer ${
+                className={`flex-1 py-1 px-1.5 text-[11px] font-mono rounded transition cursor-pointer whitespace-nowrap ${
                   activeSideTab === 'email'
                     ? 'bg-zinc-800 text-[#38bdf8] font-bold'
                     : 'text-zinc-400 hover:text-white'
                 }`}
               >
-                {lang === 'pt' ? 'Polling E-mail' : 'Email Polling'}
+                {lang === 'pt' ? 'Daemon 24h' : '24/7 Daemon'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSideTab('actions')}
+                className={`flex-1 py-1 px-1.5 text-[11px] font-mono rounded transition cursor-pointer whitespace-nowrap flex items-center justify-center gap-1 ${
+                  activeSideTab === 'actions'
+                    ? 'bg-zinc-800 text-emerald-400 font-bold'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{lang === 'pt' ? 'Feed HUD' : 'HUD Feed'}</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveSideTab('logs')}
-                className={`flex-1 py-1 text-[11px] font-mono rounded transition cursor-pointer ${
+                className={`flex-1 py-1 px-1.5 text-[11px] font-mono rounded transition cursor-pointer whitespace-nowrap ${
                   activeSideTab === 'logs'
                     ? 'bg-zinc-800 text-amber-300 font-bold'
                     : 'text-zinc-400 hover:text-white'
@@ -1163,7 +1264,7 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
               <button
                 type="button"
                 onClick={() => setActiveSideTab('export')}
-                className={`flex-1 py-1 text-[11px] font-mono rounded transition cursor-pointer ${
+                className={`flex-1 py-1 px-1.5 text-[11px] font-mono rounded transition cursor-pointer whitespace-nowrap ${
                   activeSideTab === 'export'
                     ? 'bg-zinc-800 text-[#adff2f] font-bold'
                     : 'text-zinc-400 hover:text-white'
@@ -1299,7 +1400,87 @@ const RegisterRedDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
               </div>
             )}
 
-            {/* Sub-tab 3: FastAPI & Email Polling Logs Stream */}
+            {/* Sub-tab 3: Real-Time HUD Action Feed */}
+            {activeSideTab === 'actions' && (
+              <div className="space-y-3 font-mono text-xs">
+                <div className="p-3 rounded-lg bg-zinc-950 border border-zinc-850 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>{lang === 'pt' ? 'Últimas Ações (HUD em Tempo Real)' : 'Recent Actions (Real-Time HUD)'}</span>
+                    </span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 font-semibold flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>LIVE · 15s</span>
+                    </span>
+                  </div>
+                  <p className="text-zinc-400 font-sans text-xs leading-relaxed">
+                    {lang === 'pt'
+                      ? 'Substitui atalhos estáticos por um feed dinâmico das últimas compras capturadas via Gmail 24h, comandos de voz Gemini e baixas manuais.'
+                      : 'Replaces static shortcuts with an autonomous live feed of transactions captured via 24/7 Gmail daemon, Gemini voice actions, and manual settlements.'}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  {recentActions.map((act) => (
+                    <div
+                      key={act.id}
+                      className="p-2.5 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-between gap-3 text-xs"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                          act.source === 'gmail'
+                            ? 'bg-emerald-950/80 border border-emerald-500/30 text-emerald-400'
+                            : act.source === 'gemini_ai'
+                            ? 'bg-indigo-950/80 border border-indigo-500/30 text-indigo-400'
+                            : 'bg-zinc-850 border border-zinc-700 text-zinc-300'
+                        }`}>
+                          {act.source === 'gmail' ? (
+                            <Mail className="w-3.5 h-3.5" />
+                          ) : act.source === 'gemini_ai' ? (
+                            <Sparkles className="w-3.5 h-3.5" />
+                          ) : (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <span className="block font-sans font-bold text-white truncate text-xs">
+                            {act.title}
+                          </span>
+                          <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono">
+                            <span>{act.category}</span>
+                            <span>•</span>
+                            <span className={act.status === 'Pago' || act.status === 'Paid' ? 'text-emerald-400 font-bold' : 'text-zinc-400'}>
+                              {act.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0 font-mono">
+                        <div className="text-xs font-bold text-white">
+                          {formatCurrency(act.amount)}
+                        </div>
+                        <div className="flex items-center justify-end gap-1 text-[10px] text-zinc-500 mt-0.5">
+                          <span className={`px-1 py-0.2 rounded text-[9px] font-bold ${
+                            act.source === 'gmail'
+                              ? 'bg-emerald-950 text-emerald-300'
+                              : act.source === 'gemini_ai'
+                              ? 'bg-indigo-950 text-indigo-300'
+                              : 'bg-zinc-800 text-zinc-400'
+                          }`}>
+                            {act.source === 'gmail' ? 'Gmail 24h' : act.source === 'gemini_ai' ? 'IA' : 'Manual'}
+                          </span>
+                          <span>{act.time}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sub-tab 4: FastAPI & Email Polling Logs Stream */}
             {activeSideTab === 'logs' && (
               <div className="space-y-2 font-mono text-[11px]">
                 <div className="flex items-center justify-between pb-1 text-zinc-500 text-[10px]">

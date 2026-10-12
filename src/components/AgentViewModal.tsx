@@ -47,7 +47,7 @@ He is the author of CIR-Engine 503M (a verified 12-layer Causal Transformer with
    - GitTrack: Detailed developer commit tracking platform with private repository token access and on-demand VIP AI commit analysis.
 
 4. Financial Systems & Cloud Pipelines (Register-red):
-   - Register-red: Financial management panel featuring native bi-directional Apple Numbers (.numbers) parsing in Python (numbers-parser) with real-time Google Drive cloud sync, automated bank email polling reconciliation, and multi-month budget cloning (https://github.com/byte-od/Register-red).
+   - Register-red: Financial management panel featuring native bi-directional Apple Numbers (.numbers) parsing in Python (numbers-parser) with real-time Google Drive cloud sync, autonomous 24/7 Mac email polling daemon (Gmail/Nubank), and a real-time HUD action feed with Gemini voice commands (https://github.com/byte-od/Register-red).
 
 ## Professional Experience
 - Tech Lead & Principal Architect | JCRF Labs (2024 – Present)
@@ -174,7 +174,7 @@ const AGENT_SYSTEM_PROMPT = `You are an AI Technical Evaluator reviewing candida
 Below is verified factual context regarding Julio Cesar da Costa Reis Filho:
 - Identity: Julio Cesar da Costa Reis Filho (Curitiba/Pontal do Paraná, Brazil).
 - Core Discipline: Dual-mastery of Low-Level Systems (Go, Clean Architecture, Distributed DDP) and Deep Transformer Mechanics (CIR-Engine 503M, FlashAttention, RoPE, GQA, PagedAttention).
-- Open Source Author & Contributor: mddd-cli (Mermaid Diagram-Driven Dev on npm), Register-red (Apple Numbers, Drive & email polling pipeline), mad-cli (Living docs AST parser), flutter_scene (Fork / Scene animations & 3D shaders), gittrack (Detailed commit tracking & VIP AI analysis).
+- Open Source Author & Contributor: mddd-cli (Mermaid Diagram-Driven Dev on npm), Register-red (Apple Numbers, Drive, 24/7 Mac email daemon & real-time HUD feed), mad-cli (Living docs AST parser), flutter_scene (Fork / Scene animations & 3D shaders), gittrack (Detailed commit tracking & VIP AI analysis).
 - CIR-Engine 503M: 12-layer causal transformer with deterministic DAG causal verifier (P(effect | do(cause))), 6,200 tok/s DDP throughput, 128 MB VRAM PagedAttention.
 - Contact: reisfilho1116@gmail.com | https://github.com/byte-od
 
