@@ -16,6 +16,8 @@ import {
   Zap,
   Info,
   ExternalLink,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import { getSkillCategories } from '../data/portfolio-data';
 
@@ -179,6 +181,10 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
 
   // Interaction State
   const mouseRef = useRef({ x: 0, y: 0, down: false, startX: 0, startY: 0 });
+  const activePointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchDistRef = useRef<number | null>(null);
+  const dragStartPosRef = useRef({ x: 0, y: 0 });
+  const hasDraggedRef = useRef(false);
   const rotationRef = useRef({ x: 0.15, y: 0.35, targetX: 0.15, targetY: 0.35 });
   const zoomRef = useRef({ dist: 38, targetDist: 38 });
   const cameraTargetRef = useRef(new THREE.Vector3(0, 0, 0));
@@ -344,6 +350,47 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
     const resizeObserver = new ResizeObserver(() => handleResize());
     resizeObserver.observe(container);
 
+    // Non-passive native wheel listener to reliably prevent webpage scroll and allow smooth 3D zoom
+    const handleNativeWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      let dy = e.deltaY;
+      if (e.deltaMode === 1) {
+        dy *= 20; // lines
+      } else if (e.deltaMode === 2) {
+        dy *= 60; // pages
+      }
+
+      if (e.ctrlKey) {
+        // macOS trackpad pinch gesture sends wheel with ctrlKey
+        dy *= 2.0;
+      }
+
+      const zoomSpeed = 0.035;
+      zoomRef.current.targetDist = Math.max(
+        10,
+        Math.min(75, zoomRef.current.targetDist + dy * zoomSpeed)
+      );
+    };
+
+    canvas.addEventListener('wheel', handleNativeWheel, { passive: false });
+
+    // Safari on macOS trackpad gesture handling
+    const handleGestureStart = (e: Event) => e.preventDefault();
+    const handleGestureChange = (e: any) => {
+      e.preventDefault();
+      if (typeof e.scale === 'number') {
+        const factor = (1 - e.scale) * 15;
+        zoomRef.current.targetDist = Math.max(
+          10,
+          Math.min(75, zoomRef.current.targetDist + factor)
+        );
+      }
+    };
+    canvas.addEventListener('gesturestart', handleGestureStart, { passive: false });
+    canvas.addEventListener('gesturechange', handleGestureChange, { passive: false });
+
     // Animation Loop
     let clock = new THREE.Clock();
 
@@ -389,6 +436,9 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
     return () => {
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
       resizeObserver.disconnect();
+      canvas.removeEventListener('wheel', handleNativeWheel);
+      canvas.removeEventListener('gesturestart', handleGestureStart);
+      canvas.removeEventListener('gesturechange', handleGestureChange);
       renderer.dispose();
       sphereGeometry.dispose();
       particleGeometry.dispose();
@@ -519,11 +569,67 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
     }
   }, [activeCluster, searchQuery, hoveredNode, selectedNode, nodes]);
 
-  // Raycasting & Mouse Interaction Handlers
+  const handleZoomIn = useCallback(() => {
+    zoomRef.current.targetDist = Math.max(10, zoomRef.current.targetDist - 6);
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    zoomRef.current.targetDist = Math.min(75, zoomRef.current.targetDist + 6);
+  }, []);
+
+  const handleResetCamera = useCallback(() => {
+    rotationRef.current.targetX = 0.15;
+    rotationRef.current.targetY = 0.35;
+    zoomRef.current.targetDist = 38;
+    cameraTargetRef.current.set(0, 0, 0);
+    setSelectedNode(null);
+    setHoveredNode(null);
+  }, []);
+
+  // Keyboard navigation (+ / - for zoom, 0 or R for reset) when container is focused
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        handleZoomIn();
+      } else if (e.key === '-' || e.key === '_') {
+        e.preventDefault();
+        handleZoomOut();
+      } else if (e.key === '0' || e.key === 'r' || e.key === 'R') {
+        handleResetCamera();
+      }
+    };
+
+    container.addEventListener('keydown', handleKeyDown);
+    return () => {
+      container.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleZoomIn, handleZoomOut, handleResetCamera]);
+
+  // Raycasting & Pointer Interaction Handlers
   const handlePointerDown = (e: React.PointerEvent) => {
-    mouseRef.current.down = true;
-    mouseRef.current.startX = e.clientX;
-    mouseRef.current.startY = e.clientY;
+    activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    try {
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      // ignore if pointer capture fails
+    }
+
+    if (activePointersRef.current.size === 1) {
+      mouseRef.current.down = true;
+      mouseRef.current.startX = e.clientX;
+      mouseRef.current.startY = e.clientY;
+      dragStartPosRef.current = { x: e.clientX, y: e.clientY };
+      hasDraggedRef.current = false;
+    } else if (activePointersRef.current.size === 2) {
+      // Multi-touch pinch start
+      mouseRef.current.down = false;
+      const points = Array.from(activePointersRef.current.values());
+      pinchDistRef.current = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
+    }
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -532,13 +638,34 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
     const scene = sceneRef.current;
     if (!canvas || !camera || !scene) return;
 
-    const rect = canvas.getBoundingClientRect();
+    if (activePointersRef.current.has(e.pointerId)) {
+      activePointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
 
-    if (mouseRef.current.down) {
+    // Two-finger pinch-to-zoom on touchscreens / trackpads
+    if (activePointersRef.current.size === 2 && pinchDistRef.current !== null) {
+      const points = Array.from(activePointersRef.current.values());
+      const currentDist = Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y);
+      const diff = pinchDistRef.current - currentDist;
+      zoomRef.current.targetDist = Math.max(
+        10,
+        Math.min(75, zoomRef.current.targetDist + diff * 0.12)
+      );
+      pinchDistRef.current = currentDist;
+      hasDraggedRef.current = true;
+      return;
+    }
+
+    // Single pointer dragging / orbiting
+    if (mouseRef.current.down && activePointersRef.current.size === 1) {
       const deltaX = e.clientX - mouseRef.current.startX;
       const deltaY = e.clientY - mouseRef.current.startY;
       mouseRef.current.startX = e.clientX;
       mouseRef.current.startY = e.clientY;
+
+      if (Math.hypot(e.clientX - dragStartPosRef.current.x, e.clientY - dragStartPosRef.current.y) > 5) {
+        hasDraggedRef.current = true;
+      }
 
       rotationRef.current.targetY -= deltaX * 0.007;
       rotationRef.current.targetX = Math.max(
@@ -548,7 +675,8 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
       return;
     }
 
-    // Raycast on hover
+    // Raycast on hover (when not dragging)
+    const rect = canvas.getBoundingClientRect();
     const mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     const mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
@@ -569,11 +697,32 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
     }
   };
 
-  const handlePointerUp = () => {
-    mouseRef.current.down = false;
+  const handlePointerUp = (e: React.PointerEvent) => {
+    activePointersRef.current.delete(e.pointerId);
+    try {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+
+    if (activePointersRef.current.size === 0) {
+      mouseRef.current.down = false;
+      pinchDistRef.current = null;
+    } else if (activePointersRef.current.size === 1) {
+      const remaining = Array.from(activePointersRef.current.values())[0];
+      mouseRef.current.startX = remaining.x;
+      mouseRef.current.startY = remaining.y;
+      pinchDistRef.current = null;
+    }
   };
 
   const handleCanvasClick = (e: React.MouseEvent) => {
+    // If user dragged to orbit or performed pinch zoom, ignore click
+    if (hasDraggedRef.current) {
+      hasDraggedRef.current = false;
+      return;
+    }
+
     const canvas = canvasRef.current;
     const camera = cameraRef.current;
     if (!canvas || !camera) return;
@@ -596,29 +745,39 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
 
       // Lerp camera target to clicked node
       cameraTargetRef.current.set(...hitMesh.position.toArray());
-      zoomRef.current.targetDist = 24;
+      zoomRef.current.targetDist = Math.min(zoomRef.current.targetDist, 24);
     } else {
       setSelectedNode(null);
-      cameraTargetRef.current.set(0, 0, 0);
-      zoomRef.current.targetDist = 38;
+      // Preserve current user zoom distance! Do not reset zoomRef.current.targetDist to 38.
     }
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    zoomRef.current.targetDist = Math.max(
-      14,
-      Math.min(65, zoomRef.current.targetDist + e.deltaY * 0.04)
-    );
-  };
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    const canvas = canvasRef.current;
+    const camera = cameraRef.current;
+    if (!canvas || !camera) return;
 
-  const handleResetCamera = () => {
-    rotationRef.current.targetX = 0.15;
-    rotationRef.current.targetY = 0.35;
-    zoomRef.current.targetDist = 38;
-    cameraTargetRef.current.set(0, 0, 0);
-    setSelectedNode(null);
-    setHoveredNode(null);
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
+
+    const meshes = Array.from(nodeMeshesRef.current.values());
+    const intersects = raycaster.intersectObjects(meshes, false);
+
+    if (intersects.length > 0) {
+      const hitMesh = intersects[0].object as THREE.Mesh;
+      const hitNode = hitMesh.userData.nodeData as TensorNode;
+      setSelectedNode(hitNode);
+      if (onSelectSkill) onSelectSkill(hitNode.name);
+      cameraTargetRef.current.set(...hitMesh.position.toArray());
+      zoomRef.current.targetDist = 18;
+    } else {
+      // Double click empty space: zoom in
+      zoomRef.current.targetDist = Math.max(10, zoomRef.current.targetDist - 10);
+    }
   };
 
   const activeFocusNode = selectedNode || hoveredNode;
@@ -626,7 +785,8 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full rounded-2xl bg-[#07080a] border border-zinc-800 shadow-2xl overflow-hidden font-mono select-none ${
+      tabIndex={0}
+      className={`relative w-full rounded-2xl bg-[#07080a] border border-zinc-800 shadow-2xl overflow-hidden font-mono select-none outline-none focus:border-zinc-700 transition-colors ${
         isFullscreen ? 'fixed inset-0 z-50 rounded-none' : 'h-[580px] lg:h-[640px]'
       }`}
     >
@@ -636,8 +796,9 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         onClick={handleCanvasClick}
-        onWheel={handleWheel}
+        onDoubleClick={handleDoubleClick}
         className="w-full h-full block cursor-grab active:cursor-grabbing touch-none"
       />
 
@@ -692,7 +853,7 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
           {/* Navigation Instruction Pill */}
           <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-zinc-950/90 border border-zinc-800 text-[10px] text-zinc-400 backdrop-blur-md">
             <Compass className="w-3 h-3 text-[#adff2f]" />
-            <span>{lang === 'pt' ? 'Arraste p/ orbitar 360° · Scroll zoom' : 'Drag to orbit 360° · Scroll zoom'}</span>
+            <span>{lang === 'pt' ? 'Arraste p/ orbitar 360° · Scroll ou +/- p/ zoom' : 'Drag to orbit 360° · Scroll or +/- to zoom'}</span>
           </div>
         </div>
 
@@ -710,6 +871,26 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
               className="w-24 sm:w-32 pl-7 pr-2 py-1 rounded-lg bg-zinc-950/90 border border-zinc-800 text-[10px] text-white placeholder-zinc-500 focus:outline-hidden focus:border-[#adff2f]/60 backdrop-blur-md"
             />
           </div>
+
+          {/* Zoom In Button */}
+          <button
+            type="button"
+            onClick={handleZoomIn}
+            className="p-1.5 rounded-lg bg-zinc-950/90 border border-zinc-800 text-zinc-400 hover:text-[#adff2f] hover:border-[#adff2f]/40 transition-colors cursor-pointer backdrop-blur-md"
+            title={lang === 'pt' ? 'Aproximar Zoom (+) · Scroll p/ cima' : 'Zoom In (+) · Scroll up'}
+          >
+            <ZoomIn className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Zoom Out Button */}
+          <button
+            type="button"
+            onClick={handleZoomOut}
+            className="p-1.5 rounded-lg bg-zinc-950/90 border border-zinc-800 text-zinc-400 hover:text-[#adff2f] hover:border-[#adff2f]/40 transition-colors cursor-pointer backdrop-blur-md"
+            title={lang === 'pt' ? 'Afastar Zoom (-) · Scroll p/ baixo' : 'Zoom Out (-) · Scroll down'}
+          >
+            <ZoomOut className="w-3.5 h-3.5" />
+          </button>
 
           {/* Auto Rotate Toggle */}
           <button
@@ -736,7 +917,7 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
             type="button"
             onClick={handleResetCamera}
             className="p-1.5 rounded-lg bg-zinc-950/90 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer backdrop-blur-md"
-            title={lang === 'pt' ? 'Resetar Câmera 3D' : 'Reset Camera View'}
+            title={lang === 'pt' ? 'Resetar Câmera 3D (0 ou R)' : 'Reset Camera View (0 or R)'}
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
@@ -891,7 +1072,7 @@ export const KnowledgeTensor3D: React.FC<KnowledgeTensor3DProps> = ({
           {/* Helper hint */}
           <div className="text-[9px] text-zinc-500 pt-1 border-t border-zinc-850/80 flex items-center justify-between">
             <span>{selectedNode ? (lang === 'pt' ? 'Nó fixado' : 'Node pinned') : (lang === 'pt' ? 'Clique p/ fixar câmera' : 'Click to lock camera')}</span>
-            <span className="text-zinc-600">Arraste para orbitar · Scroll p/ zoom</span>
+            <span className="text-zinc-600">{lang === 'pt' ? 'Arraste p/ orbitar · Scroll ou +/- p/ zoom' : 'Drag to orbit · Scroll or +/- to zoom'}</span>
           </div>
         </div>
       )}
