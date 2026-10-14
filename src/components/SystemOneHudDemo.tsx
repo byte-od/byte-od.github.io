@@ -123,21 +123,21 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
     () => ({
       rubiks_atomic: {
         id: 'rubiks_atomic',
-        name: lang === 'pt' ? 'Cubo Mágico 3x3 (Atômico - 12 Giros)' : "3x3 Rubik's Cube (Atomic - 12 Moves)",
-        shortTitle: lang === 'pt' ? 'Cubo 3x3 (Atômico)' : "Rubik's Atomic",
-        tag: '100% Solve (12)',
-        icon: '🎲',
+        name: lang === 'pt' ? '⚡ Cerberus-v1: Cubo 3x3 (Atômico 1.6M)' : "⚡ Cerberus-v1: 3x3 Cube (Atomic 1.6M)",
+        shortTitle: '⚡ Cerberus-v1',
+        tag: 'Cerberus (1.6M)',
+        icon: '⚡',
         file: 's1_rubiks_atomic.onnx',
-        checkpointSource: 's1_rubikscube_v0_trained_v1.pt',
-        checkpointVersion: 'v1 (4M passos)',
-        size: '~3.2 MB',
+        checkpointSource: 's1_rubikscube_v0_cerberus_v1.pt',
+        checkpointVersion: 'Cerberus-v1 (512D)',
+        size: '~6.4 MB',
         envName: 'RubiksCube-v0',
         actionSpace: "12 Giros Atômicos (U, U', D, D', F, F', B, B', R, R', L, L')",
         obsSpace: '324-dim One-Hot Vector (54 stickers × 6 cores)',
         description:
           lang === 'pt'
-            ? 'Agente neural com 100% de taxa de resolução reflexiva em embaralhamentos elementares. Executa giros atômicos rápidos com retroalimentação causal contínua.'
-            : 'Neural policy with 100% solve rate on elementary scrambles. Executes fast atomic face turns with continuous causal feedback.',
+            ? 'Agente neural Cerberus-v1 com LeanResidualTrunk 512D (1.6M parâmetros). Fast GRU + Slow GRU + Residual Highway para raciocínio reflexivo multi-escala.'
+            : 'Cerberus-v1 neural agent with LeanResidualTrunk 512D (1.6M parameters). Fast GRU + Slow GRU + Residual Highway for multi-timescale reflexive reasoning.',
       },
       rubiks: {
         id: 'rubiks',
