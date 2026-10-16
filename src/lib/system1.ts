@@ -1238,6 +1238,7 @@ export class System1AgentWeb {
       calibration?: number | 'auto';
       autoCalibrate?: boolean;
       deterministic?: boolean;
+      qualityFilter?: boolean;
     } = {}
   ): Promise<DecisionResult> {
     const obsDim = obsArr.length;

@@ -454,7 +454,7 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
 
             if (cube.isSolved()) {
               stopEvaluation();
-              setStatusDesc(lang === 'pt' ? '🏆 CUBO RESOLVIDO!' : '🏆 CUBE SOLVED!');
+              setStatusDesc(lang === 'pt' ? '🏆 CUBO RESOLVIDO (VITÓRIA)!' : '🏆 CUBE SOLVED (VICTORY)!');
             } else {
               setStatusDesc(
                 `${lang === 'pt' ? 'Passos' : 'Steps'}: ${cube.steps} | ${lang === 'pt' ? 'Ação' : 'Action'}: ${currentActionName}`
@@ -462,12 +462,15 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
             }
 
             setDecision(dec);
+            const actionEntryName = cube.isSolved()
+              ? (lang === 'pt' ? '🏆 VITÓRIA (RESOLVIDO)' : '🏆 VICTORY (SOLVED)')
+              : currentActionName;
             setActionLog((prev) => [
               {
                 id: Date.now() + Math.random(),
-                name: currentActionName,
-                confidence: dec.confidence,
-                uncertainty: dec.uncertainty,
+                name: actionEntryName,
+                confidence: cube.isSolved() ? 1.0 : dec.confidence,
+                uncertainty: cube.isSolved() ? 0.0 : dec.uncertainty,
                 latencyMs: dec.latencyMs,
                 isUncertain: dec.isUncertain,
               },
