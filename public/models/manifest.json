@@ -1,7 +1,7 @@
 {
   "version": "1.0",
-  "updated_at": 1792120763.197205,
-  "updated_at_str": "16/10/2026 00:19:23",
+  "updated_at": 1793025235.166115,
+  "updated_at_str": "26/10/2026 11:33:55",
   "models": {
     "acrobot": {
       "key": "acrobot",
@@ -19,7 +19,8 @@
       "mtime": 1791553884.7408938,
       "mtime_str": "09/10/2026 10:51:24",
       "checkpoint_source": "s1_acrobot_v1_trained.pt",
-      "checkpoint_version": "v1"
+      "checkpoint_version": "v1",
+      "action_chunk_size": 1
     },
     "ant_v4": {
       "key": "ant_v4",
@@ -37,7 +38,8 @@
       "mtime": 1791417198.9929142,
       "mtime_str": "07/10/2026 20:53:18",
       "checkpoint_source": "s1_ant_v4_trained.pt",
-      "checkpoint_version": "v1"
+      "checkpoint_version": "v1",
+      "action_chunk_size": 1
     },
     "ant_v5": {
       "key": "ant_v5",
@@ -55,7 +57,8 @@
       "mtime": 1791417199.029145,
       "mtime_str": "07/10/2026 20:53:19",
       "checkpoint_source": "s1_ant_v5_trained.pt",
-      "checkpoint_version": "v1"
+      "checkpoint_version": "v1",
+      "action_chunk_size": 1
     },
     "cartpole": {
       "key": "cartpole",
@@ -69,11 +72,12 @@
       "description": "Equilíbrio invertido amortizado em sub-milissegundo com reflexos ultra-estáveis.",
       "file": "s1_cartpole.onnx",
       "size_mb": 2.77,
-      "size_bytes": 2909005,
-      "mtime": 1792117638.2138383,
-      "mtime_str": "15/10/2026 23:27:18",
+      "size_bytes": 2909589,
+      "mtime": 1793025145.6862824,
+      "mtime_str": "26/10/2026 11:32:25",
       "checkpoint_source": "s1_cartpole_v1_trained.pt",
-      "checkpoint_version": "v1"
+      "checkpoint_version": "v1",
+      "action_chunk_size": 1
     },
     "lunarlander": {
       "key": "lunarlander",
@@ -91,7 +95,8 @@
       "mtime": 1791417198.817974,
       "mtime_str": "07/10/2026 20:53:18",
       "checkpoint_source": "s1_lunarlander_v3_trained.pt",
-      "checkpoint_version": "v1"
+      "checkpoint_version": "v1",
+      "action_chunk_size": 1
     },
     "mountaincar": {
       "key": "mountaincar",
@@ -109,26 +114,28 @@
       "mtime": 1791417198.724185,
       "mtime_str": "07/10/2026 20:53:18",
       "checkpoint_source": "s1_mountaincar_v0_trained.pt",
-      "checkpoint_version": "v1"
+      "checkpoint_version": "v1",
+      "action_chunk_size": 1
     },
     "rubiks_atomic": {
       "key": "rubiks_atomic",
-      "name": "⚡ Cerberus-v1: Cubo Mágico 3x3 (1.6M Multi-Timescale)",
+      "name": "⚡ Cubo Mágico 3x3 (Atômico 1.6M)",
       "env_id": "RubiksCube-v0",
       "type": "rubiks",
       "mode": "atomic",
       "obs_dim": 324,
       "act_dim": 12,
       "discrete": true,
-      "description": "Cerberus-v1: Tronco recorrente de 1.6M parâmetros com Fast GRU + Slow GRU + Residual Highway. 12 giros atômicos, latência sub-milissegundo.",
+      "description": "Tronco recorrente de 1.6M parâmetros com Fast GRU + Slow GRU + Residual Highway. 12 giros atômicos, latência sub-milissegundo.",
       "default": true,
       "file": "s1_rubiks_atomic.onnx",
       "size_mb": 6.36,
-      "size_bytes": 6672655,
-      "mtime": 1792120763.126004,
-      "mtime_str": "16/10/2026 00:19:23",
-      "checkpoint_source": "s1_rubikscube_v0_cerberus_v9.pt",
-      "checkpoint_version": "v9"
+      "size_bytes": 6673239,
+      "mtime": 1793025234.7996159,
+      "mtime_str": "26/10/2026 11:33:54",
+      "checkpoint_source": "s1_rubikscube_v0_trained_v23.pt",
+      "checkpoint_version": "v23",
+      "action_chunk_size": 1
     },
     "rubiks_macro": {
       "key": "rubiks_macro",
@@ -146,7 +153,8 @@
       "mtime": 1791417199.1011772,
       "mtime_str": "07/10/2026 20:53:19",
       "checkpoint_source": "s1_rubikscubemacro_v0_trained.pt",
-      "checkpoint_version": "v1"
+      "checkpoint_version": "v1",
+      "action_chunk_size": 1
     }
   }
 }
