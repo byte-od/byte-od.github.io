@@ -123,21 +123,21 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
     () => ({
       rubiks_atomic: {
         id: 'rubiks_atomic',
-        name: lang === 'pt' ? '⚡ Cerberus-v1: Cubo 3x3 (Atômico 1.6M)' : "⚡ Cerberus-v1: 3x3 Cube (Atomic 1.6M)",
-        shortTitle: '⚡ Cerberus-v1',
-        tag: 'Cerberus (1.6M)',
+        name: lang === 'pt' ? '⚡ AURA-v6: Cubo 3x3 (Atômico D10)' : "⚡ AURA-v6: 3x3 Cube (Atomic D10)",
+        shortTitle: '⚡ AURA-v6 (D10)',
+        tag: 'AURA v6 (D10)',
         icon: '⚡',
         file: 's1_rubiks_atomic.onnx',
-        checkpointSource: 's1_rubikscube_v0_cerberus_v1.pt',
-        checkpointVersion: 'Cerberus-v1 (512D)',
+        checkpointSource: 's1_rubikscube_v0_trained_v6.pt',
+        checkpointVersion: 'v6 (440M+ passos, D10)',
         size: '~6.4 MB',
         envName: 'RubiksCube-v0',
         actionSpace: "12 Giros Atômicos (U, U', D, D', F, F', B, B', R, R', L, L')",
         obsSpace: '324-dim One-Hot Vector (54 stickers × 6 cores)',
         description:
           lang === 'pt'
-            ? 'Agente neural Cerberus-v1 com LeanResidualTrunk 512D (1.6M parâmetros). Fast GRU + Slow GRU + Residual Highway para raciocínio reflexivo multi-escala.'
-            : 'Cerberus-v1 neural agent with LeanResidualTrunk 512D (1.6M parameters). Fast GRU + Slow GRU + Residual Highway for multi-timescale reflexive reasoning.',
+            ? 'Agente neural AURA-v6 com LeanResidualTrunk 512D (1.6M parâmetros). Treinado em 440M+ passos com 16 professores SIL assimétricos e DPO contrastivo, alcançando profundidade D10.'
+            : 'AURA-v6 neural agent with LeanResidualTrunk 512D (1.6M parameters). Trained across 440M+ steps with 16 asymmetric SIL teachers and contrastive DPO, unlocking Depth 10.',
       },
       rubiks: {
         id: 'rubiks',
@@ -311,7 +311,8 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
         });
       }
 
-      agentRef.current = new System1AgentWeb(session, ort);
+      const preferredHx = manifestData[activeDemo]?.hx_dim || (activeDemo === 'rubiks_atomic' ? 512 : 256);
+      agentRef.current = new System1AgentWeb(session, ort, preferredHx);
       setIsLoading(false);
       setStatusDesc(lang === 'pt' ? 'Pronto para avaliar' : 'Ready to evaluate');
     } catch (err: any) {

@@ -1204,7 +1204,8 @@ export interface DecisionResult {
 export class System1AgentWeb {
   session: any;
   ort: any;
-  hx: Float32Array = new Float32Array(256);
+  hxDim: number = 256;
+  hx: Float32Array;
   prevObs: Float32Array | null = null;
   prevAction: number = 0;
   prevReward: number = 0.0;
@@ -1213,9 +1214,19 @@ export class System1AgentWeb {
   rewardEma: number = 0.0;
   actionHistory: number[] = [];
 
-  constructor(session: any, ortInstance: any) {
+  constructor(session: any, ortInstance: any, initialHxDim?: number) {
     this.session = session;
     this.ort = ortInstance;
+    let hxDim = initialHxDim || 256;
+    try {
+      if (session?.inputMetadata?.hx?.dimensions) {
+        const dims = session.inputMetadata.hx.dimensions;
+        const last = Number(dims[dims.length - 1]);
+        if (last > 0) hxDim = last;
+      }
+    } catch (_) {}
+    this.hxDim = hxDim;
+    this.hx = new Float32Array(this.hxDim);
   }
 
   resetMemory() {
@@ -1255,9 +1266,9 @@ export class System1AgentWeb {
     const tDelta = new this.ort.Tensor('float32', deltaArr, [1, 1, obsDim]);
     const tAct = new this.ort.Tensor('int64', BigInt64Array.from([BigInt(this.prevAction)]), [1, 1]);
     const tRew = new this.ort.Tensor('float32', new Float32Array([this.prevReward]), [1, 1, 1]);
-    const tHx = new this.ort.Tensor('float32', this.hx, [1, 1, 256]);
+    const tHx = new this.ort.Tensor('float32', this.hx, [1, 1, this.hxDim]);
 
-    const feeds = {
+    const feeds: Record<string, any> = {
       obs: tObs,
       delta_obs: tDelta,
       prev_action: tAct,
@@ -1265,11 +1276,32 @@ export class System1AgentWeb {
       hx: tHx,
     };
 
-    const results = await this.session.run(feeds);
+    let results: any;
+    try {
+      results = await this.session.run(feeds);
+    } catch (runErr: any) {
+      // Auto-adapta dinamicamente à dimensão de hx (ex: 512 vs 256)
+      const msg = String(runErr?.message || runErr);
+      const m = msg.match(/Expected:\s*(\d+)/i) || msg.match(/expected\s+\[\d+,\s*\d+,\s*(\d+)\]/i);
+      if (m && Number(m[1]) > 0 && Number(m[1]) !== this.hxDim) {
+        this.hxDim = Number(m[1]);
+        this.hx = new Float32Array(this.hxDim);
+        feeds.hx = new this.ort.Tensor('float32', this.hx, [1, 1, this.hxDim]);
+        results = await this.session.run(feeds);
+      } else {
+        throw runErr;
+      }
+    }
     const latencyMs = performance.now() - t0;
 
     const logits = results.logits.data;
-    this.hx.set(results.next_hx.data);
+    if (results.next_hx && results.next_hx.data) {
+      if (this.hx.length !== results.next_hx.data.length) {
+        this.hxDim = results.next_hx.data.length;
+        this.hx = new Float32Array(this.hxDim);
+      }
+      this.hx.set(results.next_hx.data);
+    }
 
     // Softmax & Entropia de Shannon (Gating nos logits originais)
     let maxLogit = -Infinity;
