@@ -57,8 +57,8 @@ export const InteractiveToolDemos: React.FC<InteractiveToolDemosProps> = ({ lang
           </h3>
           <p className="text-xs text-zinc-400 mt-1">
             {lang === 'pt'
-              ? 'Interaja diretamente com a avaliação neural em tempo real do system_one (ONNX Runtime Web / Wasm SIMD), o Register-red (Pipeline Apple Numbers, Drive & Polling E-mails), o renderizador 3D do Flutter Scene fork, o GitTrack (Rastreamento & IA VIP), o MAD-cli (Doc Viva) e o mddd-cli (Spec-Driven Dev).'
-              : 'Directly test real-time neural evaluation of system_one (ONNX Runtime Web / Wasm SIMD), Register-red (Apple Numbers, Drive & Email Polling), Flutter Scene fork 3D Shaders, GitTrack (Commit Tracking & VIP AI), MAD-cli (Auto-Doccing), and mddd-cli (Spec-Driven Dev).'}
+              ? 'Interaja diretamente com a avaliação neural em tempo real do AURA (System 1 Engine / ONNX Runtime Web Wasm SIMD), o Register-red (Pipeline Apple Numbers, Drive & Polling E-mails), o renderizador 3D do Flutter Scene fork, o GitTrack (Rastreamento & IA VIP), o MAD-cli (Doc Viva) e o mddd-cli (Spec-Driven Dev).'
+              : 'Directly test real-time neural evaluation of AURA (System 1 Engine / ONNX Runtime Web Wasm SIMD), Register-red (Apple Numbers, Drive & Email Polling), Flutter Scene fork 3D Shaders, GitTrack (Commit Tracking & VIP AI), MAD-cli (Auto-Doccing), and mddd-cli (Spec-Driven Dev).'}
           </p>
         </div>
 
@@ -72,7 +72,7 @@ export const InteractiveToolDemos: React.FC<InteractiveToolDemosProps> = ({ lang
             }`}
           >
             <Activity className="w-3.5 h-3.5 text-amber-400" />
-            <span>system_one (HUD)</span>
+            <span>⚡ AURA (System 1 HUD)</span>
           </button>
           <button
             type="button"

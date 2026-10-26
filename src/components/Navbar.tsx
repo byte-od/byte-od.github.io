@@ -76,8 +76,8 @@ export const Navbar: React.FC<NavbarProps> = ({
       badge: lang === 'pt' ? 'INTERATIVO' : 'INTERACTIVE',
       desc:
         lang === 'pt'
-          ? 'HUD system_one, Register-red, Flutter Scene fork 3D, GitTrack, MAD-cli & mddd-cli'
-          : 'system_one HUD, Register-red, Flutter Scene fork 3D, GitTrack, MAD-cli & mddd-cli',
+          ? 'HUD AURA (Sistema 1), Register-red, Flutter Scene fork 3D, GitTrack, MAD-cli & mddd-cli'
+          : 'AURA (System 1 HUD), Register-red, Flutter Scene fork 3D, GitTrack, MAD-cli & mddd-cli',
       icon: FlaskConical,
       accent: '#adff2f',
       glowBorder: 'border-[#adff2f]/50 hover:border-[#adff2f]',

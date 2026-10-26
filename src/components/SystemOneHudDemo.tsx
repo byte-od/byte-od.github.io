@@ -703,7 +703,7 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
               ⚡
             </span>
             <h3 className="text-xl font-bold text-white tracking-wide flex items-center gap-2">
-              System 1 Engine
+              AURA — System 1 Engine
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800 font-mono font-bold tracking-wider uppercase">
                 {lang === 'pt' ? 'LIVE EVALUATION WEB' : 'LIVE WEB EVALUATION'}
               </span>
@@ -711,8 +711,8 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
           </div>
           <p className="text-xs text-zinc-400 max-w-2xl leading-relaxed">
             {lang === 'pt'
-              ? 'Agente Neural Recorrente Amortizado (GRU + ResMLP) executando inferência sub-milissegundo em tempo real direto no seu navegador com ONNX Runtime Web (Wasm SIMD).'
-              : 'Amortized Recurrent Neural Agent (GRU + ResMLP) performing sub-millisecond inference in real-time inside your browser using ONNX Runtime Web (Wasm SIMD).'}
+              ? 'AURA (Autonomous Universal Reflex Architecture) — Agente Neural Recorrente Amortizado (GRU Lean + Tri-Compass) executando inferência reflexiva sub-milissegundo em tempo real direto no seu navegador com ONNX Runtime Web (Wasm SIMD).'
+              : 'AURA (Autonomous Universal Reflex Architecture) — Amortized Recurrent Neural Agent (Lean GRU + Tri-Compass) performing sub-millisecond reflex inference in real-time inside your browser using ONNX Runtime Web (Wasm SIMD).'}
           </p>
         </div>
 
@@ -1165,7 +1165,7 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
           <div className="p-4 rounded-2xl bg-zinc-950/80 border border-zinc-800 shadow-xl space-y-2.5 text-xs">
             <div className="font-bold text-cyan-300 font-mono flex items-center gap-1.5">
               <Brain className="w-3.5 h-3.5 text-cyan-400" />
-              <span>{lang === 'pt' ? 'ARQUITETURA UNIVERSAL S1' : 'UNIVERSAL S1 ARCHITECTURE'}</span>
+              <span>{lang === 'pt' ? 'ARQUITETURA AURA (SISTEMA 1)' : 'AURA ARCHITECTURE (SYSTEM 1)'}</span>
             </div>
             <div className="space-y-1.5 text-[11px] text-zinc-400 leading-relaxed font-mono">
               <div className="flex items-start gap-1.5">

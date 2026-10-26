@@ -42,7 +42,7 @@ export const PORTFOLIO_INFO = {
     { name: 'Portuguese', level: 'Native' },
     { name: 'Spanish', level: 'Intermediate' },
   ],
-  bio: 'Systems Architect and Machine Learning Engineer with 8+ years of engineering experience spanning custom Causal Transformers (CIR-Engine 503M) trained from scratch, sub-millisecond Embodied Reinforcement Learning engines (System 1 Engine), distributed DDP clusters, autonomous tool-use orchestration, and high-concurrency microservices in Go, Next.js, and Flutter.',
+  bio: 'Systems Architect and Machine Learning Engineer with 8+ years of engineering experience spanning custom Causal Transformers (CIR-Engine 503M) trained from scratch, sub-millisecond Embodied Reinforcement Learning engines (AURA / System 1 Engine), distributed DDP clusters, autonomous tool-use orchestration, and high-concurrency microservices in Go, Next.js, and Flutter.',
 };
 
 export function getPortfolioInfo(lang: 'en' | 'pt' = 'en') {
@@ -56,13 +56,36 @@ export function getPortfolioInfo(lang: 'en' | 'pt' = 'en') {
         { name: 'Português', level: 'Nativo' },
         { name: 'Espanhol', level: 'Intermediário' },
       ],
-      bio: 'Arquiteto de Sistemas e Engenheiro de Machine Learning com 8+ anos de experiência cobrindo Transformers Causais proprietários (CIR-Engine 503M) treinados do zero, motores de Deep Reinforcement Learning sub-milissegundo (System 1 Engine), clusters distribuídos DDP em PyTorch, orquestração autônoma de ferramentas e microsserviços de alta concorrência em Go, Next.js e Flutter.',
+      bio: 'Arquiteto de Sistemas e Engenheiro de Machine Learning com 8+ anos de experiência cobrindo Transformers Causais proprietários (CIR-Engine 503M) treinados do zero, motores de Deep Reinforcement Learning sub-milissegundo (AURA / System 1 Engine), clusters distribuídos DDP em PyTorch, orquestração autônoma de ferramentas e microsserviços de alta concorrência em Go, Next.js e Flutter.',
     };
   }
   return PORTFOLIO_INFO;
 }
 
 export const PROJECTS: ProjectData[] = [
+  {
+    id: 'system_one',
+    title: 'AURA (Universal System 1 Engine)',
+    badge: 'Flagship Embodied Deep RL Engine',
+    category: 'ml_ai',
+    specs: 'Sub-0.25ms CPU Inference · Recurrent Lean GRU · Asymmetric Teacher SIL · 430M+ Steps',
+    summary: 'Autonomous Universal Reflex Architecture (AURA) — high-throughput Embodied Deep Reinforcement Learning engine and reactive reflex kernel (System 1) designed to solve highly deceptive combinatorial state spaces (Rubik\'s Cube up to Depth 10 across 232B states) with sub-millisecond deterministic CPU latency and zero tree search.',
+    details: [
+      'Architected an ultra-lean recurrent policy (GRU Trunk, Tri-Compass spatial invariance, and tensor front-end) executing full policy+value forward passes in 0.23ms on bare CPU.',
+      'Engineered an Asymmetric Hybrid Training framework combining Recurrent PPO with 16 Teacher-Assisted Lookahead workers, distilling complex non-monotonic commutators into a 10,240-trajectory Self-Imitation Learning (SIL) buffer with Contrastive Online DPO (c-SIL).',
+      'Developed a multi-vectorized headless C++/Rust Gym environment achieving >20,000 steps/s throughput across 128 parallel environments, scaling training past 430M+ steps.',
+      'Achieved 100% solve rate on depths D1–D4 with mathematically optimal move paths (1.0–3.9 moves), 88% on D5, 84% on D6, 60% on D7, 32% on D9, and successfully unlocked Depth 10 (~232.2B state manifold).',
+      'Engineered zero-overhead ONNX Runtime export for real-time WebAssembly client-side browser execution with sub-millisecond tensor parity.'
+    ],
+    techStack: ['Python', 'PyTorch', 'Recurrent PPO', 'Self-Imitation Learning (SIL)', 'Online DPO', 'ONNX Runtime / WASM', 'Gymnasium / Vectorized Envs', 'C++ / Rust'],
+    githubUrl: 'https://github.com/byte-od/system_one',
+    metrics: [
+      { label: 'Latency', value: '0.23ms CPU P50' },
+      { label: 'Throughput', value: '>20,000 FPS' },
+      { label: 'Search Space', value: '232B States (D10)' },
+      { label: 'D1-D4 Accuracy', value: '100.0% Optimal' },
+    ],
+  },
   {
     id: 'cir-engine',
     title: 'CIR-Engine & Cir-Jev',
@@ -131,29 +154,7 @@ export const PROJECTS: ProjectData[] = [
       { label: 'Sync Loop', value: 'Code-to-Diagram' },
     ],
   },
-  {
-    id: 'system_one',
-    title: 'system_one',
-    badge: 'Embodied Deep RL & Sub-Millisecond Reflex Engine',
-    category: 'ml_ai',
-    specs: 'Sub-0.25ms CPU Inference · Recurrent Lean GRU · Asymmetric Teacher SIL · 300M+ Steps',
-    summary: 'High-throughput Embodied Deep Reinforcement Learning engine and reactive reflex kernel (System 1) designed to solve highly deceptive combinatorial state spaces (Rubik\'s Cube up to Depth 10 across 232B states) with sub-millisecond deterministic CPU latency and zero tree search.',
-    details: [
-      'Architected an ultra-lean recurrent policy (GRU Trunk, Tri-Compass spatial invariance, and tensor front-end) executing full policy+value forward passes in 0.23ms on bare CPU.',
-      'Engineered an Asymmetric Hybrid Training framework combining Recurrent PPO with 16 Teacher-Assisted Lookahead workers, distilling complex non-monotonic commutators into a 10,240-trajectory Self-Imitation Learning (SIL) buffer with Contrastive Online DPO (c-SIL).',
-      'Developed a multi-vectorized headless C++/Rust Gym environment achieving >20,000 steps/s throughput across 128 parallel environments, scaling training past 300M steps.',
-      'Achieved 100% solve rate on depths D1–D4 with mathematically optimal move paths (1.0–3.9 moves), 88% on D5, 77% on D6, 60% on D7, and successfully unlocked Depth 10 (~232.2B state manifold).',
-      'Engineered zero-overhead ONNX Runtime export for real-time WebAssembly client-side browser execution with sub-millisecond tensor parity.'
-    ],
-    techStack: ['Python', 'PyTorch', 'Recurrent PPO', 'Self-Imitation Learning (SIL)', 'Online DPO', 'ONNX Runtime / WASM', 'Gymnasium / Vectorized Envs', 'C++ / Rust'],
-    githubUrl: 'https://github.com/byte-od/system_one',
-    metrics: [
-      { label: 'Latency', value: '0.23ms CPU P50' },
-      { label: 'Throughput', value: '>20,000 FPS' },
-      { label: 'Search Space', value: '232B States (D10)' },
-      { label: 'D1-D4 Accuracy', value: '100.0% Optimal' },
-    ],
-  },
+
   {
     id: 'flutter-scene-fork',
     title: 'flutter_scene (Fork & Animation Contributions)',
@@ -231,6 +232,29 @@ export function getProjects(lang: 'en' | 'pt' = 'en'): ProjectData[] {
 
   return [
     {
+      id: 'system_one',
+      title: 'AURA (Motor Universal Sistema 1)',
+      badge: 'Motor Flagship de Deep RL Incorporado',
+      category: 'ml_ai',
+      specs: 'Inferência Sub-0.25ms em CPU · Lean GRU Recorrente · Teacher SIL Assimétrico · 430M+ Passos',
+      summary: 'Autonomous Universal Reflex Architecture (AURA) — motor de Aprendizado por Reforço Profundo Incorporado de altíssimo throughput e kernel de reflexo reativo (Sistema 1) projetado para solucionar espaços de estados combinatórios altamente deceptivos (Cubo de Rubik até Nível 10 com 232 bilhões de estados) com latência determinística sub-milissegundo em CPU sem árvore de busca.',
+      details: [
+        'Arquitetou política recorrente ultra-enxuta (Tronco GRU Lean, invariância espacial Tri-Compass e front-end tensorial) executando passes diretos de política+valor em 0.23ms em CPU pura.',
+        'Desenvolveu framework de Treinamento Híbrido Assimétrico integrando PPO Recorrente a 16 workers professores com lookahead, destilando comutadores não-monotônicos complexos em um buffer de Self-Imitation Learning (SIL) de 10.240 trajetórias com DPO Online Contrastivo (c-SIL).',
+        'Construiu ambiente Gym vetorizado headless em C++/Rust atingindo throughput de >20.000 passos/s em 128 instâncias paralelas, escalando o treinamento acima de 430 milhões de passos.',
+        'Conquistou 100% de taxa de resolução em D1–D4 com caminhos matematicamente ótimos (1.0–3.9 movimentos), 88% em D5, 84% em D6, 60% em D7, 32% em D9 e desbloqueou oficialmente a profundidade D10 (~232,2 bilhões de configurações).',
+        'Implementou pipeline de exportação ONNX Runtime com zero overhead para inferência direta no navegador via WebAssembly com paridade tensorial sub-milissegundo.'
+      ],
+      techStack: ['Python', 'PyTorch', 'PPO Recorrente', 'Self-Imitation Learning (SIL)', 'DPO Online', 'ONNX Runtime / WASM', 'Gymnasium / Envs Vetorizados', 'C++ / Rust'],
+      githubUrl: 'https://github.com/byte-od/system_one',
+      metrics: [
+        { label: 'Latência', value: '0.23ms CPU P50' },
+        { label: 'Throughput', value: '>20.000 FPS' },
+        { label: 'Espaço de Estados', value: '232 Bilhões (D10)' },
+        { label: 'Acurácia D1-D4', value: '100.0% Ótimo' },
+      ],
+    },
+    {
       id: 'cir-engine',
       title: 'CIR-Engine & Cir-Jev',
       badge: 'Arquitetura ML Central',
@@ -296,29 +320,6 @@ export function getProjects(lang: 'en' | 'pt' = 'en'): ProjectData[] {
       metrics: [
         { label: 'Motor de Sintaxe', value: 'Tags MAD' },
         { label: 'Ciclo de Sincronia', value: 'Código-para-Diagrama' },
-      ],
-    },
-    {
-      id: 'system_one',
-      title: 'system_one',
-      badge: 'Deep RL Incorporado & Motor de Reflexo Sub-Milissegundo',
-      category: 'ml_ai',
-      specs: 'Inferência Sub-0.25ms em CPU · Lean GRU Recorrente · Teacher SIL Assimétrico · 300M+ Passos',
-      summary: 'Motor de Aprendizado por Reforço Profundo Incorporado de altíssimo throughput e kernel de reflexo reativo (Sistema 1) projetado para solucionar espaços de estados combinatórios altamente deceptivos (Cubo de Rubik até Nível 10 com 232 bilhões de estados) com latência determinística sub-milissegundo em CPU sem árvore de busca.',
-      details: [
-        'Arquitetou política recorrente ultra-enxuta (Tronco GRU Lean, invariância espacial Tri-Compass e front-end tensorial) executando passes diretos de política+valor em 0.23ms em CPU pura.',
-        'Desenvolveu framework de Treinamento Híbrido Assimétrico integrando PPO Recorrente a 16 workers professores com lookahead, destilando comutadores não-monotônicos complexos em um buffer de Self-Imitation Learning (SIL) de 10.240 trajetórias com DPO Online Contrastivo (c-SIL).',
-        'Construiu ambiente Gym vetorizado headless em C++/Rust atingindo throughput de >20.000 passos/s em 128 instâncias paralelas, escalando o treinamento acima de 300 milhões de passos.',
-        'Conquistou 100% de taxa de resolução em D1–D4 com caminhos matematicamente ótimos (1.0–3.9 movimentos), 88% em D5, 77% em D6, 60% em D7 e desbloqueou oficialmente a profundidade D10 (~232,2 bilhões de configurações).',
-        'Implementou pipeline de exportação ONNX Runtime com zero overhead para inferência direta no navegador via WebAssembly com paridade tensorial sub-milissegundo.'
-      ],
-      techStack: ['Python', 'PyTorch', 'PPO Recorrente', 'Self-Imitation Learning (SIL)', 'DPO Online', 'ONNX Runtime / WASM', 'Gymnasium / Envs Vetorizados', 'C++ / Rust'],
-      githubUrl: 'https://github.com/byte-od/system_one',
-      metrics: [
-        { label: 'Latência', value: '0.23ms CPU P50' },
-        { label: 'Throughput', value: '>20.000 FPS' },
-        { label: 'Espaço de Estados', value: '232 Bilhões (D10)' },
-        { label: 'Acurácia D1-D4', value: '100.0% Ótimo' },
       ],
     },
     {
