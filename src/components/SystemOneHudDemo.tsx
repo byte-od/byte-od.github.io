@@ -64,8 +64,8 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
     latencyMs: 0,
   });
 
-  const [isAutoCalibrate, setIsAutoCalibrate] = useState<boolean>(true);
-  const [calibrationValue, setCalibrationValue] = useState<number>(0.5);
+  const [isAutoCalibrate, setIsAutoCalibrate] = useState<boolean>(false);
+  const [calibrationValue, setCalibrationValue] = useState<number>(0.0);
 
   const [actionLog, setActionLog] = useState<ActionLogItem[]>([]);
   const [fps, setFps] = useState<number>(60);
@@ -391,31 +391,20 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
           const avoidList: number[] = [];
           const aHist = actionHistoryRef.current;
 
-          // Só aplica inibição heurística se o modo auto estiver ativo com estagnação persistente
-          // e NUNCA inibe o movimento de resolução do cubo
-          if (isRubiksDemo(activeDemo) && isAutoCalibrate && aHist.length >= 3) {
-            const cube = sim as RubiksCubeSim;
-            const recentStates = visitedStatesRef.current;
-            if (recentStates.length > 2) {
-              const moves = activeDemo === 'rubiks_atomic' 
-                ? RubiksCubeSim.ATOMIC_MOVES 
-                : RubiksCubeSim.MACRO_NAMES;
-              for (let i = 0; i < moves.length; i++) {
-                const nextH = cube.predictStateHash(moves[i]);
-                if (nextH !== '000000000111111111222222222333333333444444444555555555' && recentStates.includes(nextH)) {
-                  avoidList.push(i);
-                }
-              }
+          // Inibição de oscilação para macro-ações (evita A -> B -> A sob estagnação)
+          if (activeDemo === 'rubiks' && isAutoCalibrate && aHist.length >= 3) {
+            if (aHist[aHist.length - 1] === aHist[aHist.length - 3]) {
+              avoidList.push(aHist[aHist.length - 2]);
             }
           }
 
-          if (isAutoCalibrate && aHist.length >= 3 && aHist[aHist.length - 1] === aHist[aHist.length - 3]) {
-            avoidList.push(aHist[aHist.length - 2]);
-          }
-
+          const isDet = !isAutoCalibrate && calibrationValue === 0.0;
           const dec = await agent.actWithConfidence(obs, lastRewardRef.current, {
             calibration: isAutoCalibrate ? 'auto' : calibrationValue,
             autoCalibrate: isAutoCalibrate,
+            deterministic: isDet,
+            valueRerank: activeDemo === 'rubiks_atomic',
+            simulateStep: activeDemo === 'rubiks_atomic' ? (act) => (sim as RubiksCubeSim).simulateStep(act) : undefined,
             avoidAction: avoidList.length > 0 ? avoidList : undefined,
           });
           actionHistoryRef.current.push(dec.action);

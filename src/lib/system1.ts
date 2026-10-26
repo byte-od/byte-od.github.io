@@ -246,6 +246,19 @@ export class RubiksCubeSim {
     return this.state.join('');
   }
 
+  simulateStep(actionIdx: number): { obs: Float32Array; isSolved: boolean } {
+    const moveName = RubiksCubeSim.ATOMIC_MOVES[actionIdx];
+    if (!moveName) return { obs: this.getOneHot(), isSolved: this.isSolved() };
+    const invName = RubiksCubeSim.INVERSE_ATOMIC[moveName];
+    this.applyAtomic(moveName, false);
+    const isSolved = this.isSolved();
+    const obs = this.getOneHot();
+    if (invName) {
+      this.applyAtomic(invName, false);
+    }
+    return { obs, isSolved };
+  }
+
   applyMacro(macroName: string) {
     const seq = RubiksCubeSim.MACRO_ACTIONS[macroName];
     if (!seq) return;
@@ -256,19 +269,20 @@ export class RubiksCubeSim {
 
   scrambleAtomic(depth = 4): string[] {
     const moves: string[] = [];
-    let lastAxis: string | null = null;
+    let lastMove: string | null = null;
     const targetDepth = Math.max(1, depth);
-    const axes: string[] = ['X', 'Y', 'Z'];
+    let attempts = 0;
+    const maxAttempts = Math.max(100, targetDepth * 10);
 
-    while (moves.length < targetDepth) {
-      const availableAxes: string[] = lastAxis ? axes.filter((a) => a !== lastAxis) : axes;
-      const axis: string = availableAxes[Math.floor(Math.random() * availableAxes.length)];
-      const choices: string[] = RubiksCubeSim.AXES_MOVES[axis] || RubiksCubeSim.ATOMIC_MOVES;
-      const move = choices[Math.floor(Math.random() * choices.length)];
-
+    while ((moves.length < targetDepth || this.isSolved()) && attempts < maxAttempts) {
+      attempts++;
+      const candidates = RubiksCubeSim.ATOMIC_MOVES.filter(
+        (m) => m !== RubiksCubeSim.INVERSE_ATOMIC[lastMove || '']
+      );
+      const move = candidates[Math.floor(Math.random() * candidates.length)] || RubiksCubeSim.ATOMIC_MOVES[0];
       this.applyAtomic(move, false);
       moves.push(move);
-      lastAxis = axis;
+      lastMove = move;
     }
     return moves;
   }
@@ -1246,10 +1260,12 @@ export class System1AgentWeb {
     options: {
       avoidAction?: number | number[];
       temperature?: number;
-      calibration?: number | 'auto';
+      calibration?: number | 'auto' | 'deterministic';
       autoCalibrate?: boolean;
       deterministic?: boolean;
       qualityFilter?: boolean;
+      valueRerank?: boolean;
+      simulateStep?: (action: number) => { obs: Float32Array; isSolved: boolean };
     } = {}
   ): Promise<DecisionResult> {
     const obsDim = obsArr.length;
@@ -1331,10 +1347,16 @@ export class System1AgentWeb {
     const maxEntropy = Math.log(logits.length);
     const uncertainty = Math.min(1.0, Math.max(0.0, entropy / maxEntropy));
 
-    // Calibração Contínua de Ação [0.0 = Determinístico/argmax, 1.0 = Estocástico Total] ou Auto-Calibração Homeostática
-    let calib = 0.5;
-    const isAuto = Boolean(options.autoCalibrate || options.calibration === 'auto');
-    if (isAuto) {
+    // Calibração de Ação [0.0 = Determinístico/argmax, 1.0 = Estocástico Total] ou Auto-Calibração Homeostática
+    let calib = 0.0;
+    const isExplicitDeterministic = Boolean(
+      options.deterministic || options.calibration === 0.0 || options.calibration === 'deterministic'
+    );
+    const isAuto = !isExplicitDeterministic && Boolean(options.autoCalibrate || options.calibration === 'auto');
+
+    if (isExplicitDeterministic) {
+      calib = 0.0;
+    } else if (isAuto) {
       const r = this.prevReward;
       const deltaR = r - this.rewardEma;
       this.rewardEma = 0.9 * this.rewardEma + 0.1 * r;
@@ -1344,7 +1366,11 @@ export class System1AgentWeb {
         this.dynamicCalibration = Math.max(0.0, this.dynamicCalibration - 0.20);
       } else {
         this.stagnationCount++;
-        if (this.stagnationCount >= 2) {
+        // Para o cubo atômico (12 ações), comutadores não-monotônicos requerem múltiplos passos
+        // antes de alinhar novas facetas. O limiar de estagnação deve ser tolerante (>= 12 passos)
+        // para não sabotar trajetórias reflexivas determinísticas com ruído estocástico prematuro.
+        const stagThreshold = (logits.length === 12) ? 12 : 3;
+        if (this.stagnationCount >= stagThreshold) {
           this.dynamicCalibration = Math.min(0.80, this.dynamicCalibration + 0.10);
         }
       }
@@ -1356,8 +1382,8 @@ export class System1AgentWeb {
     } else {
       const calibration = options.calibration !== undefined 
         ? options.calibration 
-        : (options.temperature !== undefined ? options.temperature : (options.deterministic ? 0.0 : 0.5));
-      calib = Math.min(1.0, Math.max(0.0, typeof calibration === 'number' ? calibration : 0.5));
+        : (options.temperature !== undefined ? options.temperature : 0.0);
+      calib = Math.min(1.0, Math.max(0.0, typeof calibration === 'number' ? calibration : 0.0));
     }
 
     // Resolução do conjunto de ações a evitar / quebra de ciclos e qualidade
@@ -1371,23 +1397,28 @@ export class System1AgentWeb {
     }
 
     const hist = this.actionHistory || [];
-    if ((isAuto && this.stagnationCount >= 2) || (options.qualityFilter !== false && hist.length >= 3)) {
-      if (hist.length >= 3 && hist[hist.length - 1] === hist[hist.length - 3]) {
-        // Oscilação A -> B -> A sob estagnação: evita B para romper o ciclo vicioso
-        avoidSet.add(hist[hist.length - 2]);
-      } else if (hist.length >= 3 && hist[hist.length - 1] === hist[hist.length - 2] && hist[hist.length - 2] === hist[hist.length - 3]) {
-        avoidSet.add(hist[hist.length - 1]);
+    // Action Quality Filter & Inverse Pruning (alinhado rigorosamente com agent.py):
+    if (options.qualityFilter !== false && logits.length === 12) {
+      if (hist.length >= 1) {
+        const last = hist[hist.length - 1];
+        const inv = (last % 2 === 0) ? last + 1 : last - 1;
+        if (maxProb < 0.96) {
+          avoidSet.add(inv);
+        }
       }
-    }
-    // Action Quality Filter & Inverse Pruning:
-    // Em cubo atômico (12 ações), o movimento imediatamente inverso (ex: U -> U')
-    // anula o passo anterior e desperdiça tempo. Evita reversão direta se houver histórico e maxProb < 0.96.
-    if (options.qualityFilter !== false && hist.length >= 1 && logits.length === 12) {
-      const last = hist[hist.length - 1];
-      const inv = (last % 2 === 0) ? last + 1 : last - 1;
-      if (maxProb < 0.96) {
-        avoidSet.add(inv);
+      // Detecção e poda do ciclo comutador neutro de 4 passos [a1, a2, inv(a1)] -> inv(a2)
+      if (hist.length >= 3) {
+        const a1 = hist[hist.length - 3];
+        const a2 = hist[hist.length - 2];
+        const a3 = hist[hist.length - 1];
+        const invA1 = (a1 % 2 === 0) ? a1 + 1 : a1 - 1;
+        const invA2 = (a2 % 2 === 0) ? a2 + 1 : a2 - 1;
+        if (a3 === invA1 && maxProb < 0.95) {
+          avoidSet.add(invA2);
+        }
       }
+    } else if (hist.length >= 3 && hist[hist.length - 1] === hist[hist.length - 3]) {
+      avoidSet.add(hist[hist.length - 2]);
     }
 
     let chosenAction = bestAction;
@@ -1425,6 +1456,46 @@ export class System1AgentWeb {
     if (avoidSet.size > 0 && avoidSet.has(chosenAction) && ranked.length > 1) {
       const alt = ranked.find((item) => !avoidSet.has(item.action));
       chosenAction = alt ? alt.action : ranked[1].action;
+    }
+
+    // -----------------------------------------------------------------
+    // Value Re-ranking (Local 1-Step Lookahead via Learned Critic V(s'))
+    // -----------------------------------------------------------------
+    if (options.valueRerank && options.simulateStep && logits.length === 12 && maxProb < 0.85) {
+      const topCandActions = ranked.filter((r) => !avoidSet.has(r.action)).slice(0, 2).map((r) => r.action);
+      if (topCandActions.length > 1) {
+        let bestRerankAct = chosenAction;
+        let bestVal = -Infinity;
+        for (const cAct of topCandActions) {
+          const simRes = options.simulateStep(cAct);
+          if (simRes.isSolved) {
+            bestRerankAct = cAct;
+            break;
+          }
+          try {
+            const deltaCand = new Float32Array(324);
+            for (let i = 0; i < 324; i++) deltaCand[i] = simRes.obs[i] - obsArr[i];
+            const tObsC = new this.ort.Tensor('float32', simRes.obs, [1, 1, 324]);
+            const tDeltaC = new this.ort.Tensor('float32', deltaCand, [1, 1, 324]);
+            const tActC = new this.ort.Tensor('int64', BigInt64Array.from([BigInt(cAct)]), [1, 1]);
+            const tRewC = new this.ort.Tensor('float32', new Float32Array([0.0]), [1, 1, 1]);
+            const tHxC = new this.ort.Tensor('float32', this.hx, [1, 1, this.hxDim]);
+            const cRes = await this.session.run({
+              obs: tObsC,
+              delta_obs: tDeltaC,
+              prev_action: tActC,
+              prev_reward: tRewC,
+              hx: tHxC,
+            });
+            const cVal = cRes.value ? Number(cRes.value.data[0]) : -Infinity;
+            if (cVal > bestVal) {
+              bestVal = cVal;
+              bestRerankAct = cAct;
+            }
+          } catch (_) {}
+        }
+        chosenAction = bestRerankAct;
+      }
     }
 
     if (!this.actionHistory) this.actionHistory = [];
