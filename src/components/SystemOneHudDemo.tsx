@@ -50,6 +50,8 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
     isSolved: false,
   });
 
+  const [nonCubeSteps, setNonCubeSteps] = useState<number>(0);
+
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -282,6 +284,7 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
 
     actionHistoryRef.current = [];
     lastRewardRef.current = 0.0;
+    setNonCubeSteps(0);
     prevScoreRef.current = isRubiksDemo(demoKey) && simRef.current ? getCubeScore(simRef.current) : 0.0;
     peakRawRef.current = isRubiksDemo(demoKey) && simRef.current ? (simRef.current as RubiksCubeSim).getRawAlignedCount() : 0;
     visitedStatesRef.current = isRubiksDemo(demoKey) && simRef.current ? [(simRef.current as RubiksCubeSim).getStateHash()] : [];
@@ -438,11 +441,9 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
 
             if (cube.isSolved()) {
               stopEvaluation();
-              setStatusDesc(lang === 'pt' ? '🏆 CUBO RESOLVIDO (VITÓRIA)!' : '🏆 CUBE SOLVED (VICTORY)!');
+              setStatusDesc(lang === 'pt' ? '🏆 Cubo Resolvido!' : '🏆 Solved!');
             } else {
-              setStatusDesc(
-                `${lang === 'pt' ? 'Passos' : 'Steps'}: ${cube.steps} | ${lang === 'pt' ? 'Ação' : 'Action'}: ${currentActionName}`
-              );
+              setStatusDesc(lang === 'pt' ? '⚡ Avaliando...' : '⚡ Evaluating...');
             }
 
             setDecision(dec);
@@ -475,10 +476,11 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
             if (now - lastUiUpdateTimeRef.current >= 100) {
               lastUiUpdateTimeRef.current = now;
               setDecision(dec);
+              setNonCubeSteps(res.steps);
               setStatusDesc(
                 lander.isLanded
-                  ? (lang === 'pt' ? '🏆 POUSOU COM SUCESSO!' : '🏆 LANDED SAFELY!')
-                  : `${lang === 'pt' ? 'Passos' : 'Steps'}: ${res.steps}`
+                  ? (lang === 'pt' ? '🏆 Pousou com Sucesso!' : '🏆 Landed Safely!')
+                  : (lang === 'pt' ? '⚡ Em voo...' : '⚡ In flight...')
               );
 
               setActionLog((prev) => [
@@ -508,10 +510,11 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
             if (now - lastUiUpdateTimeRef.current >= 100) {
               lastUiUpdateTimeRef.current = now;
               setDecision(dec);
+              setNonCubeSteps(res.steps);
               setStatusDesc(
                 car.isGoalReached
-                  ? (lang === 'pt' ? '🏆 META ALCANÇADA!' : '🏆 GOAL REACHED!')
-                  : `${lang === 'pt' ? 'Passos' : 'Steps'}: ${res.steps}`
+                  ? (lang === 'pt' ? '🏆 Meta Alcançada!' : '🏆 Goal Reached!')
+                  : (lang === 'pt' ? '⚡ Em aceleração...' : '⚡ Accelerating...')
               );
 
               setActionLog((prev) => [
@@ -541,10 +544,11 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
             if (now - lastUiUpdateTimeRef.current >= 100) {
               lastUiUpdateTimeRef.current = now;
               setDecision(dec);
+              setNonCubeSteps(res.steps);
               setStatusDesc(
                 acrobot.isGoalReached
-                  ? (lang === 'pt' ? '🏆 SWING CONCLUÍDO!' : '🏆 SWING COMPLETED!')
-                  : `${lang === 'pt' ? 'Passos' : 'Steps'}: ${res.steps}`
+                  ? (lang === 'pt' ? '🏆 Swing Concluído!' : '🏆 Swing Completed!')
+                  : (lang === 'pt' ? '⚡ Em balanço...' : '⚡ Swinging...')
               );
 
               setActionLog((prev) => [
@@ -573,7 +577,8 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
             if (now - lastUiUpdateTimeRef.current >= 100) {
               lastUiUpdateTimeRef.current = now;
               setDecision(dec);
-              setStatusDesc(`${lang === 'pt' ? 'Passos' : 'Steps'}: ${res.steps}`);
+              setNonCubeSteps(res.steps);
+              setStatusDesc(lang === 'pt' ? '⚡ Equilibrando...' : '⚡ Balancing...');
 
               setActionLog((prev) => [
                 {
@@ -617,8 +622,13 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
   };
 
   const toggleEvaluation = () => {
-    if (isRunning) stopEvaluation();
-    else startEvaluation();
+    if (isRunning) {
+      stopEvaluation();
+      setStatusDesc(lang === 'pt' ? '⏸️ Pausado' : '⏸️ Paused');
+    } else {
+      startEvaluation();
+      setStatusDesc(lang === 'pt' ? '⚡ Avaliando...' : '⚡ Evaluating...');
+    }
   };
 
   const scrambleEnv = (depthOverride?: number) => {
@@ -641,14 +651,10 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
       prevScoreRef.current = getCubeScore(cube);
       visitedStatesRef.current = [cube.getStateHash()];
       if (agentRef.current) agentRef.current.resetMemory();
-      const moveStr =
-        moves.length <= 4
-          ? ` [${moves.join(' ')}]`
-          : ` (${moves.length} ${lang === 'pt' ? 'giros' : 'moves'})`;
       setStatusDesc(
         lang === 'pt'
-          ? `Cubo embaralhado${moveStr}`
-          : `Cube scrambled${moveStr}`
+          ? `🎲 Embaralhado [D${depth}]`
+          : `🎲 Scrambled [D${depth}]`
       );
     }
   };
@@ -656,6 +662,7 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
   const resetEnv = () => {
     if (simRef.current) {
       simRef.current.reset();
+      setNonCubeSteps(0);
       if (canvasRef.current) {
         simRef.current.render(canvasRef.current);
       }
@@ -663,19 +670,92 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
         const cube = simRef.current as RubiksCubeSim;
         setCubeState({
           state: new Int32Array(cube.state),
-          lastAction: cube.lastAction,
-          steps: cube.steps,
+          lastAction: 'RESET',
+          steps: 0,
           alignedCount: cube.getAlignedCount(),
           isSolved: cube.isSolved(),
         });
       }
       if (agentRef.current) agentRef.current.resetMemory();
       setActionLog([]);
-      setStatusDesc(lang === 'pt' ? 'Ambiente reiniciado' : 'Environment reset');
+      setStatusDesc(lang === 'pt' ? 'Pronto para avaliar' : 'Ready to evaluate');
     }
   };
 
   const currentCfg = DEMO_CONFIGS[activeDemo];
+
+  const displaySteps = isRubiksDemo(activeDemo) ? cubeState.steps : nonCubeSteps;
+
+  const displayAction = isRubiksDemo(activeDemo)
+    ? (cubeState.lastAction === 'SCRAMBLED' ? (lang === 'pt' ? 'INÍCIO' : 'START') : (cubeState.lastAction === 'RESET' ? 'RESET' : cubeState.lastAction))
+    : (actionLog[0]?.name || '--');
+
+  const card1Data = useMemo(() => {
+    if (isRubiksDemo(activeDemo)) {
+      const pct = Math.min(100, Math.max(0, (cubeState.alignedCount / 54) * 100));
+      return {
+        label: lang === 'pt' ? 'ALINHAMENTO' : 'ALIGNMENT',
+        val: `${cubeState.alignedCount}`,
+        max: '/54',
+        badge: `${pct.toFixed(0)}%`,
+        color: cubeState.isSolved ? 'text-emerald-400' : 'text-cyan-400',
+        sub: cubeState.isSolved
+          ? (lang === 'pt' ? '🏆 100% Resolvido' : '🏆 100% Solved')
+          : (lang === 'pt' ? `${54 - cubeState.alignedCount} facetas restantes` : `${54 - cubeState.alignedCount} stickers left`),
+      };
+    }
+    if (activeDemo === 'lunarlander') {
+      const lander = simRef.current as LunarLanderSim | null;
+      const fuel = lander?.fuel ?? 100;
+      return {
+        label: lang === 'pt' ? 'COMBUSTÍVEL' : 'FUEL',
+        val: `${fuel.toFixed(0)}`,
+        max: '%',
+        badge: lander?.isLanded ? (lang === 'pt' ? 'POUSADO' : 'LANDED') : (lang === 'pt' ? 'EM VOO' : 'IN FLIGHT'),
+        color: lander?.isLanded ? 'text-emerald-400' : 'text-cyan-400',
+        sub: lander?.isLanded
+          ? (lang === 'pt' ? '🏆 Pouso seguro' : '🏆 Safe landing')
+          : (lang === 'pt' ? 'Propulsão ativa' : 'Thrusters active'),
+      };
+    }
+    if (activeDemo === 'mountaincar') {
+      const car = simRef.current as MountainCarSim | null;
+      const pos = car?.position ?? -0.5;
+      const pct = Math.max(0, Math.min(100, ((pos + 1.2) / 1.7) * 100));
+      return {
+        label: 'MOMENTUM',
+        val: `${pct.toFixed(0)}`,
+        max: '%',
+        badge: car?.isGoalReached ? (lang === 'pt' ? 'META' : 'GOAL') : (lang === 'pt' ? 'INÉRCIA' : 'INERTIA'),
+        color: car?.isGoalReached ? 'text-emerald-400' : 'text-amber-400',
+        sub: car?.isGoalReached
+          ? (lang === 'pt' ? '🏆 Topo alcançado' : '🏆 Summit reached')
+          : (lang === 'pt' ? 'Balanço cinético' : 'Kinetic swing'),
+      };
+    }
+    if (activeDemo === 'acrobot') {
+      const acrobot = simRef.current as AcrobotSim | null;
+      return {
+        label: lang === 'pt' ? 'ALTURA' : 'HEIGHT',
+        val: `${acrobot?.isGoalReached ? '100' : displaySteps}`,
+        max: acrobot?.isGoalReached ? '%' : (lang === 'pt' ? ' movs' : ' steps'),
+        badge: acrobot?.isGoalReached ? (lang === 'pt' ? 'META' : 'GOAL') : 'SWING',
+        color: acrobot?.isGoalReached ? 'text-emerald-400' : 'text-purple-400',
+        sub: acrobot?.isGoalReached
+          ? (lang === 'pt' ? '🏆 Alvo superado' : '🏆 Goal cleared')
+          : (lang === 'pt' ? 'Ressonância dupla' : 'Double resonance'),
+      };
+    }
+    // cartpole
+    return {
+      label: lang === 'pt' ? 'EQUILÍBRIO' : 'BALANCE',
+      val: `${displaySteps}`,
+      max: (lang === 'pt' ? ' movs' : ' steps'),
+      badge: displaySteps > 200 ? (lang === 'pt' ? 'EXCELENTE' : 'EXCELLENT') : (lang === 'pt' ? 'ATIVO' : 'ACTIVE'),
+      color: 'text-emerald-400',
+      sub: lang === 'pt' ? 'Haste estabilizada' : 'Stabilized pole',
+    };
+  }, [activeDemo, cubeState, displaySteps, lang]);
 
   return (
     <div className="space-y-6">
@@ -1007,15 +1087,91 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
             </div>
           )}
 
-          {/* Real Telemetry Cards (4-Grid) */}
+          {/* Status & Telemetry Cards (4-Grid Não-Redundante) */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-            {/* Latência de Inferência */}
+            {/* Card 1: Progresso / Alinhamento da Tarefa */}
+            <div className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800 shadow-md flex flex-col justify-between h-[116px] min-h-[116px] overflow-hidden select-none">
+              <div>
+                <div className="h-5 flex items-center justify-between">
+                  <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider whitespace-nowrap truncate">
+                    {card1Data.label}
+                  </span>
+                  <span className={`text-[9px] font-mono font-bold ${card1Data.color}`}>
+                    {card1Data.badge}
+                  </span>
+                </div>
+                <div className={`text-xl font-bold font-mono tabular-nums ${card1Data.color} mt-1 flex items-baseline gap-0.5`}>
+                  <span>{card1Data.val}</span>
+                  <span className="text-xs text-zinc-500 font-normal">{card1Data.max}</span>
+                </div>
+              </div>
+              <span className="text-[9px] text-zinc-500 font-mono mt-1 whitespace-nowrap truncate block">
+                {card1Data.sub}
+              </span>
+            </div>
+
+            {/* Card 2: Passos do Episódio */}
+            <div className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800 shadow-md flex flex-col justify-between h-[116px] min-h-[116px] overflow-hidden select-none">
+              <div>
+                <div className="h-5 flex items-center justify-between">
+                  <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider whitespace-nowrap truncate">
+                    {lang === 'pt' ? 'PASSOS DO EPISÓDIO' : 'EPISODE STEPS'}
+                  </span>
+                  <span className="text-[9px] font-mono text-zinc-500">
+                    {isRubiksDemo(activeDemo) ? `D${cubeScrambleDepth}` : 'EP'}
+                  </span>
+                </div>
+                <div className="text-xl font-bold font-mono tabular-nums text-amber-300 mt-1 flex items-baseline gap-1">
+                  <span className="w-14 inline-block">{displaySteps}</span>
+                  <span className="text-xs text-amber-500 font-normal">{lang === 'pt' ? 'movs' : 'steps'}</span>
+                </div>
+              </div>
+              <span className="text-[9px] text-zinc-500 font-mono mt-1 whitespace-nowrap truncate block">
+                {isRubiksDemo(activeDemo)
+                  ? (lang === 'pt' ? `Alvo: D${cubeScrambleDepth} (~${activeLvlInfo.avgMoves} médios)` : `Target: D${cubeScrambleDepth} (~${activeLvlInfo.avgMoves} avg)`)
+                  : (lang === 'pt' ? 'Horizonte reflexivo contínuo' : 'Continuous reflex horizon')}
+              </span>
+            </div>
+
+            {/* Card 3: Última Ação & Confiança */}
+            <div className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800 shadow-md flex flex-col justify-between h-[116px] min-h-[116px] overflow-hidden select-none">
+              <div>
+                <div className="h-5 flex items-center justify-between gap-1">
+                  <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider whitespace-nowrap truncate">
+                    {lang === 'pt' ? 'ÚLTIMA AÇÃO' : 'LAST ACTION'}
+                  </span>
+                  <span
+                    className={`text-[8px] font-mono px-1 py-0.2 rounded border font-bold shrink-0 ${
+                      decision.isUncertain
+                        ? 'bg-amber-950/80 text-amber-300 border-amber-800'
+                        : 'bg-cyan-950/80 text-cyan-300 border-cyan-800'
+                    }`}
+                  >
+                    {decision.isUncertain ? 'S2 TRIGGER' : 'O(1) REFLEX'}
+                  </span>
+                </div>
+                <div className="text-xl font-bold font-mono tabular-nums text-white mt-1 flex items-baseline justify-between">
+                  <span className="text-cyan-300 font-bold truncate max-w-[90px]">{displayAction}</span>
+                  <span className="text-xs text-emerald-400 font-mono font-bold">
+                    {decision.confidence > 0 ? (decision.confidence * 100).toFixed(0) : '--'}%
+                  </span>
+                </div>
+              </div>
+              <span className="text-[9px] text-zinc-500 font-mono mt-1 whitespace-nowrap truncate block">
+                {decision.confidence > 0
+                  ? (lang === 'pt' ? `Certeza: ${(decision.confidence * 100).toFixed(1)}%` : `Certainty: ${(decision.confidence * 100).toFixed(1)}%`)
+                  : (lang === 'pt' ? 'Aguardando decisão' : 'Awaiting decision')}
+              </span>
+            </div>
+
+            {/* Card 4: Latência de Inferência */}
             <div className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800 shadow-md flex flex-col justify-between h-[116px] min-h-[116px] overflow-hidden select-none">
               <div>
                 <div className="h-5 flex items-center justify-between">
                   <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider whitespace-nowrap truncate">
                     {lang === 'pt' ? 'LATÊNCIA' : 'LATENCY'}
                   </span>
+                  <span className="text-[9px] font-mono text-cyan-400">Wasm SIMD</span>
                 </div>
                 <div className="text-xl font-bold font-mono tabular-nums text-cyan-400 mt-1 flex items-baseline gap-1">
                   <span className="w-16 inline-block">{decision.latencyMs > 0 ? decision.latencyMs.toFixed(2) : '0.18'}</span>
@@ -1024,74 +1180,6 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
               </div>
               <span className="text-[9px] text-zinc-500 font-mono mt-1 whitespace-nowrap truncate block">
                 {lang === 'pt' ? 'Sub-milissegundo CPU' : 'Sub-millisecond CPU'}
-              </span>
-            </div>
-
-            {/* Confiança Top-1 */}
-            <div className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800 shadow-md flex flex-col justify-between h-[116px] min-h-[116px] overflow-hidden select-none">
-              <div>
-                <div className="h-5 flex items-center justify-between">
-                  <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider whitespace-nowrap truncate">
-                    {lang === 'pt' ? 'CONFIANÇA' : 'CONFIDENCE'}
-                  </span>
-                </div>
-                <div className="text-xl font-bold font-mono tabular-nums text-emerald-400 mt-1 flex items-baseline gap-1">
-                  <span className="w-16 inline-block">{decision.confidence > 0 ? (decision.confidence * 100).toFixed(1) : '--'}</span>
-                  <span className="text-xs text-emerald-500 font-normal">%</span>
-                </div>
-              </div>
-              <span className="text-[9px] text-zinc-500 font-mono mt-1 whitespace-nowrap truncate block">
-                {lang === 'pt' ? 'Certeza do reflexo' : 'Amortized reflex certainty'}
-              </span>
-            </div>
-
-            {/* Incerteza / Gating */}
-            <div className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800 shadow-md flex flex-col justify-between h-[116px] min-h-[116px] overflow-hidden select-none">
-              <div>
-                <div className="h-5 flex items-center justify-between gap-1">
-                  <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider whitespace-nowrap truncate">
-                    {lang === 'pt' ? 'INCERTEZA' : 'UNCERTAINTY'}
-                  </span>
-                  <span
-                    className={`text-[8px] font-mono px-1 py-0.2 rounded border font-bold transition-opacity duration-150 shrink-0 ${
-                      decision.isUncertain
-                        ? 'bg-red-950/80 text-red-300 border-red-800 opacity-100'
-                        : 'opacity-0 pointer-events-none'
-                    }`}
-                  >
-                    S2 TRIGGER
-                  </span>
-                </div>
-                <div className="text-xl font-bold font-mono tabular-nums text-amber-400 mt-1 flex items-baseline gap-1">
-                  <span className="w-16 inline-block">{decision.uncertainty > 0 ? (decision.uncertainty * 100).toFixed(1) : '--'}</span>
-                  <span className="text-xs text-amber-500 font-normal">%</span>
-                </div>
-              </div>
-              <span className="text-[9px] text-zinc-500 font-mono mt-1 whitespace-nowrap truncate block">
-                {lang === 'pt' ? 'Entropia Shannon' : 'Shannon entropy'}
-              </span>
-            </div>
-
-            {/* Calibração / Homeostase */}
-            <div className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800 shadow-md flex flex-col justify-between h-[116px] min-h-[116px] overflow-hidden select-none">
-              <div>
-                <div className="h-5 flex items-center justify-between">
-                  <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider whitespace-nowrap truncate">
-                    {lang === 'pt' ? 'CALIBRAÇÃO' : 'CALIBRATION'}
-                  </span>
-                  <span className="text-[9px] font-mono text-purple-400">
-                    {isAutoCalibrate ? (decision.calibration > 0.05 ? '🔥 Inovando' : '⚡ Foco') : 'Fixo'}
-                  </span>
-                </div>
-                <div className="text-xl font-bold font-mono tabular-nums text-purple-400 mt-1 flex items-baseline gap-1">
-                  <span className="w-16 inline-block">{(decision.calibration ?? 0.0).toFixed(2)}</span>
-                  <span className="text-xs text-purple-500 font-normal">T</span>
-                </div>
-              </div>
-              <span className="text-[9px] text-zinc-500 font-mono mt-1 whitespace-nowrap truncate block">
-                {isAutoCalibrate
-                  ? (lang === 'pt' ? 'Homeostase S1' : 'S1 Homeostasis')
-                  : (lang === 'pt' ? 'Amostragem Estática' : 'Static Sampling')}
               </span>
             </div>
           </div>
@@ -1308,14 +1396,6 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
                   : (manifestData[activeDemo]?.checkpoint_version || currentCfg.checkpointVersion || 'v1 (Amortizado)')}
               </span>
             </div>
-            {isRubiksDemo(activeDemo) && (
-              <div className="flex justify-between border-t border-zinc-850 pt-1.5 mt-1.5">
-                <span>{lang === 'pt' ? 'Win Rate Conquistado:' : 'Conquered Win Rate:'}</span>
-                <span className="text-amber-300 font-bold truncate max-w-[190px]">
-                  100% (D1–D4) · 88% (D5) · 77% (D6) · D10 Ativo
-                </span>
-              </div>
-            )}
           </div>
 
         </div>

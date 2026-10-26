@@ -298,18 +298,14 @@ export const RubiksCube3D: React.FC<RubiksCube3DProps> = ({
     >
       <canvas ref={canvasRef} className="w-full h-full block" />
 
-      {/* Cyber HUD Overlay Superior */}
+      {/* HUD Overlay Superior: Controles de Câmera & Scramble */}
       <div className="absolute top-2.5 left-3 right-3 flex items-center justify-between pointer-events-none">
-        <div className="flex flex-col gap-0.5">
-          <div className="flex items-center gap-1.5 text-cyan-400 font-mono font-bold text-xs">
-            <Rotate3d className="w-3.5 h-3.5 text-cyan-400" />
-            <span>⚡ SYSTEM 1 HUD | 3D VIEWPORT</span>
-          </div>
-          <span className="text-[10px] font-mono text-zinc-400">
-            {lang === 'pt'
-              ? `Passos: ${steps} | Alinhamento: ${alignedCount}/54 (${scorePct}%)${scrambleSequence && steps === 0 ? ` | Scramble: ${scrambleSequence}` : ''}`
-              : `Steps: ${steps} | Alignment: ${alignedCount}/54 (${scorePct}%)${scrambleSequence && steps === 0 ? ` | Scramble: ${scrambleSequence}` : ''}`}
-          </span>
+        <div className="pointer-events-auto">
+          {scrambleSequence && steps === 0 && (
+            <span className="px-2 py-0.5 rounded bg-zinc-900/80 border border-zinc-700 text-[10px] font-mono text-amber-300 shadow">
+              🎲 {scrambleSequence}
+            </span>
+          )}
         </div>
 
         {/* Botão de resetar câmera e toggle rotação */}
@@ -340,19 +336,15 @@ export const RubiksCube3D: React.FC<RubiksCube3DProps> = ({
 
       {/* Status da Ação Inferior */}
       <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between pointer-events-none text-xs font-mono">
-        <div
-          className={`px-2 py-1 rounded-md border font-bold ${
-            isSolved
-              ? 'bg-emerald-950/80 border-emerald-600 text-emerald-400'
-              : 'bg-zinc-900/90 border-zinc-700 text-zinc-200'
-          }`}
-        >
-          {isSolved
-            ? (lang === 'pt' ? 'STATUS: RESOLVIDO 🏆' : 'STATUS: SOLVED 🏆')
-            : `${lang === 'pt' ? 'AÇÃO ATIVA' : 'ACTIVE ACTION'}: ${lastAction}`}
+        <div>
+          {isSolved && (
+            <div className="px-2.5 py-1 rounded-md border font-bold bg-emerald-950/90 border-emerald-500 text-emerald-300 shadow-lg">
+              {lang === 'pt' ? '🏆 CUBO RESOLVIDO' : '🏆 CUBE SOLVED'}
+            </div>
+          )}
         </div>
 
-        <span className="text-[9px] text-zinc-500 hidden sm:inline">
+        <span className="text-[9px] text-zinc-500 hidden sm:inline bg-zinc-950/60 px-2 py-0.5 rounded border border-zinc-850">
           {lang === 'pt' ? 'Arraste para girar a visão 3D' : 'Drag to orbit 3D view'}
         </span>
       </div>
