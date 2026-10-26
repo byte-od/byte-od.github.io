@@ -31,7 +31,7 @@ interface ActionLogItem {
   isUncertain: boolean;
 }
 
-export type DemoKey = 'rubiks_atomic' | 'rubiks' | 'lunarlander' | 'mountaincar' | 'cartpole' | 'acrobot';
+export type DemoKey = 'rubiks_atomic' | 'lunarlander' | 'mountaincar' | 'cartpole' | 'acrobot';
 
 export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en' }) => {
   const [activeDemo, setActiveDemo] = useState<DemoKey>('rubiks_atomic');
@@ -90,7 +90,7 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
   const peakRawRef = useRef<number>(0);
   const visitedStatesRef = useRef<string[]>([]);
 
-  const isRubiksDemo = (k: DemoKey) => k === 'rubiks' || k === 'rubiks_atomic';
+  const isRubiksDemo = (k: DemoKey) => k === 'rubiks_atomic';
 
   const getCubeScore = (c: any): number => {
     if (!c) return 0.0;
@@ -125,39 +125,21 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
     () => ({
       rubiks_atomic: {
         id: 'rubiks_atomic',
-        name: lang === 'pt' ? '⚡ AURA-v6: Cubo 3x3 (Atômico D10)' : "⚡ AURA-v6: 3x3 Cube (Atomic D10)",
-        shortTitle: '⚡ AURA-v6 (D10)',
-        tag: 'AURA v6 (D10)',
-        icon: '⚡',
+        name: "Rubik's Cube",
+        shortTitle: "Rubik's Cube",
+        tag: lang === 'pt' ? '12 Giros Atômicos' : '12 Atomic Moves',
+        icon: '🧩',
         file: 's1_rubiks_atomic.onnx',
         checkpointSource: 's1_rubikscube_v0_trained_v6.pt',
-        checkpointVersion: 'v6 (440M+ passos, D10)',
+        checkpointVersion: 'v6 (450M+ passos, D10)',
         size: '~6.4 MB',
         envName: 'RubiksCube-v0',
         actionSpace: "12 Giros Atômicos (U, U', D, D', F, F', B, B', R, R', L, L')",
         obsSpace: '324-dim One-Hot Vector (54 stickers × 6 cores)',
         description:
           lang === 'pt'
-            ? 'Agente neural AURA-v6 com LeanResidualTrunk 512D (1.6M parâmetros). Treinado em 440M+ passos com 16 professores SIL assimétricos e DPO contrastivo, alcançando profundidade D10.'
-            : 'AURA-v6 neural agent with LeanResidualTrunk 512D (1.6M parameters). Trained across 440M+ steps with 16 asymmetric SIL teachers and contrastive DPO, unlocking Depth 10.',
-      },
-      rubiks: {
-        id: 'rubiks',
-        name: lang === 'pt' ? 'Cubo Mágico 3x3 (Macro / CFOP)' : "3x3 Rubik's Cube (Macro / CFOP)",
-        shortTitle: lang === 'pt' ? 'Cubo Mágico 3x3 (CFOP)' : "Rubik's Macro",
-        tag: 'Macro CFOP (12)',
-        icon: '🧩',
-        file: 's1_rubiks_macro.onnx',
-        checkpointSource: 's1_rubikscubemacro_v0_trained.pt',
-        checkpointVersion: 'v1 (CFOP)',
-        size: '~3.2 MB',
-        envName: 'RubiksCubeMacro-v0',
-        actionSpace: '12 Macro Actions (CFOP: Sune, T-Perm, Sexy Move)',
-        obsSpace: '324-dim One-Hot Vector (54 stickers × 6 cores)',
-        description:
-          lang === 'pt'
-            ? 'Agente neural amortizado treinado com PPO e BPTT recorrente. Seleciona e executa macros algorítmicas diretamente em 3D sem busca combinatória em árvore.'
-            : 'Amortized neural policy trained with PPO and recurrent BPTT. Predicts macro moves directly in 3D without combinatorial tree search.',
+            ? 'Agente neural AURA-v6 com LeanResidualTrunk 512D (1.6M parâmetros). Treinado em 450M+ passos com 16 professores SIL assimétricos e DPO contrastivo, alcançando profundidade D10.'
+            : 'AURA-v6 neural agent with LeanResidualTrunk 512D (1.6M parameters). Trained across 450M+ steps with 16 asymmetric SIL teachers and contrastive DPO, unlocking Depth 10.',
       },
       lunarlander: {
         id: 'lunarlander',
@@ -236,14 +218,6 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
   );
 
   const RUBIKS_BENCHMARK_LEVELS = useMemo(() => {
-    if (activeDemo === 'rubiks') {
-      return [
-        { depth: 1, name: 'D1', winRate: '100.0', rateColor: 'text-emerald-400', avgMoves: 1.0, states: '12', status: lang === 'pt' ? 'Ótimo Exato' : 'Exact Optimal' },
-        { depth: 2, name: 'D2', winRate: '95.0', rateColor: 'text-emerald-400', avgMoves: 2.1, states: '114', status: lang === 'pt' ? 'Alta Precisão' : 'High Precision' },
-        { depth: 3, name: 'D3', winRate: '75.0', rateColor: 'text-cyan-400', avgMoves: 4.8, states: '1.0k', status: lang === 'pt' ? 'Conquistado' : 'Conquered' },
-        { depth: 4, name: 'D4', winRate: '45.0', rateColor: 'text-amber-400', avgMoves: 8.5, states: '9.3k', status: lang === 'pt' ? 'Intermediário' : 'Intermediate' },
-      ];
-    }
     return [
       { depth: 1, name: 'D1', winRate: '100.0', rateColor: 'text-emerald-400', avgMoves: 1.0, states: '12', status: lang === 'pt' ? 'Ótimo Exato' : 'Exact Optimal' },
       { depth: 2, name: 'D2', winRate: '100.0', rateColor: 'text-emerald-400', avgMoves: 2.0, states: '114', status: lang === 'pt' ? 'Ótimo Exato' : 'Exact Optimal' },
@@ -256,7 +230,7 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
       { depth: 9, name: 'D9', winRate: '17.0', rateColor: 'text-amber-400', avgMoves: 32.3, states: '550M', status: lang === 'pt' ? 'Fronteira D9' : 'D9 Frontier' },
       { depth: 10, name: 'D10', winRate: '12.0', rateColor: 'text-purple-400', avgMoves: 38.0, states: '232.2B', status: lang === 'pt' ? 'Fronteira 232B' : '232B Frontier' },
     ];
-  }, [activeDemo, lang]);
+  }, [lang]);
 
   const activeLvlInfo = useMemo(() => {
     const found = RUBIKS_BENCHMARK_LEVELS.find((lvl) => lvl.depth === cubeScrambleDepth);
@@ -278,8 +252,8 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
   const initSim = (demoKey: DemoKey, depthOverride?: number) => {
     if (isRubiksDemo(demoKey)) {
       const cube = new RubiksCubeSim();
-      const depth = depthOverride ?? (demoKey === 'rubiks' ? 2 : (cubeScrambleDepth || 4));
-      cube.scramble(depth, demoKey === 'rubiks' ? 'macro' : 'atomic');
+      const depth = depthOverride ?? (cubeScrambleDepth || 4);
+      cube.scramble(depth, 'atomic');
       simRef.current = cube;
       setCubeState({
         state: new Int32Array(cube.state),
@@ -372,12 +346,7 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
 
   useEffect(() => {
     stopEvaluation();
-    let effectiveDepth = cubeScrambleDepth;
-    if (activeDemo === 'rubiks' && cubeScrambleDepth > 4) {
-      effectiveDepth = 2;
-      setCubeScrambleDepth(2);
-    }
-    initSim(activeDemo, effectiveDepth);
+    initSim(activeDemo, cubeScrambleDepth);
     loadModel(activeDemo);
 
     return () => {
@@ -429,21 +398,13 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
           const avoidList: number[] = [];
           const aHist = actionHistoryRef.current;
 
-          // Inibição de oscilação para macro-ações (evita A -> B -> A sob estagnação)
-          if (activeDemo === 'rubiks' && isAutoCalibrate && aHist.length >= 3) {
-            if (aHist[aHist.length - 1] === aHist[aHist.length - 3]) {
-              avoidList.push(aHist[aHist.length - 2]);
-            }
-          }
-
           const isDet = !isAutoCalibrate && calibrationValue === 0.0;
           const dec = await agent.actWithConfidence(obs, lastRewardRef.current, {
             calibration: isAutoCalibrate ? 'auto' : calibrationValue,
             autoCalibrate: isAutoCalibrate,
             deterministic: isDet,
-            valueRerank: activeDemo === 'rubiks_atomic',
-            simulateStep: activeDemo === 'rubiks_atomic' ? (act) => (sim as RubiksCubeSim).simulateStep(act) : undefined,
-            avoidAction: avoidList.length > 0 ? avoidList : undefined,
+            valueRerank: isRubiksDemo(activeDemo),
+            simulateStep: isRubiksDemo(activeDemo) ? (act) => (sim as RubiksCubeSim).simulateStep(act) : undefined,
           });
           actionHistoryRef.current.push(dec.action);
           if (actionHistoryRef.current.length > 20) actionHistoryRef.current.shift();
@@ -452,13 +413,8 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
 
           if (isRubiksDemo(activeDemo)) {
             const cube = sim as RubiksCubeSim;
-            if (activeDemo === 'rubiks_atomic') {
-              currentActionName = RubiksCubeSim.ATOMIC_MOVES[dec.action] || `MOVE_${dec.action}`;
-              cube.applyAtomic(currentActionName, true);
-            } else {
-              currentActionName = RubiksCubeSim.MACRO_NAMES[dec.action] || `ACT_${dec.action}`;
-              cube.applyMacro(currentActionName);
-            }
+            currentActionName = RubiksCubeSim.ATOMIC_MOVES[dec.action] || `MOVE_${dec.action}`;
+            cube.applyAtomic(currentActionName, true);
 
             visitedStatesRef.current.push(cube.getStateHash());
             if (visitedStatesRef.current.length > 24) visitedStatesRef.current.shift();
@@ -669,7 +625,7 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
     if (isRubiksDemo(activeDemo) && simRef.current) {
       const cube = simRef.current as RubiksCubeSim;
       const depth = depthOverride ?? cubeScrambleDepth;
-      const moves = cube.scramble(depth, activeDemo === 'rubiks' ? 'macro' : 'atomic');
+      const moves = cube.scramble(depth, 'atomic');
       if (canvasRef.current) {
         cube.render(canvasRef.current);
       }
@@ -688,7 +644,7 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
       const moveStr =
         moves.length <= 4
           ? ` [${moves.join(' ')}]`
-          : ` (${moves.length} ${activeDemo === 'rubiks' ? 'macros' : 'giros'})`;
+          : ` (${moves.length} ${lang === 'pt' ? 'giros' : 'moves'})`;
       setStatusDesc(
         lang === 'pt'
           ? `Cubo embaralhado${moveStr}`
@@ -1153,7 +1109,7 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
             </h4>
 
             <div className="grid grid-cols-2 gap-2">
-              {(['rubiks_atomic', 'rubiks', 'lunarlander', 'mountaincar', 'cartpole', 'acrobot'] as DemoKey[]).map((key) => {
+              {(['rubiks_atomic', 'lunarlander', 'mountaincar', 'cartpole', 'acrobot'] as DemoKey[]).map((key) => {
                 const cfg = DEMO_CONFIGS[key];
                 const isSelected = activeDemo === key;
                 return (
@@ -1356,9 +1312,7 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
               <div className="flex justify-between border-t border-zinc-850 pt-1.5 mt-1.5">
                 <span>{lang === 'pt' ? 'Win Rate Conquistado:' : 'Conquered Win Rate:'}</span>
                 <span className="text-amber-300 font-bold truncate max-w-[190px]">
-                  {activeDemo === 'rubiks_atomic'
-                    ? '100% (D1–D4) · 88% (D5) · 77% (D6) · D10 Ativo'
-                    : '100% (D1) · 95% (D2) · 75% (D3)'}
+                  100% (D1–D4) · 88% (D5) · 77% (D6) · D10 Ativo
                 </span>
               </div>
             )}
