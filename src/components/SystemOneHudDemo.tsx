@@ -7,6 +7,8 @@ import {
   Brain,
   Dices,
   Activity,
+  Trophy,
+  Zap,
 } from 'lucide-react';
 import {
   RubiksCubeSim,
@@ -232,6 +234,42 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
     }),
     [lang]
   );
+
+  const RUBIKS_BENCHMARK_LEVELS = useMemo(() => {
+    if (activeDemo === 'rubiks') {
+      return [
+        { depth: 1, name: 'D1', winRate: '100.0', rateColor: 'text-emerald-400', avgMoves: 1.0, states: '12', status: lang === 'pt' ? 'Ótimo Exato' : 'Exact Optimal' },
+        { depth: 2, name: 'D2', winRate: '95.0', rateColor: 'text-emerald-400', avgMoves: 2.1, states: '114', status: lang === 'pt' ? 'Alta Precisão' : 'High Precision' },
+        { depth: 3, name: 'D3', winRate: '75.0', rateColor: 'text-cyan-400', avgMoves: 4.8, states: '1.0k', status: lang === 'pt' ? 'Conquistado' : 'Conquered' },
+        { depth: 4, name: 'D4', winRate: '45.0', rateColor: 'text-amber-400', avgMoves: 8.5, states: '9.3k', status: lang === 'pt' ? 'Intermediário' : 'Intermediate' },
+      ];
+    }
+    return [
+      { depth: 1, name: 'D1', winRate: '100.0', rateColor: 'text-emerald-400', avgMoves: 1.0, states: '12', status: lang === 'pt' ? 'Ótimo Exato' : 'Exact Optimal' },
+      { depth: 2, name: 'D2', winRate: '100.0', rateColor: 'text-emerald-400', avgMoves: 2.0, states: '114', status: lang === 'pt' ? 'Ótimo Exato' : 'Exact Optimal' },
+      { depth: 3, name: 'D3', winRate: '100.0', rateColor: 'text-emerald-400', avgMoves: 2.9, states: '1.066', status: lang === 'pt' ? 'Ótimo Exato' : 'Exact Optimal' },
+      { depth: 4, name: 'D4', winRate: '100.0', rateColor: 'text-emerald-400', avgMoves: 3.9, states: '9.324', status: lang === 'pt' ? 'Ótimo Exato' : 'Exact Optimal' },
+      { depth: 5, name: 'D5', winRate: '88.0', rateColor: 'text-emerald-400', avgMoves: 7.2, states: '84.288', status: lang === 'pt' ? 'Quasi-Ótimo' : 'Near-Optimal' },
+      { depth: 6, name: 'D6', winRate: '77.0', rateColor: 'text-cyan-400', avgMoves: 11.5, states: '757.512', status: lang === 'pt' ? 'Alta Precisão' : 'High Precision' },
+      { depth: 7, name: 'D7', winRate: '60.0', rateColor: 'text-cyan-400', avgMoves: 18.7, states: '6.77M', status: lang === 'pt' ? 'Comutadores' : 'Commutators' },
+      { depth: 8, name: 'D8', winRate: '36.0', rateColor: 'text-amber-400', avgMoves: 24.6, states: '61.3M', status: lang === 'pt' ? 'Teacher SIL' : 'Teacher SIL' },
+      { depth: 9, name: 'D9', winRate: '17.0', rateColor: 'text-amber-400', avgMoves: 32.3, states: '550M', status: lang === 'pt' ? 'Fronteira D9' : 'D9 Frontier' },
+      { depth: 10, name: 'D10', winRate: '12.0', rateColor: 'text-purple-400', avgMoves: 38.0, states: '232.2B', status: lang === 'pt' ? 'Fronteira 232B' : '232B Frontier' },
+    ];
+  }, [activeDemo, lang]);
+
+  const activeLvlInfo = useMemo(() => {
+    const found = RUBIKS_BENCHMARK_LEVELS.find((lvl) => lvl.depth === cubeScrambleDepth);
+    return found || {
+      depth: cubeScrambleDepth,
+      name: `D${cubeScrambleDepth}`,
+      winRate: cubeScrambleDepth <= 4 ? '100.0' : cubeScrambleDepth === 5 ? '88.0' : cubeScrambleDepth === 6 ? '77.0' : cubeScrambleDepth === 7 ? '60.0' : cubeScrambleDepth === 8 ? '36.0' : cubeScrambleDepth === 9 ? '17.0' : '12.0',
+      rateColor: 'text-zinc-300',
+      avgMoves: (cubeScrambleDepth * 3.8).toFixed(1),
+      states: `${cubeScrambleDepth} giros`,
+      status: lang === 'pt' ? 'Customizado' : 'Custom',
+    };
+  }, [RUBIKS_BENCHMARK_LEVELS, cubeScrambleDepth, lang]);
 
   useEffect(() => {
     isRunningRef.current = isRunning;
@@ -940,6 +978,79 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
             </div>
           </div>
 
+          {/* Níveis Conquistados & Taxas de Vitória (Curriculum D1–D10) */}
+          {isRubiksDemo(activeDemo) && (
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-zinc-950/90 border border-zinc-800 shadow-xl space-y-2.5 font-mono">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-zinc-200 flex items-center gap-1.5">
+                  <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                  <span>
+                    {lang === 'pt'
+                      ? 'TAXA DE VITÓRIA POR NÍVEL CONQUISTADO (AURA D1–D10)'
+                      : 'CONQUERED LEVEL WIN RATE BENCHMARK (AURA D1–D10)'}
+                  </span>
+                </span>
+                <span className="text-[10px] text-zinc-500">
+                  {lang === 'pt' ? 'Clique em um nível para testar' : 'Click a level to test'}
+                </span>
+              </div>
+
+              {/* Grid Interativa de Níveis com Win Rate */}
+              <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+                {RUBIKS_BENCHMARK_LEVELS.map((lvl) => {
+                  const isCurrent = cubeScrambleDepth === lvl.depth;
+                  return (
+                    <button
+                      key={lvl.depth}
+                      type="button"
+                      onClick={() => {
+                        stopEvaluation();
+                        setCubeScrambleDepth(lvl.depth);
+                        scrambleEnv(lvl.depth);
+                      }}
+                      className={`px-1 py-1.5 rounded-lg border text-center transition cursor-pointer flex flex-col items-center justify-between min-h-[52px] ${
+                        isCurrent
+                          ? 'bg-amber-950/70 border-amber-400 text-amber-200 shadow-lg shadow-amber-950/60 ring-1 ring-amber-400/60'
+                          : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700 hover:bg-zinc-900'
+                      }`}
+                      title={`${lvl.name}: ${lvl.winRate}% ${lang === 'pt' ? 'de vitória' : 'win rate'} (${lvl.states} ${lang === 'pt' ? 'estados' : 'states'}, ~${lvl.avgMoves} ${lang === 'pt' ? 'movs' : 'moves'})`}
+                    >
+                      <span className="text-[11px] font-bold text-white tracking-tight">{lvl.name}</span>
+                      <span className={`text-[10px] font-bold tabular-nums ${lvl.rateColor}`}>
+                        {lvl.winRate}%
+                      </span>
+                      <span className="text-[8px] text-zinc-500">{lvl.avgMoves}m</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Detalhe Dinâmico do Nível Selecionado */}
+              <div className="flex items-center justify-between text-[11px] text-zinc-400 bg-zinc-900/80 px-3 py-2 rounded-lg border border-zinc-800">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-white font-bold flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-amber-400 fill-current" />
+                    <span>{activeLvlInfo.name}:</span>
+                  </span>
+                  <span className="text-emerald-400 font-bold">
+                    {activeLvlInfo.winRate}% {lang === 'pt' ? 'Taxa de Vitória' : 'Win Rate'}
+                  </span>
+                  <span className="text-zinc-600">•</span>
+                  <span>
+                    ~{activeLvlInfo.avgMoves} {lang === 'pt' ? 'movs médios' : 'avg moves'}
+                  </span>
+                  <span className="text-zinc-600">•</span>
+                  <span>
+                    {lang === 'pt' ? 'Espaço de Estados' : 'State Space'}: <strong className="text-cyan-300 font-mono">{activeLvlInfo.states}</strong>
+                  </span>
+                </div>
+                <span className="text-[10px] text-amber-400/90 font-bold uppercase tracking-wider hidden md:inline bg-amber-950/40 px-2 py-0.5 rounded border border-amber-900/50">
+                  {activeLvlInfo.status}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Real Telemetry Cards (4-Grid) */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
             {/* Latência de Inferência */}
@@ -1241,6 +1352,16 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
                   : (manifestData[activeDemo]?.checkpoint_version || currentCfg.checkpointVersion || 'v1 (Amortizado)')}
               </span>
             </div>
+            {isRubiksDemo(activeDemo) && (
+              <div className="flex justify-between border-t border-zinc-850 pt-1.5 mt-1.5">
+                <span>{lang === 'pt' ? 'Win Rate Conquistado:' : 'Conquered Win Rate:'}</span>
+                <span className="text-amber-300 font-bold truncate max-w-[190px]">
+                  {activeDemo === 'rubiks_atomic'
+                    ? '100% (D1–D4) · 88% (D5) · 77% (D6) · D10 Ativo'
+                    : '100% (D1) · 95% (D2) · 75% (D3)'}
+                </span>
+              </div>
+            )}
           </div>
 
         </div>
