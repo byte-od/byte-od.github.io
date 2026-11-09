@@ -527,6 +527,26 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
   const generateReflexResponse = (userQuery: string, targetLang: 'en' | 'pt'): { text: string; links?: Message['links'] } => {
     const q = userQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
+    // 0. Saudações e Cumprimentos (Instantâneo)
+    if (/^(oi|ola|olá|bom dia|boa tarde|boa noite|e ai|e aí|tudo bem|fala|hey|hi|hello|good morning|good afternoon|good evening)[\s!.,?]*$/i.test(q)) {
+      let saudacao = 'Olá!';
+      if (q.includes('bom dia') || q.includes('good morning')) saudacao = targetLang === 'pt' ? 'Bom dia!' : 'Good morning!';
+      else if (q.includes('boa tarde') || q.includes('good afternoon')) saudacao = targetLang === 'pt' ? 'Boa tarde!' : 'Good afternoon!';
+      else if (q.includes('boa noite') || q.includes('good evening')) saudacao = targetLang === 'pt' ? 'Boa noite!' : 'Good evening!';
+      else if (q.includes('tudo bem') || q.includes('how are you')) saudacao = targetLang === 'pt' ? 'Olá! Tudo ótimo por aqui.' : 'Hello! Everything is great here.';
+
+      return {
+        text:
+          targetLang === 'pt'
+            ? `${saudacao} Como posso te ajudar a explorar os projetos e as inovações de arquitetura do Julio Reis hoje?`
+            : `${saudacao} How can I help you explore Julio Reis's projects and architecture breakthroughs today?`,
+        links: [
+          { label: 'GitHub @byte-od', url: 'https://github.com/byte-od', icon: 'github' },
+          { label: 'LinkedIn', url: 'https://linkedin.com/in/juliocrfilho', icon: 'ext' },
+        ],
+      };
+    }
+
     // 1. Quem é VOCÊ? (Identidade da IA)
     if (q.includes('quem e voce') || q.includes('quem e vc') || q.includes('who are you') || q.includes('what are you') || q.includes('seu papel') || q.includes('o que voce faz')) {
       return {
@@ -681,6 +701,22 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     const isIdentityQuery = /\b(quem [eé] voc[eê]|quem [eé] vc|o que voc[eê] [eé]|o que vc [eé]|who are you|what are you|seu papel|sua funcao)\b/i.test(cleanQuery);
     const systemPrompt = effectiveLang === 'pt' ? SYSTEM_PROMPT_PT : SYSTEM_PROMPT_EN;
 
+    // Se for uma saudação pura isolada (ex: "Oi, boa noite"), responda imediatamente com perfeição em <1ms sem acionar inferência desnecessária nem arriscar alucinações de modelos pequenos
+    if (isGreeting) {
+      const reflexRes = generateReflexResponse(query, effectiveLang);
+      const agentMsg: Message = {
+        id: `agent-${Date.now()}`,
+        sender: 'agent',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        text: reflexRes.text,
+        links: reflexRes.links,
+        tierUsed: activeTier,
+        fromCache: true,
+      };
+      setMessages((prev) => [...prev, agentMsg]);
+      return;
+    }
+
     // A. SE TIVER EM MODO NEURAL CARREGADO
     if (activeTier !== 'reflex' && loadedTier === activeTier && workerRef.current) {
       setIsTyping(true);
@@ -707,7 +743,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
               {
                 role: 'assistant',
                 content:
-                  'Sou o assistente de IA oficial do portfólio de Julio Reis, executado 100% no seu navegador via WebGPU e MoS/SCache O(1). Como posso te chamar e como posso ajudar?',
+                  'Sou o assistente de IA oficial do portfólio de Julio Reis, executado 100% no seu navegador via WebGPU e MoS/SCache O(1). Em que posso te ajudar?',
               },
               { role: 'user', content: 'Pode me chamar de Julio' },
               {
