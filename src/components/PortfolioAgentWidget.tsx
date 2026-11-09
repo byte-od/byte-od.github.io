@@ -23,6 +23,7 @@ import {
   HardDrive,
   Info,
   Check,
+  Globe,
 } from 'lucide-react';
 import { MODELS_CONFIG } from '../lib/llmWorker';
 import { SCacheTelemetry } from '../lib/scacheEngine';
@@ -122,11 +123,11 @@ interface HardwareProfile {
 const SYSTEM_PROMPT_PT = `Você é o Assistente Virtual Oficial do portfólio de Julio Cesar da Costa Reis Filho, executado 100% no navegador do visitante via WebGPU local e arquitetura Mixture of Scars (MoS) + Scar-Cache (SCache) O(1).
 
 REGRAS CRÍTICAS E OBRIGATÓRIAS:
-1. IDIOMA: Responda SEMPRE no idioma do usuário. Se o usuário falar em português (ex: "oi", "olá"), responda estritamente em português brasileiro.
+1. IDIOMA: Responda SEMPRE no idioma do usuário. Se o usuário falar em português (ex: "oi", "olá", "quem é o Julio"), responda estritamente em português brasileiro natural e profissional. Se o usuário falar em inglês (ex: "hi", "who is Julio"), responda em inglês fluente.
 2. SAUDAÇÕES SIMPLES: Se a mensagem do usuário for apenas uma saudação breve (ex: "oi", "olá", "tudo bem", "bom dia"), responda APENAS com uma saudação calorosa e breve de 1 frase (ex: "Olá! Seja bem-vindo ao portfólio do Julio. Como posso te ajudar hoje?") e PARE imediatamente. NÃO despeje dados biográficos nem projetos se o usuário não perguntou!
-3. CONCISÃO ABSOLUTA: Responda diretamente e com precisão em no máximo 1 ou 2 parágrafos. NUNCA gere frases longas e desconexas de jargão corporativo ou preenchimento prolixo.
+3. CONCISÃO ABSOLUTA: Responda diretamente e com precisão em no máximo 1 ou 2 parágrafos curtos. NUNCA gere frases longas e desconexas de jargão corporativo ou preenchimento prolixo.
 4. INFORMAÇÕES SOBRE O JULIO: Apenas quando perguntado diretamente sobre o Julio ou seu trabalho, use estritamente estes fatos verificados na 3ª pessoa ("O Julio..."):
-   - Arquiteto de Sistemas Sênior & Engenheiro de LLMs com 8+ anos de experiência.
+   - Arquiteto de Sistemas Sênior & Engenheiro de LLMs com 8+ anos de experiência internacional.
    - Criador do Mixture of Scars (MoS) & SCache: Viabilizou rodar 80 camadas de um 72B em GPU de 16GB com apenas 2.40 GB de VRAM e substituiu a KV Cache linear por memória O(1) de 34.8 KB.
    - Autor do motor AURA System 1 (Embodied Deep RL resolvendo o Cubo de Rubik com 232B estados a 0.23ms na CPU) e CIR-Engine 503M (Causal Transformer em PyTorch DDP).
    - Autor do pacote mddd-cli no npm (Spec-Driven Development por diagramas).
@@ -136,7 +137,7 @@ REGRAS CRÍTICAS E OBRIGATÓRIAS:
 const SYSTEM_PROMPT_EN = `You are the Official Virtual AI Assistant for Julio Cesar da Costa Reis Filho's portfolio, running 100% in the visitor's browser via WebGPU and the Mixture of Scars (MoS) + Scar-Cache (SCache) O(1) architecture.
 
 CRITICAL MANDATORY RULES:
-1. LANGUAGE: ALWAYS respond in the user's language. If the user writes in Portuguese (e.g. "oi", "olá"), you MUST reply in Portuguese!
+1. LANGUAGE: ALWAYS respond in the user's language. If the visitor writes in English (e.g. "hi", "hello", "who is Julio"), reply in fluent, natural English. If the visitor writes in Portuguese (e.g. "oi", "olá", "quem é o Julio"), reply in natural Brazilian Portuguese!
 2. SIMPLE GREETINGS: If the visitor sends a brief greeting (e.g. "hi", "hello", "oi", "how are you"), reply ONLY with a single warm, concise greeting sentence (e.g. "Hello! Welcome to Julio's portfolio. How can I assist you today?") and STOP immediately. DO NOT dump portfolio details or projects unless explicitly asked!
 3. CONCISENESS & RESTRAINT: Answer directly and concisely in at most 2 brief paragraphs. NEVER generate endless run-on sentences or corporate buzzwords.
 4. FACTS ABOUT JULIO: Only when asked about Julio or his work, speak strictly in the 3rd person ("Julio developed..."):
@@ -148,12 +149,22 @@ CRITICAL MANDATORY RULES:
 5. ANTI-HALLUCINATION: NEVER invent unrelated technologies (like GANs) and NEVER state that your training data lacks information about Julio.`;
 
 export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang = 'en' }) => {
+  const [currentLang, setCurrentLang] = useState<'en' | 'pt'>(lang);
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [activeTier, setActiveTier] = useState<ModelTier>('reflex');
+
+  // Sync internal language state if external prop changes
+  useEffect(() => {
+    setCurrentLang(lang);
+  }, [lang]);
+
+  const toggleLanguage = () => {
+    setCurrentLang((prev) => (prev === 'pt' ? 'en' : 'pt'));
+  };
 
   // Hardware Profiling State
   const [hardwareProfile, setHardwareProfile] = useState<HardwareProfile>({
@@ -366,7 +377,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
               sender: 'agent',
               timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               text:
-                lang === 'pt'
+                currentLang === 'pt'
                   ? `✅ Motor neural [${MODEL_OPTIONS[modelKey as ModelTier].labelPt} ${
                       MODEL_OPTIONS[modelKey as ModelTier].badge
                     }] pronto na sua GPU!\n• Fonte: ${fromCache ? '⚡ Cache Local Persistente (0 MB de rede)' : '📥 Download Concluído & Salvo no Cache'}\n• Memória SCache: 34.8 KB O(1) residente na SRAM\n• Requisições de rede durante o chat: 0 bytes (100% offline).`
@@ -421,27 +432,32 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     }
   }, [lang]);
 
-  const initialGreeting: Message = {
+  const getInitialGreeting = (targetLang: 'en' | 'pt'): Message => ({
     id: 'msg-0',
     sender: 'agent',
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     text:
-      lang === 'pt'
-        ? 'Olá! Sou o agente virtual do portfólio do Julio Cesar Reis Filho. Posso te apresentar sua trajetória sênior, detalhar suas criações de IA (como o MoS 72B em 16GB e o motor AURA) ou demonstrar a arquitetura SCache rodando na prática no seu navegador.\n\nEscolha acima o modelo que deseja executar no seu hardware: [Reflexo], [Leve 135M], [Média 500M] ou [Grande 1.5B]!'
-        : 'Hello! I am Julio Cesar Reis Filho\'s portfolio agent. I can walk you through his systems breakthroughs (such as the 72B MoS on 16GB GPU and AURA Deep RL engine) or demonstrate the SCache architecture running in-browser.\n\nSelect a model above to execute on your local hardware: [Reflex], [Light 135M], [Medium 500M], or [Large 1.5B]!',
+      targetLang === 'pt'
+        ? 'Olá! Sou o agente virtual do portfólio do Julio Cesar Reis Filho. Posso te apresentar sua trajetória sênior, detalhar suas criações de IA (como o MoS 72B em 16GB e o motor AURA) ou demonstrar a arquitetura SCache rodando na prática no seu navegador.\n\nEscolha acima o modelo que deseja executar no seu hardware: [Reflexo], [Leve 135M], [Média 500M] ou [Grande 1B]!'
+        : "Hello! I am Julio Cesar Reis Filho's portfolio AI agent. I can walk you through his systems breakthroughs (such as the 72B MoS on 16GB GPU and AURA Deep RL engine) or demonstrate the SCache architecture running in-browser.\n\nSelect a model above to execute on your local hardware: [Reflex], [Light 135M], [Medium 500M], or [Large 1B]!",
     links: [
       {
-        label: lang === 'pt' ? '⚡ Live Test Colab (72B + SCache)' : '⚡ Live Test Colab (72B + SCache)',
+        label: targetLang === 'pt' ? '⚡ Live Test Colab (72B + SCache)' : '⚡ Live Test Colab (72B + SCache)',
         url: 'https://colab.research.google.com/github/byte-od/mixture-of-scars/blob/main/notebooks/Proof_70B_MoS_on_16GB_GPU.ipynb',
         icon: 'colab',
       },
     ],
     tierUsed: 'reflex',
-  };
+  });
 
   useEffect(() => {
-    setMessages([initialGreeting]);
-  }, [lang]);
+    setMessages((prev) => {
+      if (prev.length === 0 || (prev.length === 1 && prev[0].id === 'msg-0')) {
+        return [getInitialGreeting(currentLang)];
+      }
+      return prev;
+    });
+  }, [currentLang]);
 
   useEffect(() => {
     if (isOpen && !isMinimized) {
@@ -475,7 +491,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
 
   // Quick Chips
   const quickPrompts =
-    lang === 'pt'
+    currentLang === 'pt'
       ? [
           { label: '👤 Quem é o Julio?', query: 'Quem é o Julio e qual a experiência dele?' },
           { label: '⚡ MoS & SCache 72B', query: 'O que é o Mixture of Scars (MoS) e o SCache?' },
@@ -492,13 +508,13 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         ];
 
   // Natural Knowledge Engine for Instant Reflex Mode
-  const generateReflexResponse = (userQuery: string): { text: string; links?: Message['links'] } => {
+  const generateReflexResponse = (userQuery: string, targetLang: 'en' | 'pt'): { text: string; links?: Message['links'] } => {
     const q = userQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
     if (q.includes('quem e') || q.includes('who is') || q.includes('julio') || q.includes('trajetoria') || q.includes('experiencia') || q.includes('background') || q.includes('carreira') || q.includes('sobre')) {
       return {
         text:
-          lang === 'pt'
+          targetLang === 'pt'
             ? 'Julio Cesar da Costa Reis Filho é um Arquiteto de Sistemas Sênior e Engenheiro de LLMs com mais de 8 anos de experiência em engenharia de ponta. Ele combina domínio de sistemas de baixo nível (Go, C++, Rust, CUDA/Metal) com arquiteturas neurais avançadas (Transformers Causais, PyTorch DDP, RL e quantização em hardware). Disponível globalmente para posições remotas ou relocalização internacional.'
             : 'Julio Cesar da Costa Reis Filho is a Senior Systems Architect and LLM Systems Engineer with over 8 years of engineering experience bridging low-level systems (Go, C++, Rust, CUDA/Metal) with deep learning architectures (Causal Transformers, Distributed PyTorch DDP, Embodied RL, and hardware quantization). Available globally for remote roles and relocation.',
         links: [
@@ -511,7 +527,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     if (q.includes('mos') || q.includes('scache') || q.includes('mixture of scars') || q.includes('72b') || q.includes('70b') || q.includes('16gb') || q.includes('100.000') || q.includes('100k') || q.includes('kv cache')) {
       return {
         text:
-          lang === 'pt'
+          targetLang === 'pt'
             ? 'O Mixture of Scars (MoS) & SCache resolve os dois maiores gargalos físicos de LLMs:\n\n1. O MoS resolve os PESOS: executa todas as 80 camadas de um 72B em GPU de 16 GB com apenas 2.40 GB de VRAM via desquantização streaming INT4 sob demanda.\n\n2. O SCache resolve o CONTEXTO: substitui o KV Cache tradicional (que consumiria 32.8 GB a 100.000 tokens e causaria Fatal OOM) por uma memória associativa O(1) de estritamente 34.8 KB no Cache L1/SRAM!'
             : 'Mixture of Scars (MoS) & SCache is a dual breakthrough architecture solving both fundamental physical walls of foundation models:\n\n1. MoS solves MODEL WEIGHTS: executes all 80 transformer layers of 72B parameter geometry on a single 16GB GPU with peak VRAM capped strictly under 2.40 GB via INT4 streaming.\n\n2. SCache solves CONTEXT MEMORY: replaces the traditional linear O(T) KV Cache (32.8 GB at 100,000 tokens causing fatal OOM) with an exact 34.8 KB O(1) associative tensor resident in L1 Cache/SRAM!',
         links: [
@@ -529,10 +545,10 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       };
     }
 
-    if (q.includes('browser') || q.includes('navegador') || q.includes('como voce') || q.includes('como funciona') || q.includes('arquitetura que viabilizou')) {
+    if (q.includes('browser') || q.includes('navegador') || q.includes('como voce') || q.includes('como funciona') || q.includes('arquitetura que viabilizou') || q.includes('how do you run') || q.includes('in-browser')) {
       return {
         text:
-          lang === 'pt'
+          targetLang === 'pt'
             ? 'O motivo de rodar no navegador sem travar a aba:\n• WebGPU limita buffers a 2–4 GB: o MoS evita o estouro fazendo streaming dos pesos INT4 em fatias leves.\n• O KV Cache tradicional cresce a cada token gerado e estoura a memória da aba: o SCache mantém a memória fixa em 34.8 KB constantes O(1).\n\nExperimente selecionar [Leve], [Média] ou [Grande] acima para rodar a rede neural 100% na sua GPU!'
             : 'Why it runs in-browser without tab crash:\n• WebGPU caps memory buffer allocation at 2-4 GB: MoS avoids OOM by streaming INT4 weight slices.\n• Standard KV Cache continuously expands causing browser tab crash: SCache locks context memory to a constant 34.8 KB O(1) tensor in GPU SRAM.\n\nSelect [Light], [Medium] or [Large] above to run an actual neural model locally on your GPU!',
         links: [
@@ -545,12 +561,12 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       };
     }
 
-    if (q.includes('aura') || q.includes('sistema 1') || q.includes('system 1') || q.includes('rubik') || q.includes('reforco')) {
+    if (q.includes('aura') || q.includes('sistema 1') || q.includes('system 1') || q.includes('rubik') || q.includes('reforco') || q.includes('reinforcement')) {
       return {
         text:
-          lang === 'pt'
+          targetLang === 'pt'
             ? 'AURA (Universal System 1 Engine) é o motor de Deep Reinforcement Learning do Julio. É um kernel de reflexo reativo que resolve estados combinatórios (Cubo de Rubik até profundidade D10 com 232 bilhões de estados) em apenas 0.23ms em CPU pura com zero árvore de busca (No MCTS).'
-            : 'AURA (Universal System 1 Engine) is Julio\'s Embodied Deep Reinforcement Learning engine. It is a sub-millisecond reactive reflex kernel solving combinatorial spaces (Rubik\'s Cube up to Depth 10 across 232B states) in 0.23ms on bare CPU with zero tree search.',
+            : "AURA (Universal System 1 Engine) is Julio's Embodied Deep Reinforcement Learning engine. It is a sub-millisecond reactive reflex kernel solving combinatorial spaces (Rubik's Cube up to Depth 10 across 232B states) in 0.23ms on bare CPU with zero tree search.",
         links: [
           { label: 'Repositório GitHub (AURA)', url: 'https://github.com/byte-od/system_one', icon: 'github' },
         ],
@@ -560,7 +576,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     if (q.includes('contato') || q.includes('contact') || q.includes('contratar') || q.includes('hire') || q.includes('email') || q.includes('linkedin')) {
       return {
         text:
-          lang === 'pt'
+          targetLang === 'pt'
             ? 'O Julio está disponível para posições de Liderança Técnica, Arquiteto de Sistemas Sênior e Engenheiro de LLMs/Transformers (remoto global ou relocalização internacional):\n\n• E-mail: reisfilho1116@gmail.com\n• LinkedIn: linkedin.com/in/juliocrfilho\n• GitHub: github.com/byte-od'
             : 'Julio is available for Staff/Principal Systems Architect and Senior LLM Engineer roles (remote global or relocation):\n\n• Email: reisfilho1116@gmail.com\n• LinkedIn: linkedin.com/in/juliocrfilho\n• GitHub: github.com/byte-od',
         links: [
@@ -572,12 +588,12 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
 
     return {
       text:
-        lang === 'pt'
-          ? `Compreendido! No modo Reflexo (Zero Download), posso detalhar os pilares da engenharia do Julio:\n1. ⚡ MoS & SCache 72B em 16GB\n2. 🧩 AURA Deep RL (0.23ms CPU)\n3. 🤖 CIR-Engine 503M Causal\n4. 👤 Contratação & Contato direto por e-mail.\n\nOu selecione [Leve 135M], [Média 500M] ou [Grande 1.5B] acima para conversar com o modelo neural WebGPU real!`
-          : `Understood! In Reflex Mode (Zero Download), I can guide you through Julio's engineering dossier:\n1. ⚡ MoS & SCache 72B on 16GB GPU\n2. 🧩 AURA Deep RL (0.23ms CPU)\n3. 🤖 CIR-Engine 503M Causal Transformer\n4. 👤 Hiring & Direct coordinates via email.\n\nOr select [Light 135M], [Medium 500M], or [Large 1.5B] above to chat with the real in-browser WebGPU model!`,
+        targetLang === 'pt'
+          ? `Compreendido! No modo Reflexo (Zero Download), posso detalhar os pilares da engenharia do Julio:\n1. ⚡ MoS & SCache 72B em 16GB\n2. 🧩 AURA Deep RL (0.23ms CPU)\n3. 🤖 CIR-Engine 503M Causal\n4. 👤 Contratação & Contato direto por e-mail.\n\nOu selecione [Leve 135M], [Média 500M] ou [Grande 1B] acima para conversar com o modelo neural WebGPU real!`
+          : `Understood! In Reflex Mode (Zero Download), I can guide you through Julio's engineering dossier:\n1. ⚡ MoS & SCache 72B on 16GB GPU\n2. 🧩 AURA Deep RL (0.23ms CPU)\n3. 🤖 CIR-Engine 503M Causal Transformer\n4. 👤 Hiring & Direct coordinates via email.\n\nOr select [Light 135M], [Medium 500M], or [Large 1B] above to chat with the real in-browser WebGPU model!`,
       links: [
         {
-          label: 'Live Test no Colab',
+          label: targetLang === 'pt' ? 'Live Test no Colab' : 'Colab Live Test',
           url: 'https://colab.research.google.com/github/byte-od/mixture-of-scars/blob/main/notebooks/Proof_70B_MoS_on_16GB_GPU.ipynb',
           icon: 'colab',
         },
@@ -599,6 +615,23 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     setMessages((prev) => [...prev, userMsg]);
     setInputMessage('');
 
+    // Multilingual Language & Intent Detection:
+    const cleanQuery = query.trim().toLowerCase();
+    const isPtQuery = /\b(oi|ol[aá]|bom dia|boa tarde|boa noite|quem|qual|como|onde|por que|porque|explique|fale|mostre|projeto|sobre|experiencia|contato|tudo bem|vc|voc[eê]|sim|n[aã]o|me diga|fale-me|me fale|o que [eé]|trabalho|arquitetura|obrigado|valeu)\b/i.test(cleanQuery);
+    const isEnQuery = /\b(hi|hello|hey|who|what|where|how|why|is|are|tell|explain|can|show|project|background|experience|contact|yes|no|work|architecture|available|hire|thanks|thank you)\b/i.test(cleanQuery);
+
+    let effectiveLang: 'en' | 'pt';
+    if (isPtQuery && !isEnQuery) {
+      effectiveLang = 'pt';
+    } else if (isEnQuery && !isPtQuery) {
+      effectiveLang = 'en';
+    } else {
+      effectiveLang = currentLang;
+    }
+
+    const isGreeting = /^(oi|olá|ola|hello|hi|hey|bom dia|boa tarde|boa noite|e aí|e ai|tudo bem|how are you|good morning|good afternoon|good evening)[\s!.,?]*$/i.test(cleanQuery);
+    const systemPrompt = effectiveLang === 'pt' ? SYSTEM_PROMPT_PT : SYSTEM_PROMPT_EN;
+
     // A. SE TIVER EM MODO NEURAL CARREGADO
     if (activeTier !== 'reflex' && loadedTier === activeTier && workerRef.current) {
       setIsTyping(true);
@@ -614,12 +647,6 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         fromCache: wasLoadedFromCache,
       };
       setMessages((prev) => [...prev, newAgentMsg]);
-
-      // Detect language and intent dynamically from user query or interface state
-      const isPtQuery = /^(oi|olá|ola|bom dia|boa tarde|boa noite|quem|como|qual|você|vc|fale|sobre|projeto|tudo bem)/i.test(query.trim());
-      const isGreeting = /^(oi|olá|ola|hello|hi|hey|bom dia|boa tarde|boa noite|e aí|e ai|tudo bem)[\s!.,?]*$/i.test(query.trim());
-      const effectiveLang = (lang === 'pt' || isPtQuery) ? 'pt' : 'en';
-      const systemPrompt = effectiveLang === 'pt' ? SYSTEM_PROMPT_PT : SYSTEM_PROMPT_EN;
 
       // Filter out internal system notifications so they don't corrupt LLM dialogue context
       const cleanHistory = messages
@@ -655,10 +682,10 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         sender: 'agent',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         text:
-          lang === 'pt'
-            ? `O modelo neural [${MODEL_OPTIONS[activeTier].labelPt}] está sendo carregado na sua GPU. Enquanto isso, aqui está a resposta pelo Motor de Reflexo:\n\n${generateReflexResponse(query).text}`
-            : `The neural model [${MODEL_OPTIONS[activeTier].labelEn}] is currently loading into your GPU. Meanwhile, here is the immediate Reflex response:\n\n${generateReflexResponse(query).text}`,
-        links: generateReflexResponse(query).links,
+          effectiveLang === 'pt'
+            ? `O modelo neural [${MODEL_OPTIONS[activeTier].labelPt}] está sendo carregado na sua GPU. Enquanto isso, aqui está a resposta pelo Motor de Reflexo:\n\n${generateReflexResponse(query, effectiveLang).text}`
+            : `The neural model [${MODEL_OPTIONS[activeTier].labelEn}] is currently loading into your GPU. Meanwhile, here is the immediate Reflex response:\n\n${generateReflexResponse(query, effectiveLang).text}`,
+        links: generateReflexResponse(query, effectiveLang).links,
         tierUsed: 'reflex',
       };
       setMessages((prev) => [...prev, waitMsg]);
@@ -668,7 +695,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     // C. MODO REFLEXO (INSTANTÂNEO)
     setIsTyping(true);
     setTimeout(() => {
-      const resp = generateReflexResponse(query);
+      const resp = generateReflexResponse(query, effectiveLang);
       const agentMsg: Message = {
         id: `agent-${Date.now()}`,
         sender: 'agent',
@@ -698,14 +725,14 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             type="button"
             onClick={() => setIsOpen(true)}
             className="group flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-zinc-950/95 hover:bg-zinc-900 border-2 border-[#adff2f]/70 text-white font-mono text-xs font-bold shadow-[0_0_25px_rgba(173,255,47,0.25)] hover:shadow-[0_0_35px_rgba(173,255,47,0.4)] transition-all duration-200 cursor-pointer hover:scale-105"
-            title={lang === 'pt' ? 'Testar IA no Browser (MoS & SCache)' : 'Test In-Browser AI (MoS & SCache)'}
+            title={currentLang === 'pt' ? 'Testar IA no Browser (MoS & SCache)' : 'Test In-Browser AI (MoS & SCache)'}
           >
             <div className="relative">
               <Bot className="w-4 h-4 text-[#adff2f]" />
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#adff2f] animate-ping" />
               <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#adff2f]" />
             </div>
-            <span>{lang === 'pt' ? 'Testar IA no Browser' : 'Test In-Browser AI'}</span>
+            <span>{currentLang === 'pt' ? 'Testar IA no Browser' : 'Test In-Browser AI'}</span>
             <span className="px-1.5 py-0.5 rounded text-[10px] bg-[#adff2f]/20 text-[#adff2f] border border-[#adff2f]/30">
               WebGPU · O(1)
             </span>
@@ -730,7 +757,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h4 className="text-xs font-mono font-bold text-white tracking-tight">
-                    {lang === 'pt' ? 'Agente Neural Local' : 'Local Neural Agent'}
+                    {currentLang === 'pt' ? 'Agente Neural Local' : 'Local Neural Agent'}
                   </h4>
                   <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-[#adff2f]/20 text-[#adff2f] border border-[#adff2f]/40 font-bold">
                     SCache {scacheTelemetry.memoryKb} O(1)
@@ -755,11 +782,23 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Language toggle pill: PT | EN */}
               <button
                 type="button"
-                onClick={() => setMessages([initialGreeting])}
+                onClick={toggleLanguage}
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-mono font-bold bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/60 transition-colors cursor-pointer mr-0.5"
+                title={currentLang === 'pt' ? 'Switch chat language to English' : 'Mudar idioma do chat para Português'}
+              >
+                <Globe className="w-3 h-3 text-[#adff2f]" />
+                <span className={currentLang === 'pt' ? 'text-[#adff2f]' : 'text-zinc-500'}>PT</span>
+                <span className="text-zinc-600">/</span>
+                <span className={currentLang === 'en' ? 'text-[#adff2f]' : 'text-zinc-500'}>EN</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMessages([getInitialGreeting(currentLang)])}
                 className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer"
-                title={lang === 'pt' ? 'Limpar conversa' : 'Reset chat'}
+                title={currentLang === 'pt' ? 'Limpar conversa' : 'Reset chat'}
               >
                 <RefreshCw className="w-3.5 h-3.5" />
               </button>
@@ -767,7 +806,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                 type="button"
                 onClick={() => setIsMinimized(!isMinimized)}
                 className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer"
-                title={isMinimized ? (lang === 'pt' ? 'Expandir' : 'Expand') : (lang === 'pt' ? 'Minimizar' : 'Minimize')}
+                title={isMinimized ? (currentLang === 'pt' ? 'Expandir' : 'Expand') : (currentLang === 'pt' ? 'Minimizar' : 'Minimize')}
               >
                 {isMinimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
               </button>
@@ -775,7 +814,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                 type="button"
                 onClick={() => setIsOpen(false)}
                 className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-colors cursor-pointer"
-                title={lang === 'pt' ? 'Fechar' : 'Close'}
+                title={currentLang === 'pt' ? 'Fechar' : 'Close'}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -797,7 +836,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                     onClick={() => setShowHwTooltip(!showHwTooltip)}
                     className="flex items-center gap-1 px-2 py-0.5 rounded bg-lime-400/10 text-[#adff2f] border border-lime-400/30 hover:bg-lime-400/20 transition-colors cursor-pointer font-bold text-[9px]"
                   >
-                    <span>★ {lang === 'pt' ? 'Recomendação' : 'Recommended'}</span>
+                    <span>★ {currentLang === 'pt' ? 'Recomendação' : 'Recommended'}</span>
                     <Info className="w-2.5 h-2.5" />
                   </button>
 
@@ -807,13 +846,13 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                       <div className="font-bold text-[#adff2f] flex items-center gap-1">
                         <Sparkles className="w-3 h-3" />
                         <span>
-                          {lang === 'pt'
+                          {currentLang === 'pt'
                             ? `Recomendado: ${MODEL_OPTIONS[hardwareProfile.recommendedTier].labelPt} (${MODEL_OPTIONS[hardwareProfile.recommendedTier].badge})`
                             : `Recommended: ${MODEL_OPTIONS[hardwareProfile.recommendedTier].labelEn} (${MODEL_OPTIONS[hardwareProfile.recommendedTier].badge})`}
                         </span>
                       </div>
                       <p className="text-zinc-300 leading-snug">
-                        {lang === 'pt' ? hardwareProfile.reasonPt : hardwareProfile.reasonEn}
+                        {currentLang === 'pt' ? hardwareProfile.reasonPt : hardwareProfile.reasonEn}
                       </p>
                       <div className="pt-1 border-t border-zinc-800 text-[9px] text-zinc-400 flex items-center justify-between">
                         <span>{hardwareProfile.hasWebGPU ? '✓ WebGPU Ativo' : '⚠️ Sem WebGPU'}</span>
@@ -845,7 +884,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                             ? 'bg-[#adff2f]/15 border-[#adff2f] text-white shadow-[0_0_12px_rgba(173,255,47,0.3)]'
                             : 'bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
                         }`}
-                        title={lang === 'pt' ? opt.descPt : opt.descEn}
+                        title={currentLang === 'pt' ? opt.descPt : opt.descEn}
                       >
                         {/* Hardware recommendation badge */}
                         {isRecommended && (
@@ -860,7 +899,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                           {tier === 'media' && <span className="w-2 h-2 rounded-full bg-cyan-400" />}
                           {tier === 'grande' && <Flame className="w-2.5 h-2.5 text-rose-400" />}
                           <span className="text-[11px] font-mono font-bold leading-none">
-                            {lang === 'pt' ? opt.labelPt : opt.labelEn}
+                            {currentLang === 'pt' ? opt.labelPt : opt.labelEn}
                           </span>
                         </div>
 
@@ -872,7 +911,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                           {isCached && tier !== 'reflex' && (
                             <span
                               className="text-[8px] text-emerald-400 font-bold"
-                              title={lang === 'pt' ? 'Salvo no cache permanente' : 'Saved in local cache'}
+                              title={currentLang === 'pt' ? 'Salvo no cache permanente' : 'Saved in local cache'}
                             >
                               ✓
                             </span>
@@ -892,10 +931,10 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                       <DownloadCloud className="w-3.5 h-3.5 text-[#adff2f] animate-pulse" />
                       <span>
                         {cachedTiers[loadingTier]
-                          ? lang === 'pt'
+                          ? currentLang === 'pt'
                             ? `Carregando do Cache Local [${MODEL_OPTIONS[loadingTier].badge}]...`
                             : `Reading from Local Cache [${MODEL_OPTIONS[loadingTier].badge}]...`
-                          : lang === 'pt'
+                          : currentLang === 'pt'
                           ? `Baixando [${MODEL_OPTIONS[loadingTier].labelPt} ${MODEL_OPTIONS[loadingTier].badge}] para GPU...`
                           : `Downloading [${MODEL_OPTIONS[loadingTier].labelEn} ${MODEL_OPTIONS[loadingTier].badge}] to GPU...`}
                       </span>
@@ -918,16 +957,16 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                   <div className="flex items-center justify-between text-[9px] font-mono text-zinc-400 mt-1.5">
                     <span>
                       {cachedTiers[loadingTier]
-                        ? lang === 'pt'
+                        ? currentLang === 'pt'
                           ? '⚡ 0 MB baixados: lendo diretamente do IndexedDB permanente.'
                           : '⚡ 0 MB network: reading directly from persistent IndexedDB.'
-                        : lang === 'pt'
+                        : currentLang === 'pt'
                         ? 'Alocando buffer SCache O(1) de 34.8 KB na SRAM.'
                         : 'Allocating 34.8 KB O(1) SCache buffer in SRAM.'}
                     </span>
                     <span className="text-emerald-400 flex items-center gap-0.5">
                       <ShieldCheck className="w-2.5 h-2.5" />
-                      <span>Cache Persistente</span>
+                      <span>{currentLang === 'pt' ? 'Cache Persistente' : 'Persistent Cache'}</span>
                     </span>
                   </div>
                 </div>
@@ -945,7 +984,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                     onClick={() => setActiveTier('reflex')}
                     className="underline text-white font-bold ml-2 cursor-pointer"
                   >
-                    {lang === 'pt' ? 'Usar Reflexo' : 'Use Reflex'}
+                    {currentLang === 'pt' ? 'Usar Reflexo' : 'Use Reflex'}
                   </button>
                 </div>
               )}
@@ -1013,7 +1052,11 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                     <span className="w-1.5 h-1.5 rounded-full bg-[#adff2f] animate-bounce [animation-delay:0.2s]" />
                     <span className="w-1.5 h-1.5 rounded-full bg-[#adff2f] animate-bounce [animation-delay:0.4s]" />
                     <span className="text-[10px] font-mono text-zinc-400 ml-1.5">
-                      {activeTier !== 'reflex' ? 'Decodificando tokens na GPU local...' : ''}
+                      {activeTier !== 'reflex'
+                        ? currentLang === 'pt'
+                          ? 'Decodificando tokens na GPU local...'
+                          : 'Decoding tokens on local GPU...'
+                        : ''}
                     </span>
                   </div>
                 )}
@@ -1040,8 +1083,12 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                   <ShieldCheck className="w-3 h-3" />
                   <span>
                     {isStoragePersisted
-                      ? 'Storage.persist: Ativo · Zero Downloads Duplicados'
-                      : 'Cache IndexedDB Ativo'}
+                      ? currentLang === 'pt'
+                        ? 'Storage.persist: Ativo · Zero Downloads Duplicados'
+                        : 'Storage.persist: Active · Zero Duplicate Downloads'
+                      : currentLang === 'pt'
+                      ? 'Cache IndexedDB Ativo'
+                      : 'IndexedDB Cache Active'}
                   </span>
                 </span>
                 <span className="text-zinc-300">
@@ -1059,10 +1106,10 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                   onKeyDown={handleKeyDown}
                   placeholder={
                     activeTier !== 'reflex'
-                      ? lang === 'pt'
+                      ? currentLang === 'pt'
                         ? `Conversando via ${MODEL_OPTIONS[activeTier].labelPt} local na GPU...`
                         : `Chatting via local ${MODEL_OPTIONS[activeTier].labelEn} on GPU...`
-                      : lang === 'pt'
+                      : currentLang === 'pt'
                       ? 'Pergunte sobre o Julio, MoS 72B, AURA...'
                       : 'Ask about Julio, MoS 72B, AURA...'
                   }
@@ -1073,7 +1120,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                   onClick={() => handleSendMessage()}
                   disabled={!inputMessage.trim()}
                   className="p-2 bg-[#adff2f] hover:bg-lime-300 disabled:bg-zinc-800 disabled:text-zinc-600 text-black rounded-lg transition-colors cursor-pointer shrink-0"
-                  title={lang === 'pt' ? 'Enviar' : 'Send'}
+                  title={currentLang === 'pt' ? 'Enviar' : 'Send'}
                 >
                   <Send className="w-3.5 h-3.5" />
                 </button>
