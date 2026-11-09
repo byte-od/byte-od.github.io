@@ -31,6 +31,7 @@ export const MODELS_CONFIG: Record<string, ModelConfig> = {
 let currentPipeline: any = null;
 let currentModelKey: string | null = null;
 let isGenerating = false;
+let isLoading = false;
 
 // Check if WebGPU is available in this worker context
 async function checkWebGPU(): Promise<boolean> {
@@ -45,10 +46,38 @@ async function checkWebGPU(): Promise<boolean> {
   return false;
 }
 
+// Check if model files already exist in local browser cache (zero download guarantee)
+async function isModelCached(modelId: string): Promise<boolean> {
+  try {
+    if (typeof self !== 'undefined' && 'caches' in self) {
+      const cache = await self.caches.open('transformers-cache');
+      const keys = await cache.keys();
+      return keys.some((req) => req.url.includes(modelId) && req.url.includes('.onnx'));
+    }
+  } catch (e) {
+    console.warn('[LLM Worker] Cache inspection error:', e);
+  }
+  return false;
+}
+
 self.onmessage = async (e: MessageEvent) => {
   const { type, payload } = e.data;
 
-  // 1. CARREGAR MODELO
+  // 1. VERIFICAR STATUS DO CACHE (GARANTIA DE NÃO RE-BAIXAR)
+  if (type === 'check_cache') {
+    try {
+      const results: Record<string, boolean> = {};
+      for (const [key, cfg] of Object.entries(MODELS_CONFIG)) {
+        results[key] = await isModelCached(cfg.id);
+      }
+      self.postMessage({ type: 'cache_status', results });
+    } catch (err) {
+      console.warn('[LLM Worker] Failed to check cache status:', err);
+    }
+    return;
+  }
+
+  // 2. CARREGAR MODELO
   if (type === 'load') {
     const { modelKey } = payload;
     const targetConfig = MODELS_CONFIG[modelKey];
@@ -58,24 +87,42 @@ self.onmessage = async (e: MessageEvent) => {
       return;
     }
 
+    // Se já está residente na memória da GPU
     if (currentPipeline && currentModelKey === modelKey) {
       self.postMessage({
         type: 'ready',
         modelKey,
         name: targetConfig.name,
-        device: 'cached',
+        device: 'memory_resident',
+        fromCache: true,
       });
       return;
     }
 
+    // Trava de concorrência: impede downloads paralelos duplicados
+    if (isLoading) {
+      console.warn('[LLM Worker] Carregamento já em andamento. Ignorando requisição concorrente.');
+      return;
+    }
+
+    isLoading = true;
+
     try {
+      // Liberar pipeline anterior da VRAM antes de carregar o novo (preservação de memória da aba)
+      if (currentPipeline) {
+        currentPipeline = null;
+        currentModelKey = null;
+      }
+
       const hasWebGPU = await checkWebGPU();
       const preferredDevice = hasWebGPU ? 'webgpu' : 'wasm';
+      const wasAlreadyCached = await isModelCached(targetConfig.id);
 
       self.postMessage({
         type: 'loading_start',
         modelKey,
         device: preferredDevice,
+        wasAlreadyCached,
       });
 
       // Progress callback tracking download percentage
@@ -118,17 +165,21 @@ self.onmessage = async (e: MessageEvent) => {
         modelKey,
         name: targetConfig.name,
         device: preferredDevice,
+        fromCache: wasAlreadyCached,
       });
     } catch (err: any) {
       console.error('[LLM Worker] Failed to load model:', err);
       self.postMessage({
         type: 'error',
-        error: err?.message || 'Falha ao compilar shaders WebGPU ou baixar tensores.',
+        error: err?.message || 'Falha ao compilar shaders WebGPU ou ler tensores do cache.',
       });
+    } finally {
+      isLoading = false;
     }
+    return;
   }
 
-  // 2. GERAR TEXTO
+  // 3. GERAR TEXTO
   if (type === 'generate') {
     if (!currentPipeline) {
       self.postMessage({ type: 'error', error: 'Nenhum modelo neural carregado na GPU.' });
@@ -188,12 +239,14 @@ self.onmessage = async (e: MessageEvent) => {
     } finally {
       isGenerating = false;
     }
+    return;
   }
 
-  // 3. DESCARREGAR
+  // 4. DESCARREGAR PIPELINE PARA LIMPAR MEMÓRIA
   if (type === 'unload') {
     currentPipeline = null;
     currentModelKey = null;
     self.postMessage({ type: 'unloaded' });
+    return;
   }
 };

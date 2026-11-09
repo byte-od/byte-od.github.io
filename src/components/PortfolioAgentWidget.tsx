@@ -20,6 +20,9 @@ import {
   AlertTriangle,
   Flame,
   ShieldCheck,
+  HardDrive,
+  Info,
+  Check,
 } from 'lucide-react';
 import { MODELS_CONFIG } from '../lib/llmWorker';
 
@@ -33,6 +36,7 @@ interface Message {
   links?: { label: string; url: string; icon?: 'colab' | 'github' | 'ext' }[];
   tierUsed?: ModelTier;
   tokPerSec?: string;
+  fromCache?: boolean;
 }
 
 interface PortfolioAgentWidgetProps {
@@ -60,7 +64,7 @@ const MODEL_OPTIONS: Record<ModelTier, ModelMeta> = {
     badge: '0 MB',
     params: 'Regras Semânticas',
     sizeMb: 0,
-    descPt: 'Instantâneo (<1ms). Zero download, ideal para testes rápidos sem consumir dados móveis.',
+    descPt: 'Instantâneo (<1ms). Zero download, ideal para testes imediatos sem gastar dados móveis.',
     descEn: 'Instant (<1ms). Zero download, perfect for quick inspection with zero mobile data use.',
     devicePt: 'CPU Host',
     deviceEn: 'Host CPU',
@@ -72,7 +76,7 @@ const MODEL_OPTIONS: Record<ModelTier, ModelMeta> = {
     badge: '135M',
     params: '135 Milhões (INT4)',
     sizeMb: 180,
-    descPt: 'SmolLM2-135M (~180 MB). Download rápido (3-5s), roda suave até em smartphones via WebGPU.',
+    descPt: 'SmolLM2-135M (~180 MB). Download ultrarrápido (3-5s), roda suave em smartphones e laptops.',
     descEn: 'SmolLM2-135M (~180 MB). Rapid download (3-5s), runs smooth on mobile & laptops via WebGPU.',
     devicePt: 'WebGPU / WASM',
     deviceEn: 'WebGPU / WASM',
@@ -103,6 +107,16 @@ const MODEL_OPTIONS: Record<ModelTier, ModelMeta> = {
   },
 };
 
+interface HardwareProfile {
+  recommendedTier: ModelTier;
+  hardwareSummary: string;
+  reasonPt: string;
+  reasonEn: string;
+  hasWebGPU: boolean;
+  isMobile: boolean;
+  cores: number;
+}
+
 const SYSTEM_PROMPT_PT = `Você é o Agente Neural Oficial do portfólio de Julio Cesar da Costa Reis Filho, executando 100% no navegador do visitante via WebGPU local e arquitetura Scar-Cache (SCache) O(1).
 Fatos verificados sobre o Julio:
 - Arquiteto de Sistemas Sênior & Engenheiro de LLMs com 8+ anos de experiência.
@@ -129,6 +143,18 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
   const [isTyping, setIsTyping] = useState(false);
   const [activeTier, setActiveTier] = useState<ModelTier>('reflex');
 
+  // Hardware Profiling State
+  const [hardwareProfile, setHardwareProfile] = useState<HardwareProfile>({
+    recommendedTier: 'media',
+    hardwareSummary: 'Analisando GPU & CPU...',
+    reasonPt: 'Detectando arquitetura...',
+    reasonEn: 'Detecting hardware...',
+    hasWebGPU: false,
+    isMobile: false,
+    cores: 4,
+  });
+  const [showHwTooltip, setShowHwTooltip] = useState(false);
+
   // Web Worker states
   const [loadedTier, setLoadedTier] = useState<ModelTier | null>(null);
   const [loadingTier, setLoadingTier] = useState<ModelTier | null>(null);
@@ -139,12 +165,107 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
   const [lastTokPerSec, setLastTokPerSec] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Cache & Memory Preservation States
+  const [cachedTiers, setCachedTiers] = useState<Record<ModelTier, boolean>>({
+    reflex: true,
+    leve: false,
+    media: false,
+    grande: false,
+  });
+  const [isStoragePersisted, setIsStoragePersisted] = useState(false);
+  const [wasLoadedFromCache, setWasLoadedFromCache] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const workerRef = useRef<Worker | null>(null);
   const streamingMsgIdRef = useRef<string | null>(null);
 
-  // Initialize Web Worker for client-side local inference
+  // 1. HARDWARE PROFILER & PERSISTENT STORAGE REGISTRATION
+  useEffect(() => {
+    async function profileHardware() {
+      const isMobile =
+        typeof navigator !== 'undefined' &&
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const cores = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency || 4 : 4;
+      const ramGb = typeof navigator !== 'undefined' ? (navigator as any).deviceMemory || 8 : 8;
+
+      let hasWebGPU = false;
+      let gpuVendor = '';
+      let maxBufferGb = 0;
+
+      try {
+        if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
+          const adapter = await (navigator as any).gpu.requestAdapter();
+          if (adapter) {
+            hasWebGPU = true;
+            maxBufferGb = adapter.limits?.maxBufferSize
+              ? Math.round(adapter.limits.maxBufferSize / (1024 * 1024 * 1024))
+              : 2;
+            const info = await adapter.requestAdapterInfo?.();
+            if (info?.vendor || info?.architecture) {
+              gpuVendor = `${info.vendor || ''} ${info.architecture || ''}`.trim();
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[Hardware Profiler] WebGPU probe failed:', e);
+      }
+
+      // Hardware recommendation heuristics
+      let recommended: ModelTier = 'media';
+      let summary = '';
+      let reasonPt = '';
+      let reasonEn = '';
+
+      if (isMobile) {
+        recommended = 'leve';
+        summary = `📱 Mobile (${cores} Cores · ${ramGb}GB)`;
+        reasonPt = 'Dispositivo móvel detectado. O modelo Leve (135M) é o ideal para economizar bateria e memória RAM.';
+        reasonEn = 'Mobile device detected. Light (135M) is optimal to preserve battery and mobile RAM.';
+      } else if (!hasWebGPU) {
+        recommended = 'reflex';
+        summary = `⚙️ CPU Host (${cores} Cores · Sem WebGPU)`;
+        reasonPt = 'Seu navegador não possui WebGPU ativo. O modo Reflexo opera instantaneamente (<1ms) sem risco de travamento.';
+        reasonEn = 'WebGPU is inactive in this browser. Reflex mode runs instantaneously (<1ms) with zero lag.';
+      } else if (cores >= 8 && (ramGb >= 16 || maxBufferGb >= 2)) {
+        recommended = 'grande';
+        summary = `⚡ GPU Alta Potência (${cores} Cores · ${gpuVendor || 'WebGPU Discrete'})`;
+        reasonPt = 'Hardware potente detectado (GPU dedicada / Apple Silicon). Seu sistema aguenta com folga o modelo Grande (1.5B).';
+        reasonEn = 'High-end hardware detected (Discrete GPU / Apple Silicon). Your system easily handles Large (1.5B).';
+      } else {
+        recommended = 'media';
+        summary = `💻 Desktop GPU (${cores} Cores · ${ramGb}GB RAM)`;
+        reasonPt = 'GPU desktop padrão detectada. O modelo Médio (500M) oferece o equilíbrio perfeito de fluência e velocidade.';
+        reasonEn = 'Standard desktop GPU detected. Medium (500M) provides the ideal balance of speed and fluency.';
+      }
+
+      setHardwareProfile({
+        recommendedTier: recommended,
+        hardwareSummary: summary,
+        reasonPt,
+        reasonEn,
+        hasWebGPU,
+        isMobile,
+        cores,
+      });
+    }
+
+    async function requestStoragePreservation() {
+      if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.persist) {
+        try {
+          const isPersisted = await navigator.storage.persist();
+          setIsStoragePersisted(isPersisted);
+        } catch (e) {
+          console.warn('[Storage] persist error:', e);
+        }
+      }
+    }
+
+    profileHardware();
+    requestStoragePreservation();
+  }, []);
+
+  // 2. INITIALIZE WEB WORKER & CACHE INSPECTOR
   useEffect(() => {
     try {
       const worker = new Worker(new URL('../lib/llmWorker.ts', import.meta.url), {
@@ -152,13 +273,39 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       });
       workerRef.current = worker;
 
-      worker.onmessage = (e: MessageEvent) => {
-        const { type, modelKey, percent, loaded, total, device, token, stats, error } = e.data;
+      // Ask worker to check which models are already cached
+      worker.postMessage({ type: 'check_cache' });
 
-        if (type === 'loading_start') {
+      worker.onmessage = (e: MessageEvent) => {
+        const {
+          type,
+          modelKey,
+          percent,
+          loaded,
+          total,
+          device,
+          token,
+          stats,
+          error,
+          results,
+          fromCache,
+          wasAlreadyCached,
+        } = e.data;
+
+        if (type === 'cache_status' && results) {
+          setCachedTiers({
+            reflex: true,
+            leve: !!results.leve,
+            media: !!results.media,
+            grande: !!results.grande,
+          });
+        } else if (type === 'loading_start') {
           setLoadingTier(modelKey);
-          setDownloadPercent(0);
-          setDeviceInfo(device === 'webgpu' ? '⚡ WebGPU Shaders Ativo' : '⚙️ WebAssembly SIMD Fallback');
+          setDownloadPercent(wasAlreadyCached ? 100 : 0);
+          setWasLoadedFromCache(!!wasAlreadyCached);
+          setDeviceInfo(
+            device === 'webgpu' ? '⚡ WebGPU Shaders (Local)' : '⚙️ WebAssembly SIMD Fallback'
+          );
           setErrorMessage(null);
         } else if (type === 'download_progress') {
           setDownloadPercent(percent);
@@ -167,7 +314,11 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         } else if (type === 'ready') {
           setLoadedTier(modelKey);
           setLoadingTier(null);
-          setDeviceInfo(device === 'webgpu' ? '⚡ WebGPU Shaders (Local)' : '⚙️ WebAssembly SIMD (Local)');
+          setWasLoadedFromCache(!!fromCache);
+          setCachedTiers((prev) => ({ ...prev, [modelKey]: true }));
+          setDeviceInfo(
+            device === 'webgpu' ? '⚡ WebGPU Shaders (Local)' : '⚙️ WebAssembly SIMD (Local)'
+          );
           setMessages((prev) => [
             ...prev,
             {
@@ -176,9 +327,14 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
               timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               text:
                 lang === 'pt'
-                  ? `✅ Motor neural [${MODEL_OPTIONS[modelKey as ModelTier].labelPt} ${MODEL_OPTIONS[modelKey as ModelTier].badge}] compilado na sua GPU com sucesso!\n• Memória SCache: 34.8 KB O(1) na SRAM\n• Requisições de rede: 0 bytes (100% offline)\n• Processamento: Totalmente no seu hardware.`
-                  : `✅ Neural engine [${MODEL_OPTIONS[modelKey as ModelTier].labelEn} ${MODEL_OPTIONS[modelKey as ModelTier].badge}] compiled in your local GPU!\n• SCache Memory: 34.8 KB O(1) in SRAM\n• Network requests: 0 bytes (100% offline)\n• Processing: Entirely on your local hardware.`,
+                  ? `✅ Motor neural [${MODEL_OPTIONS[modelKey as ModelTier].labelPt} ${
+                      MODEL_OPTIONS[modelKey as ModelTier].badge
+                    }] pronto na sua GPU!\n• Fonte: ${fromCache ? '⚡ Cache Local Persistente (0 MB de rede)' : '📥 Download Concluído & Salvo no Cache'}\n• Memória SCache: 34.8 KB O(1) residente na SRAM\n• Requisições de rede durante o chat: 0 bytes (100% offline).`
+                  : `✅ Neural engine [${MODEL_OPTIONS[modelKey as ModelTier].labelEn} ${
+                      MODEL_OPTIONS[modelKey as ModelTier].badge
+                    }] compiled in your local GPU!\n• Source: ${fromCache ? '⚡ Persistent Local Cache (0 MB network)' : '📥 Downloaded & Saved to Cache'}\n• SCache Memory: 34.8 KB O(1) resident in SRAM\n• Network requests during chat: 0 bytes (100% offline).`,
               tierUsed: modelKey as ModelTier,
+              fromCache: !!fromCache,
             },
           ]);
         } else if (type === 'generation_start') {
@@ -209,7 +365,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         worker.terminate();
       };
     } catch (err) {
-      console.warn('[PortfolioAgent] Web Workers not supported in this environment:', err);
+      console.warn('[PortfolioAgent] Web Workers not supported:', err);
     }
   }, [lang]);
 
@@ -256,7 +412,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       return;
     }
 
-    // If neural tier selected and not loaded, trigger load
+    // Trigger load in worker (Worker checks cache to avoid duplicate download)
     if (loadedTier !== tier && loadingTier !== tier) {
       workerRef.current?.postMessage({
         type: 'load',
@@ -325,8 +481,8 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       return {
         text:
           lang === 'pt'
-            ? 'O motivo de rodar no navegador sem travar a aba:\n• WebGPU limita buffers a 2–4 GB: o MoS evita o estouro fazendo streaming dos pesos INT4 em fatias leves.\n• O KV Cache tradicional cresce a cada token gerado e estoura a memória da aba: o SCache mantém a memória fixa em 34.8 KB constantes O(1).\n\nExperimente trocar a aba acima para [Leve], [Média] ou [Grande] para ver a rede neural rodando de verdade na sua GPU!'
-            : 'Why it runs in-browser without tab crash:\n• WebGPU caps memory buffer allocation at 2-4 GB: MoS avoids OOM by streaming INT4 weight slices.\n• Standard KV Cache continuously expands causing browser tab crash: SCache locks context memory to a constant 34.8 KB O(1) tensor in GPU SRAM.\n\nSwitch to [Light], [Medium] or [Large] above to run an actual neural model locally on your GPU!',
+            ? 'O motivo de rodar no navegador sem travar a aba:\n• WebGPU limita buffers a 2–4 GB: o MoS evita o estouro fazendo streaming dos pesos INT4 em fatias leves.\n• O KV Cache tradicional cresce a cada token gerado e estoura a memória da aba: o SCache mantém a memória fixa em 34.8 KB constantes O(1).\n\nExperimente selecionar [Leve], [Média] ou [Grande] acima para rodar a rede neural 100% na sua GPU!'
+            : 'Why it runs in-browser without tab crash:\n• WebGPU caps memory buffer allocation at 2-4 GB: MoS avoids OOM by streaming INT4 weight slices.\n• Standard KV Cache continuously expands causing browser tab crash: SCache locks context memory to a constant 34.8 KB O(1) tensor in GPU SRAM.\n\nSelect [Light], [Medium] or [Large] above to run an actual neural model locally on your GPU!',
         links: [
           {
             label: 'SCache 100k Token Live Test',
@@ -403,6 +559,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         text: '',
         tierUsed: activeTier,
+        fromCache: wasLoadedFromCache,
       };
       setMessages((prev) => [...prev, newAgentMsg]);
 
@@ -499,7 +656,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       {isOpen && (
         <div
           className={`fixed bottom-6 right-6 z-50 w-[94vw] sm:w-[460px] bg-zinc-950/95 border-2 border-[#adff2f]/70 rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.85),0_0_30px_rgba(173,255,47,0.2)] backdrop-blur-xl flex flex-col transition-all duration-200 overflow-hidden ${
-            isMinimized ? 'h-[60px]' : 'h-[620px] max-h-[88vh]'
+            isMinimized ? 'h-[60px]' : 'h-[635px] max-h-[89vh]'
           }`}
         >
           {/* Header */}
@@ -554,37 +711,76 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
 
           {!isMinimized && (
             <>
-              {/* MODEL SELECTOR HEADER BAR (3 OPÇÕES + REFLEXO) */}
-              <div className="px-3 py-2 bg-black/60 border-b border-zinc-800 shrink-0">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1">
-                    <Cpu className="w-3 h-3 text-[#adff2f]" />
-                    <span>{lang === 'pt' ? 'Escolha o Modelo Local:' : 'Select Local Model:'}</span>
-                  </span>
-                  <span className="text-[9px] font-mono text-cyan-400">
-                    {deviceInfo}
-                  </span>
+              {/* HARDWARE RECOMMENDATION & HARDWARE PROFILE BANNER */}
+              <div className="px-3 py-1.5 bg-zinc-950/90 border-b border-zinc-850 flex items-center justify-between text-[10px] font-mono shrink-0">
+                <div className="flex items-center gap-1.5 text-zinc-300">
+                  <Cpu className="w-3.5 h-3.5 text-[#adff2f]" />
+                  <span className="font-semibold">{hardwareProfile.hardwareSummary}</span>
                 </div>
 
-                <div className="grid grid-cols-4 gap-1">
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowHwTooltip(!showHwTooltip)}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded bg-lime-400/10 text-[#adff2f] border border-lime-400/30 hover:bg-lime-400/20 transition-colors cursor-pointer font-bold text-[9px]"
+                  >
+                    <span>★ {lang === 'pt' ? 'Recomendação' : 'Recommended'}</span>
+                    <Info className="w-2.5 h-2.5" />
+                  </button>
+
+                  {/* Tooltip / Drawer */}
+                  {showHwTooltip && (
+                    <div className="absolute right-0 top-6 z-50 w-72 p-2.5 bg-zinc-900 border border-[#adff2f]/50 rounded-xl shadow-2xl text-[10px] font-mono text-zinc-200 space-y-1.5 backdrop-blur-md">
+                      <div className="font-bold text-[#adff2f] flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        <span>
+                          {lang === 'pt'
+                            ? `Recomendado: ${MODEL_OPTIONS[hardwareProfile.recommendedTier].labelPt} (${MODEL_OPTIONS[hardwareProfile.recommendedTier].badge})`
+                            : `Recommended: ${MODEL_OPTIONS[hardwareProfile.recommendedTier].labelEn} (${MODEL_OPTIONS[hardwareProfile.recommendedTier].badge})`}
+                        </span>
+                      </div>
+                      <p className="text-zinc-300 leading-snug">
+                        {lang === 'pt' ? hardwareProfile.reasonPt : hardwareProfile.reasonEn}
+                      </p>
+                      <div className="pt-1 border-t border-zinc-800 text-[9px] text-zinc-400 flex items-center justify-between">
+                        <span>{hardwareProfile.hasWebGPU ? '✓ WebGPU Ativo' : '⚠️ Sem WebGPU'}</span>
+                        <span>{hardwareProfile.cores} Cores</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* MODEL SELECTOR HEADER BAR (4 TIERS WITH HARDWARE BADGES & CACHE ICONS) */}
+              <div className="px-3 py-2 bg-black/70 border-b border-zinc-800 shrink-0">
+                <div className="grid grid-cols-4 gap-1.5">
                   {(['reflex', 'leve', 'media', 'grande'] as ModelTier[]).map((tier) => {
                     const opt = MODEL_OPTIONS[tier];
                     const isSelected = activeTier === tier;
                     const isLoaded = loadedTier === tier || tier === 'reflex';
                     const isLoading = loadingTier === tier;
+                    const isRecommended = hardwareProfile.recommendedTier === tier;
+                    const isCached = cachedTiers[tier];
 
                     return (
                       <button
                         key={tier}
                         type="button"
                         onClick={() => handleSelectTier(tier)}
-                        className={`px-2 py-1.5 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
+                        className={`relative px-1.5 py-1.5 rounded-lg border text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
                           isSelected
-                            ? 'bg-[#adff2f]/15 border-[#adff2f] text-white shadow-[0_0_12px_rgba(173,255,47,0.25)]'
-                            : 'bg-zinc-900/70 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+                            ? 'bg-[#adff2f]/15 border-[#adff2f] text-white shadow-[0_0_12px_rgba(173,255,47,0.3)]'
+                            : 'bg-zinc-900/80 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
                         }`}
                         title={lang === 'pt' ? opt.descPt : opt.descEn}
                       >
+                        {/* Hardware recommendation badge */}
+                        {isRecommended && (
+                          <span className="absolute -top-1.5 -right-1 px-1 py-0.2 rounded-full bg-[#adff2f] text-black font-extrabold text-[8px] font-mono shadow-sm">
+                            ★ IDEAL
+                          </span>
+                        )}
+
                         <div className="flex items-center gap-1">
                           {tier === 'reflex' && <Zap className="w-2.5 h-2.5 text-amber-400" />}
                           {tier === 'leve' && <span className="w-2 h-2 rounded-full bg-emerald-400" />}
@@ -594,29 +790,47 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                             {lang === 'pt' ? opt.labelPt : opt.labelEn}
                           </span>
                         </div>
-                        <span className="text-[9px] font-mono text-zinc-400 mt-0.5">
-                          {isLoading ? '⏳' : opt.badge}
-                        </span>
+
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span className="text-[9px] font-mono text-zinc-400">
+                            {isLoading ? '⏳' : opt.badge}
+                          </span>
+                          {/* Cache status icon */}
+                          {isCached && tier !== 'reflex' && (
+                            <span
+                              className="text-[8px] text-emerald-400 font-bold"
+                              title={lang === 'pt' ? 'Salvo no cache permanente' : 'Saved in local cache'}
+                            >
+                              ✓
+                            </span>
+                          )}
+                        </div>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* NEURAL LOADING PROGRESS OVERLAY */}
+              {/* NEURAL LOADING PROGRESS OVERLAY (WITH CACHE NOTICE) */}
               {loadingTier && (
                 <div className="p-3 bg-zinc-900/95 border-b border-zinc-800 shrink-0">
                   <div className="flex items-center justify-between text-xs font-mono mb-1.5">
                     <span className="text-white font-bold flex items-center gap-1.5">
                       <DownloadCloud className="w-3.5 h-3.5 text-[#adff2f] animate-pulse" />
                       <span>
-                        {lang === 'pt'
-                          ? `Baixando [${MODEL_OPTIONS[loadingTier].labelPt} ${MODEL_OPTIONS[loadingTier].badge}] para a GPU...`
-                          : `Loading [${MODEL_OPTIONS[loadingTier].labelEn} ${MODEL_OPTIONS[loadingTier].badge}] into GPU...`}
+                        {cachedTiers[loadingTier]
+                          ? lang === 'pt'
+                            ? `Carregando do Cache Local [${MODEL_OPTIONS[loadingTier].badge}]...`
+                            : `Reading from Local Cache [${MODEL_OPTIONS[loadingTier].badge}]...`
+                          : lang === 'pt'
+                          ? `Baixando [${MODEL_OPTIONS[loadingTier].labelPt} ${MODEL_OPTIONS[loadingTier].badge}] para GPU...`
+                          : `Downloading [${MODEL_OPTIONS[loadingTier].labelEn} ${MODEL_OPTIONS[loadingTier].badge}] to GPU...`}
                       </span>
                     </span>
                     <span className="text-[#adff2f] font-bold">
-                      {downloadPercent}% ({downloadLoadedMb} MB / {downloadTotalMb || MODEL_OPTIONS[loadingTier].sizeMb} MB)
+                      {cachedTiers[loadingTier]
+                        ? '100% [Cache]'
+                        : `${downloadPercent}% (${downloadLoadedMb} MB / ${downloadTotalMb || MODEL_OPTIONS[loadingTier].sizeMb} MB)`}
                     </span>
                   </div>
 
@@ -628,11 +842,21 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                     />
                   </div>
 
-                  <p className="text-[9px] font-mono text-zinc-400 mt-1.5">
-                    {lang === 'pt'
-                      ? 'Compilando shaders WebGPU e alocando buffer SCache O(1) de 34.8 KB. Os pesos ficam cacheados no navegador (IndexedDB) para uso offline futuro!'
-                      : 'Compiling WebGPU shaders & allocating 34.8 KB O(1) SCache buffer. Weights are cached locally in IndexedDB for offline reuse!'}
-                  </p>
+                  <div className="flex items-center justify-between text-[9px] font-mono text-zinc-400 mt-1.5">
+                    <span>
+                      {cachedTiers[loadingTier]
+                        ? lang === 'pt'
+                          ? '⚡ 0 MB baixados: lendo diretamente do IndexedDB permanente.'
+                          : '⚡ 0 MB network: reading directly from persistent IndexedDB.'
+                        : lang === 'pt'
+                        ? 'Alocando buffer SCache O(1) de 34.8 KB na SRAM.'
+                        : 'Allocating 34.8 KB O(1) SCache buffer in SRAM.'}
+                    </span>
+                    <span className="text-emerald-400 flex items-center gap-0.5">
+                      <ShieldCheck className="w-2.5 h-2.5" />
+                      <span>Cache Persistente</span>
+                    </span>
+                  </div>
                 </div>
               )}
 
@@ -698,6 +922,11 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                         <span className="text-[9px] font-mono text-[#adff2f] flex items-center gap-1">
                           <Cpu className="w-2.5 h-2.5" />
                           <span>WebGPU ({MODEL_OPTIONS[msg.tierUsed].badge})</span>
+                          {msg.fromCache && (
+                            <span className="text-emerald-400 text-[8px] bg-emerald-500/10 px-1 rounded border border-emerald-500/20">
+                              Cache
+                            </span>
+                          )}
                         </span>
                       )}
                     </div>
@@ -732,13 +961,17 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                 ))}
               </div>
 
-              {/* Telemetry Footer */}
-              <div className="px-3 py-1 bg-black/80 border-t border-zinc-850 flex items-center justify-between text-[9px] font-mono text-zinc-400 shrink-0">
+              {/* Telemetry & Cache Preservation Guarantee Footer */}
+              <div className="px-3 py-1.5 bg-black/90 border-t border-zinc-850 flex items-center justify-between text-[9px] font-mono text-zinc-400 shrink-0">
                 <span className="flex items-center gap-1 text-emerald-400">
                   <ShieldCheck className="w-3 h-3" />
-                  <span>100% Client-Side · Zero Server Logs</span>
+                  <span>
+                    {isStoragePersisted
+                      ? 'Storage.persist: Ativo · Zero Downloads Duplicados'
+                      : 'Cache IndexedDB Ativo'}
+                  </span>
                 </span>
-                <span>
+                <span className="text-zinc-300">
                   {lastTokPerSec ? `⚡ ${lastTokPerSec} tok/s` : 'SCache: 34.8 KB O(1)'}
                 </span>
               </div>
