@@ -6,3 +6,5 @@ coverage/
 *.log
 .env*
 !.env.example
+public/models/s1_mixed_replay_*.onnx
+public/models/s1_overnight_*.onnx
