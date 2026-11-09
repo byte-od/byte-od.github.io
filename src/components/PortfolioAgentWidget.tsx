@@ -25,6 +25,7 @@ import {
   Check,
 } from 'lucide-react';
 import { MODELS_CONFIG } from '../lib/llmWorker';
+import { SCacheTelemetry } from '../lib/scacheEngine';
 
 export type ModelTier = 'reflex' | 'leve' | 'media' | 'grande';
 
@@ -177,6 +178,17 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
   const [lastTokPerSec, setLastTokPerSec] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // SCache O(1) Real-Time Telemetry State
+  const [scacheTelemetry, setScacheTelemetry] = useState<SCacheTelemetry>({
+    memoryBytes: 37632,
+    memoryKb: '36.8 KB',
+    scarsCount: 0,
+    matrixNorm: 0,
+    manifoldAlignment: 0,
+    lastSurprise: 0,
+    mode: 'O(1) Associative Scar Memory',
+  });
+
   // Cache & Memory Preservation States
   const [cachedTiers, setCachedTiers] = useState<Record<ModelTier, boolean>>({
     reflex: true,
@@ -285,8 +297,9 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       });
       workerRef.current = worker;
 
-      // Ask worker to check which models are already cached
+      // Ask worker to check which models are already cached and get initial SCache telemetry
       worker.postMessage({ type: 'check_cache' });
+      worker.postMessage({ type: 'get_scache_telemetry' });
 
       worker.onmessage = (e: MessageEvent) => {
         const {
@@ -302,9 +315,12 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           results,
           fromCache,
           wasAlreadyCached,
+          scacheTelemetry: incomingTelemetry,
         } = e.data;
 
-        if (type === 'cache_status' && results) {
+        if (type === 'scache_telemetry' && e.data.telemetry) {
+          setScacheTelemetry(e.data.telemetry);
+        } else if (type === 'cache_status' && results) {
           setCachedTiers({
             reflex: true,
             leve: !!results.leve,
@@ -351,6 +367,9 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           ]);
         } else if (type === 'generation_start') {
           setIsTyping(true);
+          if (incomingTelemetry) {
+            setScacheTelemetry(incomingTelemetry);
+          }
         } else if (type === 'token') {
           setIsTyping(false);
           const activeId = streamingMsgIdRef.current;
@@ -364,6 +383,9 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           streamingMsgIdRef.current = null;
           if (stats?.tokensPerSec) {
             setLastTokPerSec(stats.tokensPerSec);
+          }
+          if (incomingTelemetry) {
+            setScacheTelemetry(incomingTelemetry);
           }
         } else if (type === 'error') {
           setIsTyping(false);
@@ -681,14 +703,21 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
               <div>
                 <div className="flex items-center gap-2">
                   <h4 className="text-xs font-mono font-bold text-white tracking-tight">
-                    {lang === 'pt' ? 'IA no Browser (MoS & SCache)' : 'In-Browser AI (MoS & SCache)'}
+                    {lang === 'pt' ? 'Agente Neural Local' : 'Local Neural Agent'}
                   </h4>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-[#adff2f]/20 text-[#adff2f] border border-[#adff2f]/40 font-bold">
+                    SCache {scacheTelemetry.memoryKb} O(1)
+                  </span>
                   <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                     Local GPU
                   </span>
                 </div>
-                <p className="text-[10px] font-mono text-zinc-400">
-                  {lang === 'pt' ? 'Memória SCache: 34.8 KB O(1) · 0 Chamadas de Nuvem' : 'SCache Memory: 34.8 KB O(1) · 0 Cloud Calls'}
+                <p className="text-[10px] font-mono text-zinc-400 flex items-center gap-1.5 flex-wrap">
+                  <span>Cicatrizes: <b className="text-[#adff2f]">{scacheTelemetry.scarsCount}</b></span>
+                  <span>·</span>
+                  <span>||W||: <b className="text-white">{scacheTelemetry.matrixNorm}</b></span>
+                  <span>·</span>
+                  <span className="text-emerald-400">0 Cloud</span>
                 </p>
               </div>
             </div>

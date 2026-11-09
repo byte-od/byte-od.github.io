@@ -1,8 +1,12 @@
 import { pipeline, env, TextStreamer } from '@huggingface/transformers';
+import { SCacheMemoryCore } from './scacheEngine';
 
 // Configuration for in-browser client execution
 env.allowLocalModels = false;
 env.useBrowserCache = true;
+
+// Instanciação do Motor de Memória Associativa SCache O(1)
+const scacheCore = new SCacheMemoryCore(96);
 
 interface ModelConfig {
   id: string;
@@ -62,6 +66,12 @@ async function isModelCached(modelId: string): Promise<boolean> {
 
 self.onmessage = async (e: MessageEvent) => {
   const { type, payload } = e.data;
+
+  // 0. TELEMETRIA DO SCACHE O(1)
+  if (type === 'get_scache_telemetry') {
+    self.postMessage({ type: 'scache_telemetry', telemetry: scacheCore.getTelemetry() });
+    return;
+  }
 
   // 1. VERIFICAR STATUS DO CACHE (GARANTIA DE NÃO RE-BAIXAR)
   if (type === 'check_cache') {
@@ -196,13 +206,20 @@ self.onmessage = async (e: MessageEvent) => {
 
     try {
       let tokenCount = 0;
+      let fullGeneratedText = '';
       const startTime = performance.now();
+
+      const lastUserMsg = Array.isArray(messages) && messages.length > 0
+        ? messages[messages.length - 1]?.content || ''
+        : '';
+      const scacheRetrieval = scacheCore.retrieve(lastUserMsg);
 
       const streamer = new TextStreamer(currentPipeline.tokenizer, {
         skip_prompt: true,
         skip_special_tokens: true,
         callback_function: (chunk: string) => {
           tokenCount++;
+          fullGeneratedText += chunk;
           self.postMessage({
             type: 'token',
             token: chunk,
@@ -210,7 +227,11 @@ self.onmessage = async (e: MessageEvent) => {
         },
       });
 
-      self.postMessage({ type: 'generation_start' });
+      self.postMessage({
+        type: 'generation_start',
+        scacheResonance: scacheRetrieval.resonance,
+        scacheTelemetry: scacheCore.getTelemetry(),
+      });
 
       await currentPipeline(messages, {
         max_new_tokens: maxTokens,
@@ -222,6 +243,11 @@ self.onmessage = async (e: MessageEvent) => {
         streamer: streamer,
       });
 
+      // Consolidação na Memória Associativa SCache O(1)
+      if (lastUserMsg && fullGeneratedText) {
+        scacheCore.absorbInteraction(lastUserMsg, fullGeneratedText);
+      }
+
       const totalTimeMs = performance.now() - startTime;
       const tokensPerSec = totalTimeMs > 0 ? (tokenCount / (totalTimeMs / 1000)).toFixed(1) : '0';
 
@@ -232,6 +258,7 @@ self.onmessage = async (e: MessageEvent) => {
           timeMs: Math.round(totalTimeMs),
           tokensPerSec,
         },
+        scacheTelemetry: scacheCore.getTelemetry(),
       });
     } catch (err: any) {
       console.error('[LLM Worker] Generation error:', err);
