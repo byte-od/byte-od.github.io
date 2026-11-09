@@ -12,7 +12,7 @@ interface ModelConfig {
 
 export const MODELS_CONFIG: Record<string, ModelConfig> = {
   leve: {
-    id: 'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA',
+    id: 'onnx-community/SmolLM2-135M-Instruct',
     name: 'SmolLM2-135M-Instruct (INT4)',
     dtype: 'q4',
   },
@@ -22,8 +22,8 @@ export const MODELS_CONFIG: Record<string, ModelConfig> = {
     dtype: 'q4',
   },
   grande: {
-    id: 'onnx-community/Qwen2.5-1.5B-Instruct',
-    name: 'Qwen2.5-1.5B-Instruct (INT4)',
+    id: 'onnx-community/Llama-3.2-1B-Instruct',
+    name: 'Llama-3.2-1B-Instruct (INT4)',
     dtype: 'q4',
   },
 };
@@ -214,8 +214,11 @@ self.onmessage = async (e: MessageEvent) => {
 
       await currentPipeline(messages, {
         max_new_tokens: maxTokens,
-        temperature: temperature,
+        temperature: Math.max(0.2, temperature),
         do_sample: temperature > 0.0,
+        repetition_penalty: 1.25,
+        top_k: 40,
+        top_p: 0.9,
         streamer: streamer,
       });
 
