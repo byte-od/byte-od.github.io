@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { MODELS_CONFIG } from '../lib/llmWorker';
 import { SCacheTelemetry } from '../lib/scacheEngine';
+import { MoSTelemetry } from '../lib/mosEngine';
 
 export type ModelTier = 'reflex' | 'leve' | 'media' | 'grande';
 
@@ -189,6 +190,17 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     mode: 'O(1) Associative Scar Memory',
   });
 
+  // MoS (Mixture of Scars) Real-Time Telemetry State
+  const [mosTelemetry, setMosTelemetry] = useState<MoSTelemetry>({
+    numExperts: 8,
+    activeTopK: 2,
+    sparsityPercent: 75,
+    totalParametersBytes: 52224,
+    activeExperts: [],
+    dominantDomain: 'Standby',
+    mode: 'Sparse MoS Top-K Low-Rank Routing',
+  });
+
   // Cache & Memory Preservation States
   const [cachedTiers, setCachedTiers] = useState<Record<ModelTier, boolean>>({
     reflex: true,
@@ -316,10 +328,12 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           fromCache,
           wasAlreadyCached,
           scacheTelemetry: incomingTelemetry,
+          mosTelemetry: incomingMosTelemetry,
         } = e.data;
 
-        if (type === 'scache_telemetry' && e.data.telemetry) {
-          setScacheTelemetry(e.data.telemetry);
+        if (type === 'scache_telemetry') {
+          if (e.data.telemetry) setScacheTelemetry(e.data.telemetry);
+          if (e.data.mosTelemetry) setMosTelemetry(e.data.mosTelemetry);
         } else if (type === 'cache_status' && results) {
           setCachedTiers({
             reflex: true,
@@ -370,6 +384,9 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           if (incomingTelemetry) {
             setScacheTelemetry(incomingTelemetry);
           }
+          if (incomingMosTelemetry) {
+            setMosTelemetry(incomingMosTelemetry);
+          }
         } else if (type === 'token') {
           setIsTyping(false);
           const activeId = streamingMsgIdRef.current;
@@ -386,6 +403,9 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           }
           if (incomingTelemetry) {
             setScacheTelemetry(incomingTelemetry);
+          }
+          if (incomingMosTelemetry) {
+            setMosTelemetry(incomingMosTelemetry);
           }
         } else if (type === 'error') {
           setIsTyping(false);
@@ -701,18 +721,23 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                 <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#adff2f] animate-pulse" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h4 className="text-xs font-mono font-bold text-white tracking-tight">
                     {lang === 'pt' ? 'Agente Neural Local' : 'Local Neural Agent'}
                   </h4>
                   <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-[#adff2f]/20 text-[#adff2f] border border-[#adff2f]/40 font-bold">
                     SCache {scacheTelemetry.memoryKb} O(1)
                   </span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40 font-bold">
+                    MoS {mosTelemetry.activeTopK}/{mosTelemetry.numExperts} ({mosTelemetry.sparsityPercent}% esparso)
+                  </span>
                   <span className="px-1.5 py-0.2 rounded text-[9px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                    Local GPU
+                    Local GPU / WGSL
                   </span>
                 </div>
                 <p className="text-[10px] font-mono text-zinc-400 flex items-center gap-1.5 flex-wrap">
+                  <span>Domínio MoS: <b className="text-purple-300">{mosTelemetry.dominantDomain}</b></span>
+                  <span>·</span>
                   <span>Cicatrizes: <b className="text-[#adff2f]">{scacheTelemetry.scarsCount}</b></span>
                   <span>·</span>
                   <span>||W||: <b className="text-white">{scacheTelemetry.matrixNorm}</b></span>

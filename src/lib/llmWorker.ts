@@ -1,12 +1,16 @@
 import { pipeline, env, TextStreamer } from '@huggingface/transformers';
 import { SCacheMemoryCore } from './scacheEngine';
+import { MixtureOfScarsCore } from './mosEngine';
 
 // Configuration for in-browser client execution
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 
-// Instanciação do Motor de Memória Associativa SCache O(1)
+// Instanciação dos Motores Matemáticos Proprietários:
+// 1. SCache: Memória Associativa Fast-Weights Hebbiana O(1) (~36.8 KB)
+// 2. MoS: Roteador Esparso de Micro-Especialistas em Cicatriz (Top-K Low-Rank)
 const scacheCore = new SCacheMemoryCore(96);
+const mosCore = new MixtureOfScarsCore(96, 8, 2);
 
 interface ModelConfig {
   id: string;
@@ -67,9 +71,13 @@ async function isModelCached(modelId: string): Promise<boolean> {
 self.onmessage = async (e: MessageEvent) => {
   const { type, payload } = e.data;
 
-  // 0. TELEMETRIA DO SCACHE O(1)
-  if (type === 'get_scache_telemetry') {
-    self.postMessage({ type: 'scache_telemetry', telemetry: scacheCore.getTelemetry() });
+  // 0. TELEMETRIA DO SCACHE O(1) & MOS
+  if (type === 'get_scache_telemetry' || type === 'get_mos_scache_telemetry') {
+    self.postMessage({
+      type: 'scache_telemetry',
+      telemetry: scacheCore.getTelemetry(),
+      mosTelemetry: mosCore.getTelemetry(),
+    });
     return;
   }
 
@@ -212,6 +220,12 @@ self.onmessage = async (e: MessageEvent) => {
       const lastUserMsg = Array.isArray(messages) && messages.length > 0
         ? messages[messages.length - 1]?.content || ''
         : '';
+
+      // 1. Projeção Semântica e Roteamento Mixture of Scars (MoS Top-K)
+      const userEmbedding = scacheCore.embedText(lastUserMsg);
+      const mosResult = mosCore.routeAndProject(userEmbedding);
+
+      // 2. Consulta Associativa SCache O(1)
       const scacheRetrieval = scacheCore.retrieve(lastUserMsg);
 
       const streamer = new TextStreamer(currentPipeline.tokenizer, {
@@ -231,6 +245,7 @@ self.onmessage = async (e: MessageEvent) => {
         type: 'generation_start',
         scacheResonance: scacheRetrieval.resonance,
         scacheTelemetry: scacheCore.getTelemetry(),
+        mosTelemetry: mosResult.telemetry,
       });
 
       await currentPipeline(messages, {
@@ -259,6 +274,7 @@ self.onmessage = async (e: MessageEvent) => {
           tokensPerSec,
         },
         scacheTelemetry: scacheCore.getTelemetry(),
+        mosTelemetry: mosCore.getTelemetry(),
       });
     } catch (err: any) {
       console.error('[LLM Worker] Generation error:', err);
