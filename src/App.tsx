@@ -14,6 +14,7 @@ import { VisitorTelemetryBadge } from './components/VisitorTelemetryBadge';
 import { FloatingTokenMonitor } from './components/FloatingTokenMonitor';
 import { AmbientTensorCanvas } from './components/AmbientTensorCanvas';
 import { HostIntegrityBanner } from './components/HostIntegrityBanner';
+import { PortfolioAgentWidget } from './components/PortfolioAgentWidget';
 import {
   Github,
   Mail,
@@ -869,6 +870,9 @@ export default function App() {
         lang={lang}
         initialTab={agentModalInitialTab}
       />
+
+      {/* Interactive MoS & SCache Conversational Portfolio Agent */}
+      <PortfolioAgentWidget lang={lang} />
     </div>
   );
 }
