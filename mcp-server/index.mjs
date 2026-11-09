@@ -20,9 +20,8 @@ const PROFILE_DATA = {
   name: 'Julio Cesar da Costa Reis Filho',
   handle: 'byte-od',
   title: 'Senior Systems Architect & LLM Engineer',
-  location: 'Curitiba & Pontal do Paraná, Brazil (Available Globally / Remote & Relocation)',
+  location: 'Available Globally (Remote & Relocation)',
   email: 'reisfilho1116@gmail.com',
-  phone: '+55 41 9 9626 8203',
   github: 'https://github.com/byte-od',
   linkedin: 'https://linkedin.com/in/juliocrfilho',
   portfolio_url: 'https://byte-od.github.io/',
@@ -358,7 +357,6 @@ server.tool(
           text: JSON.stringify({
             name: PROFILE_DATA.name,
             email: PROFILE_DATA.email,
-            phone: PROFILE_DATA.phone,
             linkedin: PROFILE_DATA.linkedin,
             github: PROFILE_DATA.github,
             live_portfolio: PROFILE_DATA.portfolio_url,

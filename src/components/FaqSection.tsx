@@ -28,13 +28,13 @@ const FAQ_ITEMS: FaqItem[] = [
       'Dual expertise bridging distributed systems (Go, Clean Architecture, gRPC) and deep transformer internals (PyTorch, FlashAttention-2, CUDA/Metal kernels).',
       'Track record leading high-scale engineering for products serving over 1,000,000+ active fintech and enterprise mobile users.',
       'Principal Architect at JCRF Labs, author of CIR-Engine 503M, and maintainer of open-source tooling on npm (mddd-cli) and GitHub.',
-      'Based in Curitiba, Brazil, available globally for Staff/Principal Systems Architect or LLM Engineering positions (remote or relocation).',
+      'Available globally for Staff/Principal Systems Architect or LLM Engineering positions (remote or relocation).',
     ],
     detailsPt: [
       'Dupla maestria unindo sistemas distribuídos (Go, Clean Architecture, gRPC) e mecânica interna de transformers (PyTorch, FlashAttention-2, kernels CUDA/Metal).',
       'Histórico liderando engenharia de larga escala para produtos com mais de 1.000.000+ de usuários ativos em fintechs e mobile empresarial.',
       'Arquiteto Principal na JCRF Labs, autor da CIR-Engine 503M e mantenedor de ferramentas open-source no npm (mddd-cli) e GitHub.',
-      'Sediado em Curitiba, Brasil, disponível globalmente para posições de Staff/Principal Systems Architect ou Engenharia de LLMs (remoto ou relocalização).',
+      'Disponível globalmente para posições de Staff/Principal Systems Architect ou Engenharia de LLMs (remoto ou relocalização).',
     ],
   },
   {
@@ -154,14 +154,14 @@ const FAQ_ITEMS: FaqItem[] = [
       'LinkedIn Profile: https://linkedin.com/in/juliocrfilho',
       'GitHub Organization & Repos: https://github.com/byte-od',
       'Machine-Readable LLM Specification: https://byte-od.github.io/llms.txt',
-      'Location: Curitiba, Paraná, Brazil (Available for 100% Remote Global or Relocation).',
+      'Availability: Available for 100% Remote Global or Relocation.',
     ],
     detailsPt: [
       'E-mail Direto: reisfilho1116@gmail.com (Resposta rápida em até 24 horas).',
       'Perfil no LinkedIn: https://linkedin.com/in/juliocrfilho',
       'Repositórios no GitHub: https://github.com/byte-od',
       'Especificação para Agentes de IA: https://byte-od.github.io/llms.txt',
-      'Localização: Curitiba, PR, Brasil (Disponível para Trabalho Remoto Global ou Relocalização).',
+      'Disponibilidade: Disponível para Trabalho Remoto Global ou Relocalização.',
     ],
   },
 ];

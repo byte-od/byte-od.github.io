@@ -34,9 +34,8 @@ export const PORTFOLIO_INFO = {
   name: 'Julio Cesar da Costa Reis Filho',
   handle: 'byte-od',
   title: 'Senior Systems Architect & LLM Engineer',
-  location: 'Curitiba, Paraná, Brazil (Open to Remote & Relocation)',
+  location: 'Available Globally (Open to Remote & Relocation)',
   email: 'reisfilho1116@gmail.com',
-  phone: '+55 41 9 9626 8203',
   github: 'https://github.com/byte-od',
   linkedin: 'https://linkedin.com/in/juliocrfilho',
   languages: [
@@ -52,7 +51,7 @@ export function getPortfolioInfo(lang: 'en' | 'pt' = 'en') {
     return {
       ...PORTFOLIO_INFO,
       title: 'Arquiteto de Sistemas Sênior & Engenheiro de LLMs',
-      location: 'Curitiba, Paraná, Brasil (Aberto para Remoto & Relocalização)',
+      location: 'Disponível Globalmente (Aberto para Remoto & Relocalização)',
       languages: [
         { name: 'Inglês', level: 'Proficiente C2 (EF SET 75/100)' },
         { name: 'Português', level: 'Nativo' },
@@ -454,7 +453,7 @@ export const EXPERIENCES: ExperienceData[] = [
     company: 'Asapp Desenvolvimento',
     role: 'Principal Architect & Founder',
     period: '2026 – Present',
-    location: 'Curitiba & Pontal do Paraná, Brazil',
+    location: 'Remote',
     type: 'Full-time / Leadership',
     highlights: [
       'Spearhead software architecture and technology strategy, delivering microservices, cloud-native platforms, and high-performance cross-platform applications using Go, Next.js, and Flutter.',
@@ -481,7 +480,7 @@ export const EXPERIENCES: ExperienceData[] = [
     company: 'Arlequim Technologies',
     role: 'Flutter Specialist & Multiplatform Lead',
     period: '07/2025 – Present',
-    location: 'Curitiba, Brazil',
+    location: 'Remote',
     type: 'Full-time',
     highlights: [
       'Technical leadership in the development of multiplatform solutions, integrating high-performance Flutter front-ends.',
@@ -495,7 +494,7 @@ export const EXPERIENCES: ExperienceData[] = [
     company: 'Asapp Desenvolvimento (Consulting Era)',
     role: 'Founder / Lead Developer',
     period: '10/2023 – 03/2024',
-    location: 'Curitiba, Brazil',
+    location: 'Remote',
     type: 'Leadership',
     highlights: [
       'Founded and led a consultancy focused on high-complexity Desktop, Mobile, and Web applications.',
@@ -508,7 +507,7 @@ export const EXPERIENCES: ExperienceData[] = [
     company: 'Grupo Data',
     role: 'Flutter Architect & Technical Lead',
     period: '11/2021 – 10/2022',
-    location: 'Curitiba, Brazil',
+    location: 'Remote',
     type: 'Contract',
     highlights: [
       'Responsible for the maintenance and evolution of the "Tim Beta" mobile application, serving over 1 million active users.',
@@ -520,7 +519,7 @@ export const EXPERIENCES: ExperienceData[] = [
     company: 'Grupo GFT',
     role: 'Mobile Developer & Tech Lead',
     period: '07/2020 – 11/2021',
-    location: 'Curitiba, Brazil',
+    location: 'Remote',
     type: 'Full-time',
     highlights: [
       'Development of critical features for tier-1 financial institutions (Banco Original and Banco Votorantim) using Java, Kotlin, and Flutter.',
@@ -532,7 +531,7 @@ export const EXPERIENCES: ExperienceData[] = [
     company: 'DevMaker Mobile Apps',
     role: 'Mobile Developer',
     period: '04/2019 – 07/2020',
-    location: 'Curitiba, Brazil',
+    location: 'Remote',
     type: 'Full-time',
     highlights: [
       'Android (Java/Kotlin), iOS (Swift), and React Native engineering.',
@@ -550,7 +549,7 @@ export function getExperiences(lang: 'en' | 'pt' = 'en'): ExperienceData[] {
       company: 'Asapp Desenvolvimento',
       role: 'Arquiteto Principal & Fundador',
       period: '2026 – Presente',
-      location: 'Curitiba & Pontal do Paraná, Brasil',
+      location: 'Remoto',
       type: 'Tempo Integral / Liderança',
       highlights: [
         'Liderança técnica em arquitetura de software e estratégia tecnológica, entregando microsserviços, plataformas nativas em nuvem e aplicações multiplataforma de alta performance com Go, Next.js e Flutter.',
@@ -577,7 +576,7 @@ export function getExperiences(lang: 'en' | 'pt' = 'en'): ExperienceData[] {
       company: 'Arlequim Technologies',
       role: 'Especialista Flutter & Líder Multiplataforma',
       period: '07/2025 – Presente',
-      location: 'Curitiba, Brasil',
+      location: 'Remoto',
       type: 'Tempo Integral',
       highlights: [
         'Liderança técnica no desenvolvimento de soluções multiplataforma com front-ends Flutter de alto rendimento.',
@@ -591,7 +590,7 @@ export function getExperiences(lang: 'en' | 'pt' = 'en'): ExperienceData[] {
       company: 'Asapp Desenvolvimento (Fase de Consultoria)',
       role: 'Fundador / Desenvolvedor Líder',
       period: '10/2023 – 03/2024',
-      location: 'Curitiba, Brasil',
+      location: 'Remoto',
       type: 'Liderança',
       highlights: [
         'Fundação e liderança de consultoria focada em aplicações corporativas de alta complexidade para Desktop, Mobile e Web.',
@@ -604,7 +603,7 @@ export function getExperiences(lang: 'en' | 'pt' = 'en'): ExperienceData[] {
       company: 'Grupo Data',
       role: 'Arquiteto Flutter & Líder Técnico',
       period: '11/2021 – 10/2022',
-      location: 'Curitiba, Brasil',
+      location: 'Remoto',
       type: 'Contrato',
       highlights: [
         'Responsável pela manutenção e evolução da aplicação móvel "Tim Beta", atendendo mais de 1 milhão de usuários ativos.',
@@ -616,7 +615,7 @@ export function getExperiences(lang: 'en' | 'pt' = 'en'): ExperienceData[] {
       company: 'Grupo GFT',
       role: 'Desenvolvedor Mobile & Líder Técnico',
       period: '07/2020 – 11/2021',
-      location: 'Curitiba, Brasil',
+      location: 'Remoto',
       type: 'Tempo Integral',
       highlights: [
         'Desenvolvimento de funcionalidades críticas para instituições financeiras tier-1 (Banco Original e Banco Votorantim) usando Java, Kotlin e Flutter.',
@@ -628,7 +627,7 @@ export function getExperiences(lang: 'en' | 'pt' = 'en'): ExperienceData[] {
       company: 'DevMaker Mobile Apps',
       role: 'Desenvolvedor Mobile',
       period: '04/2019 – 07/2020',
-      location: 'Curitiba, Brasil',
+      location: 'Remoto',
       type: 'Tempo Integral',
       highlights: [
         'Engenharia mobile em Android (Java/Kotlin), iOS (Swift) e React Native.',

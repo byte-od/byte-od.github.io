@@ -279,7 +279,7 @@ export default function App() {
               {lang === 'pt' ? 'ARQUITETO DE SISTEMAS & ENGENHEIRO DE LLMs' : 'SYSTEMS ARCHITECT & LLM ENGINEER'}
             </span>
             <span aria-hidden="true">·</span>
-            <span>{lang === 'pt' ? 'CURITIBA, BRASIL' : 'CURITIBA, BRAZIL'}</span>
+            <span>{lang === 'pt' ? 'GLOBAL / REMOTO' : 'GLOBAL / REMOTE'}</span>
             <span aria-hidden="true">·</span>
             <VisitorTelemetryBadge
               lang={lang}

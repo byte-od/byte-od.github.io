@@ -1237,7 +1237,7 @@ export const SystemOneHudDemo: React.FC<{ lang?: 'en' | 'pt' }> = ({ lang = 'en'
               <div className="flex items-center justify-between text-xs font-mono">
                 <span className="text-zinc-300 font-semibold flex items-center gap-1.5">
                   <span>⚡</span>
-                  <span>{lang === 'pt' ? 'Calibração Estocástica' : 'Stochastic Calibration'}</span>
+                  <span>{lang === 'pt' ? 'CALIBRAÇÃO ESTOCÁSTICA' : 'CALIBRATION'}</span>
                 </span>
                 <span className="text-[11px] text-cyan-400 font-mono">
                   {isAutoCalibrate ? '⚡ Auto (Homeostase)' : `${calibrationValue.toFixed(2)} [Fixo]`}

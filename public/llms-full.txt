@@ -9,7 +9,7 @@
 - GitHub: https://github.com/byte-od
 - LinkedIn: https://linkedin.com/in/juliocrfilho
 - Canonical Portfolio URL: https://byte-od.github.io/
-- Location: Curitiba & Pontal do Paraná, Paraná, Brazil (Available worldwide for remote Senior/Staff roles)
+- Location: Available Globally (Remote & Relocation)
 
 ## 2. ENGINEERING HIGHLIGHTS & ARCHITECTURAL BENCHMARKS
 - Model: CIR-Engine 503M (Causal Intelligence Reasoning Engine)

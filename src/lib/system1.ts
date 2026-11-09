@@ -1369,8 +1369,8 @@ export class System1AgentWeb {
         // Para o cubo atômico (12 ações), comutadores não-monotônicos requerem múltiplos passos
         // antes de alinhar novas facetas. O limiar de estagnação deve ser tolerante (>= 12 passos)
         // para não sabotar trajetórias reflexivas determinísticas com ruído estocástico prematuro.
-        const stagThreshold = (logits.length === 12) ? 12 : 3;
-        if (this.stagnationCount >= stagThreshold) {
+        const stagThreshold = (logits.length === 12) ? 12 : 2;
+        if (this.stagnationCount >= 2 && this.stagnationCount >= stagThreshold) {
           this.dynamicCalibration = Math.min(0.80, this.dynamicCalibration + 0.10);
         }
       }

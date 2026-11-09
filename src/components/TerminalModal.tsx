@@ -205,16 +205,12 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
   Candidato:   ${portfolioInfo.name}
   Título:      ${portfolioInfo.title}
   Email:       ${portfolioInfo.email}
-  Telefone:    ${portfolioInfo.phone}
-  Localização: ${portfolioInfo.location}
   GitHub:      ${portfolioInfo.github}
   Status:      Disponível para Posições Remotas e Relocalização Internacional`
             : `[PREDICT_CONTACT_METHOD() RESULT]
   Candidate:  ${portfolioInfo.name}
   Title:      ${portfolioInfo.title}
   Email:      ${portfolioInfo.email}
-  Phone:      ${portfolioInfo.phone}
-  Location:   ${portfolioInfo.location}
   GitHub:     ${portfolioInfo.github}
   Status:     Open to Remote & International Relocation`,
       });

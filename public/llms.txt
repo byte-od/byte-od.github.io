@@ -6,7 +6,7 @@
 name: Julio Cesar da Costa Reis Filho
 role: Systems Architect & Senior LLM Engineer
 specialization: Causal Transformers, PyTorch DDP, Inference Acceleration, Clean Architecture, Multi-Agent Pipelines
-location: Curitiba & Pontal do Paraná, Brazil (Available Globally / Remote)
+location: Available Globally (Remote & Relocation)
 email: reisfilho1116@gmail.com
 github: https://github.com/byte-od
 linkedin: https://linkedin.com/in/juliocrfilho
@@ -61,7 +61,7 @@ He is the author of AURA (Autonomous Universal Reflex Architecture / System 1 En
 
 ## Professional Experience
 - **Tech Lead & Principal Architect** | JCRF Labs (2024 – Present)
-  - Curitiba & Remote
+  - Remote & Global
   - Directs cloud-native architecture and enterprise LLM multi-agent integration.
   - Architected Appfy, a modular micro-apps platform on Google Cloud Platform (GCP).
   - Maintained open-source developer tooling (`mddd-cli` on npm) and automated agentic pipelines.

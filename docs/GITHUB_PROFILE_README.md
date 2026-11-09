@@ -1,7 +1,7 @@
 # Julio Cesar da Costa Reis Filho
 
 <p align="left">
-  <strong>Senior Systems Architect & LLM Engineer</strong> | Curitiba, Brazil<br>
+  <strong>Senior Systems Architect & LLM Engineer</strong> | Available Globally (Remote & Relocation)<br>
   <em>Specializing in Causal Transformers (CIR-Engine 503M), PyTorch Distributed DDP, Spec-Driven Tooling, and Low-Latency Neural Systems.</em>
 </p>
 

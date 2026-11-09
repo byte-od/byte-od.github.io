@@ -102,7 +102,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     if (q.includes('quem e') || q.includes('who is') || q.includes('julio') || q.includes('trajetoria') || q.includes('experiencia') || q.includes('background') || q.includes('carreira') || q.includes('sobre')) {
       if (lang === 'pt') {
         return {
-          text: 'Julio Cesar da Costa Reis Filho é um Arquiteto de Sistemas Sênior e Engenheiro de LLMs com mais de 8 anos de experiência em engenharia de software de ponta. Ele combina domínio profundo de sistemas de baixo nível (Go, C++, Rust, CUDA/Metal) com arquiteturas neurais avançadas (Transformers Causais, PyTorch DDP, RL e quantização em hardware). É baseado em Curitiba/Pontal do Paraná, Brasil, e está aberto a posições remotas globais ou relocalização internacional.',
+          text: 'Julio Cesar da Costa Reis Filho é um Arquiteto de Sistemas Sênior e Engenheiro de LLMs com mais de 8 anos de experiência em engenharia de software de ponta. Ele combina domínio profundo de sistemas de baixo nível (Go, C++, Rust, CUDA/Metal) com arquiteturas neurais avançadas (Transformers Causais, PyTorch DDP, RL e quantização em hardware). Está disponível globalmente para posições remotas ou relocalização internacional.',
           links: [
             { label: 'LinkedIn do Julio', url: 'https://linkedin.com/in/juliocrfilho', icon: 'ext' },
             { label: 'GitHub @byte-od', url: 'https://github.com/byte-od', icon: 'github' },
@@ -110,7 +110,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         };
       }
       return {
-        text: 'Julio Cesar da Costa Reis Filho is a Senior Systems Architect and LLM Systems Engineer with over 8 years of engineering experience. He bridges low-level systems programming (Go, C++, Rust, CUDA/Metal) with deep learning architectures (Causal Transformers, Distributed PyTorch DDP, Embodied RL, and hardware-level quantization). Based in Curitiba, Brazil, he is open to global remote roles and international relocation.',
+        text: 'Julio Cesar da Costa Reis Filho is a Senior Systems Architect and LLM Systems Engineer with over 8 years of engineering experience. He bridges low-level systems programming (Go, C++, Rust, CUDA/Metal) with deep learning architectures (Causal Transformers, Distributed PyTorch DDP, Embodied RL, and hardware-level quantization). Available globally for remote roles and international relocation.',
         links: [
           { label: "Julio's LinkedIn", url: 'https://linkedin.com/in/juliocrfilho', icon: 'ext' },
           { label: 'GitHub @byte-od', url: 'https://github.com/byte-od', icon: 'github' },
@@ -240,7 +240,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     if (q.includes('contato') || q.includes('contact') || q.includes('contratar') || q.includes('hire') || q.includes('email') || q.includes('linkedin') || q.includes('salario') || q.includes('vaga') || q.includes('entrevista')) {
       if (lang === 'pt') {
         return {
-          text: 'O Julio está disponível para posições de Liderança Técnica, Arquiteto de Sistemas Sênior e Engenheiro de LLMs/Transformers (remoto global ou relocalização internacional). Você pode contatá-lo diretamente pelos canais oficiais:\n\n• E-mail: reisfilho1116@gmail.com\n• LinkedIn: linkedin.com/in/juliocrfilho\n• Telefone/WhatsApp: +55 41 9 9626 8203\n• GitHub: github.com/byte-od',
+          text: 'O Julio está disponível para posições de Liderança Técnica, Arquiteto de Sistemas Sênior e Engenheiro de LLMs/Transformers (remoto global ou relocalização internacional). O canal de contato oficial e direto é:\n\n• E-mail: reisfilho1116@gmail.com\n• LinkedIn: linkedin.com/in/juliocrfilho\n• GitHub: github.com/byte-od',
           links: [
             { label: 'Enviar E-mail Direto', url: 'mailto:reisfilho1116@gmail.com', icon: 'ext' },
             { label: 'Perfil no LinkedIn', url: 'https://linkedin.com/in/juliocrfilho', icon: 'ext' },
@@ -248,7 +248,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         };
       }
       return {
-        text: 'Julio is actively open to Principal/Lead Systems Architect and Senior LLM Systems Engineer opportunities (global remote or international relocation). You can reach him directly through his primary coordinates:\n\n• Direct Email: reisfilho1116@gmail.com\n• LinkedIn: linkedin.com/in/juliocrfilho\n• Phone: +55 41 9 9626 8203\n• GitHub: github.com/byte-od',
+        text: 'Julio is actively open to Principal/Lead Systems Architect and Senior LLM Systems Engineer opportunities (global remote or international relocation). The primary direct contact coordinate is:\n\n• Direct Email: reisfilho1116@gmail.com\n• LinkedIn: linkedin.com/in/juliocrfilho\n• GitHub: github.com/byte-od',
         links: [
           { label: 'Send Direct Email', url: 'mailto:reisfilho1116@gmail.com', icon: 'ext' },
           { label: 'Connect on LinkedIn', url: 'https://linkedin.com/in/juliocrfilho', icon: 'ext' },
