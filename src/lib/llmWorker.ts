@@ -1,4 +1,4 @@
-import { pipeline, env, TextStreamer } from '@huggingface/transformers';
+import { pipeline, env, TextStreamer, InterruptableStoppingCriteria } from '@huggingface/transformers';
 import { SCacheMemoryCore } from './scacheEngine';
 import { MixtureOfScarsCore } from './mosEngine';
 
@@ -209,7 +209,7 @@ self.onmessage = async (e: MessageEvent) => {
       return;
     }
 
-    const { messages, maxTokens = 350, temperature = 0.6 } = payload;
+    const { messages, maxTokens = 160, temperature = 0.25, isGreeting = false } = payload;
     isGenerating = true;
 
     try {
@@ -228,12 +228,52 @@ self.onmessage = async (e: MessageEvent) => {
       // 2. Consulta Associativa SCache O(1)
       const scacheRetrieval = scacheCore.retrieve(lastUserMsg);
 
+      const stoppingCriteria = new InterruptableStoppingCriteria();
+      let hasInterrupted = false;
+
+      const STOP_TOKENS = [
+        '<|eot_id|>',
+        '<|end_of_text|>',
+        '<|im_end|>',
+        '</s>',
+        '<|end|>',
+        '[END]',
+        'User:',
+        'Visitor:',
+        'Usuário:',
+      ];
+
       const streamer = new TextStreamer(currentPipeline.tokenizer, {
         skip_prompt: true,
         skip_special_tokens: true,
         callback_function: (chunk: string) => {
+          if (hasInterrupted) return;
+
           tokenCount++;
           fullGeneratedText += chunk;
+
+          // 1. Checagem de tokens de parada residuais no texto decodificado
+          for (const stopTok of STOP_TOKENS) {
+            if (fullGeneratedText.includes(stopTok)) {
+              hasInterrupted = true;
+              stoppingCriteria.interrupt();
+              return;
+            }
+          }
+
+          // 2. Trava anti-alucinação / anti-prolixidade em saudações simples ("oi", "olá")
+          if (isGreeting && tokenCount >= 18 && /[.!?]\s*$/.test(fullGeneratedText.trim())) {
+            hasInterrupted = true;
+            stoppingCriteria.interrupt();
+          }
+
+          // 3. Trava de segurança para evitar loop infinito sem pontuação (diarreia de buzzwords)
+          const wordsWithoutPunct = fullGeneratedText.split(/[.!?\n]/).pop()?.trim().split(/\s+/) || [];
+          if (wordsWithoutPunct.length > 35) {
+            hasInterrupted = true;
+            stoppingCriteria.interrupt();
+          }
+
           self.postMessage({
             type: 'token',
             token: chunk,
@@ -248,13 +288,18 @@ self.onmessage = async (e: MessageEvent) => {
         mosTelemetry: mosResult.telemetry,
       });
 
+      // Lista abrangente de EOS token IDs para Llama 3.2, Qwen 2.5 e SmolLM2
+      const eosTokenIds = [128001, 128009, 151643, 151645, 2, 0];
+
       await currentPipeline(messages, {
-        max_new_tokens: maxTokens,
-        temperature: Math.max(0.2, temperature),
-        do_sample: temperature > 0.0,
-        repetition_penalty: 1.25,
-        top_k: 40,
-        top_p: 0.9,
+        max_new_tokens: isGreeting ? Math.min(maxTokens, 45) : maxTokens,
+        temperature: Math.max(0.15, Math.min(0.35, temperature)),
+        do_sample: temperature > 0.05,
+        repetition_penalty: 1.35,
+        top_k: 30,
+        top_p: 0.85,
+        eos_token_id: eosTokenIds,
+        stopping_criteria: [stoppingCriteria],
         streamer: streamer,
       });
 
