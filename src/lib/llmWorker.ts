@@ -254,12 +254,22 @@ self.onmessage = async (e: MessageEvent) => {
 
           // 0. Trava de Segurança Anti-Personificação Imediata
           // Se o modelo tentar falar "Eu sou Julio" em 1ª pessoa, interceptamos na hora
-          if (/^(eu sou julio|i am julio|eu sou o julio|i'm julio)/i.test(fullGeneratedText.trim())) {
+          const trimmedGen = fullGeneratedText.trim();
+          if (/^(eu sou julio|eu sou o julio|eu me chamo julio|me chamo julio)/i.test(trimmedGen)) {
             hasInterrupted = true;
             stoppingCriteria.interrupt();
             self.postMessage({
               type: 'token',
-              token: ' assistente de IA do portfólio de Julio Cesar Reis Filho, executado no seu navegador via WebGPU e MoS/SCache. Como posso te ajudar?',
+              token: ' o assistente de IA oficial do portfólio de Julio Reis, executado no seu navegador via WebGPU e MoS/SCache. Como posso te ajudar?',
+            });
+            return;
+          }
+          if (/^(i am julio|i'm julio|my name is julio)/i.test(trimmedGen)) {
+            hasInterrupted = true;
+            stoppingCriteria.interrupt();
+            self.postMessage({
+              type: 'token',
+              token: " the official AI assistant for Julio Reis's portfolio, running locally via WebGPU and MoS/SCache. How can I help you today?",
             });
             return;
           }

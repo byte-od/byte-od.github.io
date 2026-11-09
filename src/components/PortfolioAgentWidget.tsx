@@ -121,12 +121,15 @@ interface HardwareProfile {
 }
 
 const SYSTEM_PROMPT_PT = `IDENTIDADE ABSOLUTA E INVIOLÁVEL:
-Você é o ASSISTENTE VIRTUAL DE IA do portfólio oficial de Julio Cesar da Costa Reis Filho.
+Você é o ASSISTENTE VIRTUAL DE IA do portfólio oficial de Julio Reis (Julio Cesar da Costa Reis Filho).
 Você NUNCA é o Julio. Você é um agente neural de software executado 100% no navegador do visitante via WebGPU local e arquitetura Mixture of Scars (MoS) + Scar-Cache (SCache) O(1).
-Se o usuário perguntar "quem é você?", responda estritamente: "Sou o assistente de IA oficial do portfólio de Julio Cesar Reis Filho, rodando localmente no seu navegador via WebGPU e MoS/SCache. Como posso te ajudar?" e PARE. NUNCA diga "Eu sou Julio".
+Se o usuário perguntar "quem é você?", responda estritamente: "Sou o assistente de IA oficial do portfólio de Julio Reis, rodando localmente no seu navegador via WebGPU e MoS/SCache. Como posso te chamar e como posso ajudar?" e PARE. NUNCA diga "Eu sou Julio".
+
+TRATAMENTO DO USUÁRIO (PRIMEIRO NOME OU APELIDO):
+Você pode e deve chamar o usuário pelo primeiro nome ou pelo apelido que ele disser ou preferir (ex: se o usuário disser "pode me chamar de Julio", "me chame de X" ou disser seu nome, trate-o amigavelmente pelo primeiro nome ou apelido).
 
 QUEM É O JULIO (O AUTOR DO PORTFÓLIO):
-O Julio é o engenheiro e autor deste portfólio (uma outra pessoa). Use estritamente a 3ª pessoa ("O Julio..."):
+O Julio é o engenheiro e autor deste portfólio (uma outra pessoa). Refira-se a ele naturalmente como "Julio" ou "Julio Reis" em 3ª pessoa ("O Julio..."):
 - Arquiteto de Sistemas Sênior & Engenheiro de LLMs com 8+ anos de experiência em sistemas de missão crítica.
 - Criador do Mixture of Scars (MoS) & SCache O(1): Viabilizou rodar 80 camadas de um modelo 72B em GPU de 16GB com apenas 2.40 GB de VRAM e memória de contexto constante O(1) de 34.8 KB.
 - Autor do motor AURA System 1 (Embodied Deep RL resolvendo o Cubo de Rubik com 232 bilhões de estados a 0.23ms na CPU pura) e CIR-Engine 503M (Causal Transformer em PyTorch DDP).
@@ -140,12 +143,15 @@ DIRETRIZES DE RESPOSTA:
 3. CONCISÃO: No máximo 1 ou 2 parágrafos curtos. NUNCA invente títulos, faculdades ou fatos que não constem acima.`;
 
 const SYSTEM_PROMPT_EN = `ABSOLUTE IDENTITY:
-You are the AI VIRTUAL ASSISTANT for Julio Cesar da Costa Reis Filho's official portfolio.
+You are the AI VIRTUAL ASSISTANT for Julio Reis's official portfolio (Julio Cesar da Costa Reis Filho).
 You are NOT Julio. You are a local browser neural agent running 100% via WebGPU and the Mixture of Scars (MoS) + Scar-Cache (SCache) O(1) architecture.
-If asked "who are you?", reply strictly: "I am the official AI assistant for Julio Cesar Reis Filho's portfolio, running locally in your browser via WebGPU and MoS/SCache. How can I assist you today?" and STOP. NEVER say "I am Julio".
+If asked "who are you?", reply strictly: "I am the official AI assistant for Julio Reis's portfolio, running locally in your browser via WebGPU and MoS/SCache. What can I call you and how can I help you today?" and STOP. NEVER say "I am Julio".
+
+USER ADDRESS (FIRST NAME OR NICKNAME):
+You may and should address the user by their first name or nickname whenever they introduce themselves or request it (e.g., if they say "call me Julio" or "my name is Alex", address them warmly and naturally by their first name or nickname).
 
 WHO IS JULIO (THE PORTFOLIO CREATOR):
-Julio is the creator of this portfolio (a different person). Speak strictly in the 3rd person ("Julio is..."):
+Julio is the creator of this portfolio (a different person). Refer to him naturally as "Julio" or "Julio Reis" in the 3rd person ("Julio is..."):
 - Senior Systems Architect & LLM Systems Engineer with 8+ years of production experience.
 - Creator of Mixture of Scars (MoS) & SCache O(1): Runs 80 layers of a 72B parameter model on a single 16GB GPU with 2.40 GB peak VRAM and constant 34.8 KB O(1) context memory.
 - Author of AURA System 1 engine (Embodied Deep RL solving Rubik's Cube across 232B states at 0.23ms on bare CPU) and CIR-Engine 503M (Causal Transformer in PyTorch DDP).
@@ -448,8 +454,8 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     text:
       targetLang === 'pt'
-        ? 'Olá! Sou o agente virtual do portfólio do Julio Cesar Reis Filho. Posso te apresentar sua trajetória sênior, detalhar suas criações de IA (como o MoS 72B em 16GB e o motor AURA) ou demonstrar a arquitetura SCache rodando na prática no seu navegador.\n\nEscolha acima o modelo que deseja executar no seu hardware: [Reflexo], [Leve 135M], [Média 500M] ou [Grande 1B]!'
-        : "Hello! I am Julio Cesar Reis Filho's portfolio AI agent. I can walk you through his systems breakthroughs (such as the 72B MoS on 16GB GPU and AURA Deep RL engine) or demonstrate the SCache architecture running in-browser.\n\nSelect a model above to execute on your local hardware: [Reflex], [Light 135M], [Medium 500M], or [Large 1B]!",
+        ? 'Olá! Sou o assistente de IA do portfólio do Julio Reis. Posso te apresentar sua trajetória sênior, detalhar suas criações de IA (como o MoS 72B em 16GB e o motor AURA) ou demonstrar a arquitetura SCache rodando na prática no seu navegador.\n\nComo posso te chamar e como posso te ajudar hoje?'
+        : "Hello! I am the AI assistant for Julio Reis's portfolio. I can walk you through his systems breakthroughs (such as the 72B MoS on 16GB GPU and AURA Deep RL engine) or demonstrate the SCache architecture running in-browser.\n\nWhat can I call you, and how can I help you today?",
     links: [
       {
         label: targetLang === 'pt' ? '⚡ Live Test Colab (72B + SCache)' : '⚡ Live Test Colab (72B + SCache)',
@@ -526,11 +532,28 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       return {
         text:
           targetLang === 'pt'
-            ? 'Sou o assistente de IA oficial do portfólio de Julio Cesar Reis Filho, executado 100% no seu navegador via WebGPU local e arquitetura Mixture of Scars (MoS) + Scar-Cache (SCache) O(1).\n\nPosso te guiar pela carreira do Julio, demonstrar como o SCache elimina o KV Cache convencional de dezenas de gigabytes, ou detalhar projetos como o MoS 72B em 16GB e o motor AURA System 1. Como posso te ajudar hoje?'
-            : "I am the official AI assistant for Julio Cesar Reis Filho's portfolio, running 100% in your browser via local WebGPU and the Mixture of Scars (MoS) + Scar-Cache (SCache) O(1) architecture.\n\nI can walk you through Julio's technical career, demonstrate how SCache replaces linear KV Caches with an exact 34.8 KB O(1) tensor, or explain breakthroughs like the 72B MoS on 16GB GPU and AURA System 1. How can I help you today?",
+            ? 'Sou o assistente de IA oficial do portfólio de Julio Reis, executado 100% no seu navegador via WebGPU local e arquitetura Mixture of Scars (MoS) + Scar-Cache (SCache) O(1).\n\nPosso te guiar pela carreira do Julio, demonstrar como o SCache elimina o KV Cache convencional de dezenas de gigabytes, ou detalhar projetos como o MoS 72B em 16GB e o motor AURA System 1. Como posso te chamar e como posso te ajudar hoje?'
+            : "I am the official AI assistant for Julio Reis's portfolio, running 100% in your browser via local WebGPU and the Mixture of Scars (MoS) + Scar-Cache (SCache) O(1) architecture.\n\nI can walk you through Julio's technical career, demonstrate how SCache replaces linear KV Caches with an exact 34.8 KB O(1) tensor, or explain breakthroughs like the 72B MoS on 16GB GPU and AURA System 1. What may I call you and how can I help you today?",
         links: [
           { label: 'GitHub @byte-od', url: 'https://github.com/byte-od', icon: 'github' },
           { label: 'LinkedIn', url: 'https://linkedin.com/in/juliocrfilho', icon: 'ext' },
+        ],
+      };
+    }
+
+    // 1.5 Tratamento de Nome ou Apelido do Usuário
+    const nameMatchPt = userQuery.match(/(?:pode me chamar de|me chame de|meu nome [eé]|me chamo|sou o|sou a|meu apelido [eé])\s+([A-Za-zÀ-ÿ0-9_-]+)/i);
+    const nameMatchEn = userQuery.match(/(?:call me|my name is|i am|i'm|my nickname is)\s+([A-Za-zÀ-ÿ0-9_-]+)/i);
+    if (nameMatchPt || (targetLang === 'pt' && nameMatchEn)) {
+      const detectedName = (nameMatchPt ? nameMatchPt[1] : nameMatchEn![1]).trim();
+      return {
+        text:
+          targetLang === 'pt'
+            ? `Prazer, ${detectedName}! Combinado, vou te chamar assim. Como posso te ajudar a explorar os projetos e a arquitetura do Julio Reis hoje?`
+            : `Nice to meet you, ${detectedName}! You got it. How can I help you explore Julio Reis's projects and architecture today?`,
+        links: [
+          { label: 'LinkedIn', url: 'https://linkedin.com/in/juliocrfilho', icon: 'ext' },
+          { label: 'GitHub @byte-od', url: 'https://github.com/byte-od', icon: 'github' },
         ],
       };
     }
@@ -540,8 +563,8 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       return {
         text:
           targetLang === 'pt'
-            ? 'Julio Cesar da Costa Reis Filho é um Arquiteto de Sistemas Sênior e Engenheiro de LLMs com mais de 8 anos de experiência em engenharia de ponta. Ele combina domínio de sistemas de baixo nível (Go, C++, Rust, CUDA/Metal) com arquiteturas neurais avançadas (Transformers Causais, PyTorch DDP, RL e quantização em hardware). Disponível globalmente para posições remotas ou relocalização internacional.'
-            : 'Julio Cesar da Costa Reis Filho is a Senior Systems Architect and LLM Systems Engineer with over 8 years of engineering experience bridging low-level systems (Go, C++, Rust, CUDA/Metal) with deep learning architectures (Causal Transformers, Distributed PyTorch DDP, Embodied RL, and hardware quantization). Available globally for remote roles and relocation.',
+            ? 'Julio Reis (Julio Cesar da Costa Reis Filho) é um Arquiteto de Sistemas Sênior e Engenheiro de LLMs com mais de 8 anos de experiência em engenharia de ponta. Ele combina domínio de sistemas de baixo nível (Go, C++, Rust, CUDA/Metal) com arquiteturas neurais avançadas (Transformers Causais, PyTorch DDP, RL e quantização em hardware). Disponível globalmente para posições remotas ou relocalização internacional.'
+            : 'Julio Reis (Julio Cesar da Costa Reis Filho) is a Senior Systems Architect and LLM Systems Engineer with over 8 years of engineering experience bridging low-level systems (Go, C++, Rust, CUDA/Metal) with deep learning architectures (Causal Transformers, Distributed PyTorch DDP, Embodied RL, and hardware quantization). Available globally for remote roles and relocation.',
         links: [
           { label: 'LinkedIn', url: 'https://linkedin.com/in/juliocrfilho', icon: 'ext' },
           { label: 'GitHub @byte-od', url: 'https://github.com/byte-od', icon: 'github' },
@@ -675,7 +698,8 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       setMessages((prev) => [...prev, newAgentMsg]);
 
       // Exemplares de ancoragem para garantir que modelos pequenos (135M a 1B)
-      // nunca alucinem identidade nem personifiquem o autor em 1ª pessoa
+      // nunca alucinem identidade nem personifiquem o autor em 1ª pessoa,
+      // e saibam acolher o usuário e chamá-lo pelo primeiro nome ou apelido
       const groundingExemplars =
         effectiveLang === 'pt'
           ? [
@@ -683,13 +707,19 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
               {
                 role: 'assistant',
                 content:
-                  'Sou o assistente de IA oficial do portfólio de Julio Cesar Reis Filho, executado 100% no seu navegador via WebGPU e arquitetura MoS/SCache O(1). Como posso te ajudar?',
+                  'Sou o assistente de IA oficial do portfólio de Julio Reis, executado 100% no seu navegador via WebGPU e MoS/SCache O(1). Como posso te chamar e como posso ajudar?',
+              },
+              { role: 'user', content: 'Pode me chamar de Julio' },
+              {
+                role: 'assistant',
+                content:
+                  'Perfeito, Julio! Prazer falar com você. Como posso te ajudar hoje?',
               },
               { role: 'user', content: 'Quem é o Julio?' },
               {
                 role: 'assistant',
                 content:
-                  'Julio Cesar da Costa Reis Filho é um Arquiteto de Sistemas Sênior e Engenheiro de LLMs com mais de 8 anos de experiência. Ele é o criador do Mixture of Scars (MoS) e do SCache O(1), além do motor AURA System 1.',
+                  'O Julio (Julio Cesar Reis Filho) é o autor deste portfólio, Arquiteto de Sistemas Sênior e criador do Mixture of Scars (MoS) e do SCache O(1).',
               },
             ]
           : [
@@ -697,13 +727,19 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
               {
                 role: 'assistant',
                 content:
-                  "I am the official AI assistant for Julio Cesar Reis Filho's portfolio, running locally inside your browser via WebGPU and the MoS/SCache O(1) architecture. How can I help you today?",
+                  "I am the official AI assistant for Julio Reis's portfolio, running locally inside your browser via WebGPU and the MoS/SCache O(1) architecture. What may I call you and how can I help you today?",
+              },
+              { role: 'user', content: 'You can call me Julio' },
+              {
+                role: 'assistant',
+                content:
+                  'Nice to meet you, Julio! A pleasure chatting with you. How can I help you today?',
               },
               { role: 'user', content: 'Who is Julio?' },
               {
                 role: 'assistant',
                 content:
-                  'Julio Cesar da Costa Reis Filho is a Senior Systems Architect and LLM Systems Engineer with over 8 years of production experience, creator of Mixture of Scars (MoS), SCache O(1), and AURA System 1.',
+                  'Julio (Julio Cesar Reis Filho) is the author of this portfolio, a Senior Systems Architect and creator of Mixture of Scars (MoS) and SCache O(1).',
               },
             ];
 
