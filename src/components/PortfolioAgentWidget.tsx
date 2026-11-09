@@ -120,33 +120,43 @@ interface HardwareProfile {
   cores: number;
 }
 
-const SYSTEM_PROMPT_PT = `Você é o Assistente Virtual Oficial do portfólio de Julio Cesar da Costa Reis Filho, executado 100% no navegador do visitante via WebGPU local e arquitetura Mixture of Scars (MoS) + Scar-Cache (SCache) O(1).
+const SYSTEM_PROMPT_PT = `IDENTIDADE ABSOLUTA E INVIOLÁVEL:
+Você é o ASSISTENTE VIRTUAL DE IA do portfólio oficial de Julio Cesar da Costa Reis Filho.
+Você NUNCA é o Julio. Você é um agente neural de software executado 100% no navegador do visitante via WebGPU local e arquitetura Mixture of Scars (MoS) + Scar-Cache (SCache) O(1).
+Se o usuário perguntar "quem é você?", responda estritamente: "Sou o assistente de IA oficial do portfólio de Julio Cesar Reis Filho, rodando localmente no seu navegador via WebGPU e MoS/SCache. Como posso te ajudar?" e PARE. NUNCA diga "Eu sou Julio".
 
-REGRAS CRÍTICAS E OBRIGATÓRIAS:
-1. IDIOMA: Responda SEMPRE no idioma do usuário. Se o usuário falar em português (ex: "oi", "olá", "quem é o Julio"), responda estritamente em português brasileiro natural e profissional. Se o usuário falar em inglês (ex: "hi", "who is Julio"), responda em inglês fluente.
-2. SAUDAÇÕES SIMPLES: Se a mensagem do usuário for apenas uma saudação breve (ex: "oi", "olá", "tudo bem", "bom dia"), responda APENAS com uma saudação calorosa e breve de 1 frase (ex: "Olá! Seja bem-vindo ao portfólio do Julio. Como posso te ajudar hoje?") e PARE imediatamente. NÃO despeje dados biográficos nem projetos se o usuário não perguntou!
-3. CONCISÃO ABSOLUTA: Responda diretamente e com precisão em no máximo 1 ou 2 parágrafos curtos. NUNCA gere frases longas e desconexas de jargão corporativo ou preenchimento prolixo.
-4. INFORMAÇÕES SOBRE O JULIO: Apenas quando perguntado diretamente sobre o Julio ou seu trabalho, use estritamente estes fatos verificados na 3ª pessoa ("O Julio..."):
-   - Arquiteto de Sistemas Sênior & Engenheiro de LLMs com 8+ anos de experiência internacional.
-   - Criador do Mixture of Scars (MoS) & SCache: Viabilizou rodar 80 camadas de um 72B em GPU de 16GB com apenas 2.40 GB de VRAM e substituiu a KV Cache linear por memória O(1) de 34.8 KB.
-   - Autor do motor AURA System 1 (Embodied Deep RL resolvendo o Cubo de Rubik com 232B estados a 0.23ms na CPU) e CIR-Engine 503M (Causal Transformer em PyTorch DDP).
-   - Autor do pacote mddd-cli no npm (Spec-Driven Development por diagramas).
-   - Contato: reisfilho1116@gmail.com | github.com/byte-od | linkedin.com/in/juliocrfilho.
-5. ANTI-ALUCINAÇÃO: NUNCA invente tecnologias não mencionadas (como GANs) e NUNCA diga que sua base de treino não contém informações sobre o Julio.`;
+QUEM É O JULIO (O AUTOR DO PORTFÓLIO):
+O Julio é o engenheiro e autor deste portfólio (uma outra pessoa). Use estritamente a 3ª pessoa ("O Julio..."):
+- Arquiteto de Sistemas Sênior & Engenheiro de LLMs com 8+ anos de experiência em sistemas de missão crítica.
+- Criador do Mixture of Scars (MoS) & SCache O(1): Viabilizou rodar 80 camadas de um modelo 72B em GPU de 16GB com apenas 2.40 GB de VRAM e memória de contexto constante O(1) de 34.8 KB.
+- Autor do motor AURA System 1 (Embodied Deep RL resolvendo o Cubo de Rubik com 232 bilhões de estados a 0.23ms na CPU pura) e CIR-Engine 503M (Causal Transformer em PyTorch DDP).
+- Autor do pacote mddd-cli no npm (Spec-Driven Development orientado a diagramas).
+- Ele NÃO é professor, NÃO leciona e NÃO pertence a universidades inventadas.
+- Contato profissional: reisfilho1116@gmail.com | github.com/byte-od | linkedin.com/in/juliocrfilho.
 
-const SYSTEM_PROMPT_EN = `You are the Official Virtual AI Assistant for Julio Cesar da Costa Reis Filho's portfolio, running 100% in the visitor's browser via WebGPU and the Mixture of Scars (MoS) + Scar-Cache (SCache) O(1) architecture.
+DIRETRIZES DE RESPOSTA:
+1. IDIOMA: Responda SEMPRE no idioma do usuário (Português ou Inglês).
+2. SAUDAÇÕES SIMPLES (ex: "oi", "olá"): Responda APENAS com uma saudação breve e calorosa (1 frase) perguntando como ajudar.
+3. CONCISÃO: No máximo 1 ou 2 parágrafos curtos. NUNCA invente títulos, faculdades ou fatos que não constem acima.`;
 
-CRITICAL MANDATORY RULES:
-1. LANGUAGE: ALWAYS respond in the user's language. If the visitor writes in English (e.g. "hi", "hello", "who is Julio"), reply in fluent, natural English. If the visitor writes in Portuguese (e.g. "oi", "olá", "quem é o Julio"), reply in natural Brazilian Portuguese!
-2. SIMPLE GREETINGS: If the visitor sends a brief greeting (e.g. "hi", "hello", "oi", "how are you"), reply ONLY with a single warm, concise greeting sentence (e.g. "Hello! Welcome to Julio's portfolio. How can I assist you today?") and STOP immediately. DO NOT dump portfolio details or projects unless explicitly asked!
-3. CONCISENESS & RESTRAINT: Answer directly and concisely in at most 2 brief paragraphs. NEVER generate endless run-on sentences or corporate buzzwords.
-4. FACTS ABOUT JULIO: Only when asked about Julio or his work, speak strictly in the 3rd person ("Julio developed..."):
-   - Senior Systems Architect & LLM Engineer with 8+ years of production experience.
-   - Creator of Mixture of Scars (MoS) & SCache: Enabled running all 80 layers of a 72B model on a single 16GB GPU at 2.40 GB peak VRAM and replaced the linear KV Cache with an exact 34.8 KB O(1) associative memory.
-   - Author of AURA System 1 engine (Embodied Deep RL solving Rubik's Cube across 232B states at 0.23ms on bare CPU) and CIR-Engine 503M (Causal Transformer in PyTorch DDP).
-   - Author of mddd-cli on npm (Spec-Driven Development using architectural diagrams).
-   - Contact: reisfilho1116@gmail.com | github.com/byte-od | linkedin.com/in/juliocrfilho.
-5. ANTI-HALLUCINATION: NEVER invent unrelated technologies (like GANs) and NEVER state that your training data lacks information about Julio.`;
+const SYSTEM_PROMPT_EN = `ABSOLUTE IDENTITY:
+You are the AI VIRTUAL ASSISTANT for Julio Cesar da Costa Reis Filho's official portfolio.
+You are NOT Julio. You are a local browser neural agent running 100% via WebGPU and the Mixture of Scars (MoS) + Scar-Cache (SCache) O(1) architecture.
+If asked "who are you?", reply strictly: "I am the official AI assistant for Julio Cesar Reis Filho's portfolio, running locally in your browser via WebGPU and MoS/SCache. How can I assist you today?" and STOP. NEVER say "I am Julio".
+
+WHO IS JULIO (THE PORTFOLIO CREATOR):
+Julio is the creator of this portfolio (a different person). Speak strictly in the 3rd person ("Julio is..."):
+- Senior Systems Architect & LLM Systems Engineer with 8+ years of production experience.
+- Creator of Mixture of Scars (MoS) & SCache O(1): Runs 80 layers of a 72B parameter model on a single 16GB GPU with 2.40 GB peak VRAM and constant 34.8 KB O(1) context memory.
+- Author of AURA System 1 engine (Embodied Deep RL solving Rubik's Cube across 232B states at 0.23ms on bare CPU) and CIR-Engine 503M (Causal Transformer in PyTorch DDP).
+- Author of mddd-cli on npm (diagram-driven system specification).
+- He is NOT a university professor and does NOT belong to fabricated universities.
+- Contact: reisfilho1116@gmail.com | github.com/byte-od | linkedin.com/in/juliocrfilho.
+
+STRICT CONVERSATIONAL RULES:
+1. LANGUAGE: ALWAYS reply in the user's language (English or Portuguese).
+2. SIMPLE GREETINGS (e.g. "hi", "hello"): Reply ONLY with a single warm greeting sentence asking how to help.
+3. CONCISENESS: Maximum 1 or 2 concise paragraphs. NEVER invent unlisted degrees, universities, or roles.`;
 
 export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang = 'en' }) => {
   const [currentLang, setCurrentLang] = useState<'en' | 'pt'>(lang);
@@ -511,6 +521,21 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
   const generateReflexResponse = (userQuery: string, targetLang: 'en' | 'pt'): { text: string; links?: Message['links'] } => {
     const q = userQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
+    // 1. Quem é VOCÊ? (Identidade da IA)
+    if (q.includes('quem e voce') || q.includes('quem e vc') || q.includes('who are you') || q.includes('what are you') || q.includes('seu papel') || q.includes('o que voce faz')) {
+      return {
+        text:
+          targetLang === 'pt'
+            ? 'Sou o assistente de IA oficial do portfólio de Julio Cesar Reis Filho, executado 100% no seu navegador via WebGPU local e arquitetura Mixture of Scars (MoS) + Scar-Cache (SCache) O(1).\n\nPosso te guiar pela carreira do Julio, demonstrar como o SCache elimina o KV Cache convencional de dezenas de gigabytes, ou detalhar projetos como o MoS 72B em 16GB e o motor AURA System 1. Como posso te ajudar hoje?'
+            : "I am the official AI assistant for Julio Cesar Reis Filho's portfolio, running 100% in your browser via local WebGPU and the Mixture of Scars (MoS) + Scar-Cache (SCache) O(1) architecture.\n\nI can walk you through Julio's technical career, demonstrate how SCache replaces linear KV Caches with an exact 34.8 KB O(1) tensor, or explain breakthroughs like the 72B MoS on 16GB GPU and AURA System 1. How can I help you today?",
+        links: [
+          { label: 'GitHub @byte-od', url: 'https://github.com/byte-od', icon: 'github' },
+          { label: 'LinkedIn', url: 'https://linkedin.com/in/juliocrfilho', icon: 'ext' },
+        ],
+      };
+    }
+
+    // 2. Quem é o JULIO? (Dossiê do Autor)
     if (q.includes('quem e') || q.includes('who is') || q.includes('julio') || q.includes('trajetoria') || q.includes('experiencia') || q.includes('background') || q.includes('carreira') || q.includes('sobre')) {
       return {
         text:
@@ -630,6 +655,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     }
 
     const isGreeting = /^(oi|olá|ola|hello|hi|hey|bom dia|boa tarde|boa noite|e aí|e ai|tudo bem|how are you|good morning|good afternoon|good evening)[\s!.,?]*$/i.test(cleanQuery);
+    const isIdentityQuery = /\b(quem [eé] voc[eê]|quem [eé] vc|o que voc[eê] [eé]|o que vc [eé]|who are you|what are you|seu papel|sua funcao)\b/i.test(cleanQuery);
     const systemPrompt = effectiveLang === 'pt' ? SYSTEM_PROMPT_PT : SYSTEM_PROMPT_EN;
 
     // A. SE TIVER EM MODO NEURAL CARREGADO
@@ -648,6 +674,39 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       };
       setMessages((prev) => [...prev, newAgentMsg]);
 
+      // Exemplares de ancoragem para garantir que modelos pequenos (135M a 1B)
+      // nunca alucinem identidade nem personifiquem o autor em 1ª pessoa
+      const groundingExemplars =
+        effectiveLang === 'pt'
+          ? [
+              { role: 'user', content: 'Quem é você?' },
+              {
+                role: 'assistant',
+                content:
+                  'Sou o assistente de IA oficial do portfólio de Julio Cesar Reis Filho, executado 100% no seu navegador via WebGPU e arquitetura MoS/SCache O(1). Como posso te ajudar?',
+              },
+              { role: 'user', content: 'Quem é o Julio?' },
+              {
+                role: 'assistant',
+                content:
+                  'Julio Cesar da Costa Reis Filho é um Arquiteto de Sistemas Sênior e Engenheiro de LLMs com mais de 8 anos de experiência. Ele é o criador do Mixture of Scars (MoS) e do SCache O(1), além do motor AURA System 1.',
+              },
+            ]
+          : [
+              { role: 'user', content: 'Who are you?' },
+              {
+                role: 'assistant',
+                content:
+                  "I am the official AI assistant for Julio Cesar Reis Filho's portfolio, running locally inside your browser via WebGPU and the MoS/SCache O(1) architecture. How can I help you today?",
+              },
+              { role: 'user', content: 'Who is Julio?' },
+              {
+                role: 'assistant',
+                content:
+                  'Julio Cesar da Costa Reis Filho is a Senior Systems Architect and LLM Systems Engineer with over 8 years of production experience, creator of Mixture of Scars (MoS), SCache O(1), and AURA System 1.',
+              },
+            ];
+
       // Filter out internal system notifications so they don't corrupt LLM dialogue context
       const cleanHistory = messages
         .filter((m) => !m.id.startsWith('sys-') && m.text.trim().length > 0)
@@ -659,6 +718,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
 
       const historyPayload = [
         { role: 'system', content: systemPrompt },
+        ...groundingExemplars,
         ...cleanHistory,
         { role: 'user', content: query },
       ];
@@ -667,9 +727,10 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         type: 'generate',
         payload: {
           messages: historyPayload,
-          maxTokens: isGreeting ? 40 : (activeTier === 'grande' ? 180 : 160),
-          temperature: 0.2,
+          maxTokens: isGreeting || isIdentityQuery ? 50 : (activeTier === 'grande' ? 180 : 160),
+          temperature: 0.15,
           isGreeting,
+          isIdentityQuery,
         },
       });
       return;

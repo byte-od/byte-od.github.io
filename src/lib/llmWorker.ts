@@ -209,7 +209,7 @@ self.onmessage = async (e: MessageEvent) => {
       return;
     }
 
-    const { messages, maxTokens = 160, temperature = 0.25, isGreeting = false } = payload;
+    const { messages, maxTokens = 160, temperature = 0.25, isGreeting = false, isIdentityQuery = false } = payload;
     isGenerating = true;
 
     try {
@@ -252,6 +252,18 @@ self.onmessage = async (e: MessageEvent) => {
           tokenCount++;
           fullGeneratedText += chunk;
 
+          // 0. Trava de Segurança Anti-Personificação Imediata
+          // Se o modelo tentar falar "Eu sou Julio" em 1ª pessoa, interceptamos na hora
+          if (/^(eu sou julio|i am julio|eu sou o julio|i'm julio)/i.test(fullGeneratedText.trim())) {
+            hasInterrupted = true;
+            stoppingCriteria.interrupt();
+            self.postMessage({
+              type: 'token',
+              token: ' assistente de IA do portfólio de Julio Cesar Reis Filho, executado no seu navegador via WebGPU e MoS/SCache. Como posso te ajudar?',
+            });
+            return;
+          }
+
           // 1. Checagem de tokens de parada residuais no texto decodificado
           for (const stopTok of STOP_TOKENS) {
             if (fullGeneratedText.includes(stopTok)) {
@@ -261,8 +273,8 @@ self.onmessage = async (e: MessageEvent) => {
             }
           }
 
-          // 2. Trava anti-alucinação / anti-prolixidade em saudações simples ("oi", "olá")
-          if (isGreeting && tokenCount >= 18 && /[.!?]\s*$/.test(fullGeneratedText.trim())) {
+          // 2. Trava anti-alucinação / anti-prolixidade em saudações e consultas de identidade
+          if ((isGreeting || isIdentityQuery) && tokenCount >= 18 && /[.!?]\s*$/.test(fullGeneratedText.trim())) {
             hasInterrupted = true;
             stoppingCriteria.interrupt();
           }
