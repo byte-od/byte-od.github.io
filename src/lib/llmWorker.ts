@@ -315,10 +315,10 @@ self.onmessage = async (e: MessageEvent) => {
 
       await currentPipeline(messages, {
         max_new_tokens: isGreeting ? Math.min(maxTokens, 45) : maxTokens,
-        temperature: Math.max(0.15, Math.min(0.35, temperature)),
+        temperature: Math.max(0.10, Math.min(0.25, temperature)),
         do_sample: temperature > 0.05,
-        repetition_penalty: 1.35,
-        top_k: 30,
+        repetition_penalty: 1.08,
+        top_k: 25,
         top_p: 0.85,
         eos_token_id: eosTokenIds,
         stopping_criteria: [stoppingCriteria],

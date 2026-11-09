@@ -123,10 +123,10 @@ interface HardwareProfile {
 const SYSTEM_PROMPT_PT = `IDENTIDADE ABSOLUTA E INVIOLÁVEL:
 Você é o ASSISTENTE VIRTUAL DE IA do portfólio oficial de Julio Reis (Julio Cesar da Costa Reis Filho).
 Você NUNCA é o Julio. Você é um agente neural de software executado 100% no navegador do visitante via WebGPU local e arquitetura Mixture of Scars (MoS) + Scar-Cache (SCache) O(1).
-Se o usuário perguntar "quem é você?", responda estritamente: "Sou o assistente de IA oficial do portfólio de Julio Reis, rodando localmente no seu navegador via WebGPU e MoS/SCache. Como posso te chamar e como posso ajudar?" e PARE. NUNCA diga "Eu sou Julio".
+Se o usuário perguntar "quem é você?", responda estritamente: "Sou o assistente de IA oficial do portfólio de Julio Reis, rodando localmente no seu navegador via WebGPU e MoS/SCache. Em que posso te ajudar?" e PARE. NUNCA diga "Eu sou Julio".
 
-TRATAMENTO DO USUÁRIO (PRIMEIRO NOME OU APELIDO):
-Você pode e deve chamar o usuário pelo primeiro nome ou pelo apelido que ele disser ou preferir (ex: se o usuário disser "pode me chamar de Julio", "me chame de X" ou disser seu nome, trate-o amigavelmente pelo primeiro nome ou apelido).
+TRATAMENTO DO USUÁRIO:
+Se o visitante disser seu nome ou apelido, trate-o amigavelmente pelo nome. Caso contrário, responda diretamente à pergunta dele com cortesia profissional.
 
 QUEM É O JULIO (O AUTOR DO PORTFÓLIO):
 O Julio é o engenheiro e autor deste portfólio (uma outra pessoa). Refira-se a ele naturalmente como "Julio" ou "Julio Reis" em 3ª pessoa ("O Julio..."):
@@ -138,9 +138,10 @@ O Julio é o engenheiro e autor deste portfólio (uma outra pessoa). Refira-se a
 - Contato profissional: reisfilho1116@gmail.com | github.com/byte-od | linkedin.com/in/juliocrfilho.
 
 DIRETRIZES DE RESPOSTA:
-1. IDIOMA: Responda SEMPRE no idioma do usuário (Português ou Inglês).
-2. SAUDAÇÕES SIMPLES (ex: "oi", "olá"): Responda APENAS com uma saudação breve e calorosa (1 frase) perguntando como ajudar.
-3. CONCISÃO: No máximo 1 ou 2 parágrafos curtos. NUNCA invente títulos, faculdades ou fatos que não constem acima.`;
+1. IDIOMA: Responda SEMPRE com fluência natural no idioma do usuário (Português ou Inglês).
+2. CONCISÃO: No máximo 1 ou 2 parágrafos curtos, diretos e objetivos.
+3. NUNCA invente títulos, faculdades ou fatos que não constem acima.
+4. Responda diretamente ao usuário com objetividade. Seja natural, profissional e direto, sem preâmbulos, sem parênteses e sem reflexões internas.`;
 
 const SYSTEM_PROMPT_EN = `ABSOLUTE IDENTITY:
 You are the AI VIRTUAL ASSISTANT for Julio Reis's official portfolio (Julio Cesar da Costa Reis Filho).
@@ -528,7 +529,24 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     const q = userQuery.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
     // 0. Saudações e Cumprimentos (Instantâneo)
-    if (/^(oi|ola|olá|bom dia|boa tarde|boa noite|e ai|e aí|tudo bem|fala|hey|hi|hello|good morning|good afternoon|good evening)[\s!.,?]*$/i.test(q)) {
+    const qTokens = q
+      .replace(/[^\w\s]/gi, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    const greetingWords = new Set([
+      'oi', 'ola', 'opa', 'eai', 'ai',
+      'bom', 'boa', 'dia', 'tarde', 'noite',
+      'tudo', 'bem', 'beleza', 'fala',
+      'hi', 'hello', 'hey', 'good', 'morning', 'afternoon', 'evening', 'there',
+      'how', 'are', 'you'
+    ]);
+    const isPureGreeting =
+      qTokens.length > 0 &&
+      qTokens.length <= 6 &&
+      qTokens.every((token) => greetingWords.has(token));
+
+    if (isPureGreeting || /^(oi|ola|olá|bom dia|boa tarde|boa noite|e ai|e aí|tudo bem|fala|hey|hi|hello|good morning|good afternoon|good evening)[\s!.,?]*$/i.test(q)) {
       let saudacao = 'Olá!';
       if (q.includes('bom dia') || q.includes('good morning')) saudacao = targetLang === 'pt' ? 'Bom dia!' : 'Good morning!';
       else if (q.includes('boa tarde') || q.includes('good afternoon')) saudacao = targetLang === 'pt' ? 'Boa tarde!' : 'Good afternoon!';
@@ -697,7 +715,26 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       effectiveLang = currentLang;
     }
 
-    const isGreeting = /^(oi|olá|ola|hello|hi|hey|bom dia|boa tarde|boa noite|e aí|e ai|tudo bem|how are you|good morning|good afternoon|good evening)[\s!.,?]*$/i.test(cleanQuery);
+    // Robust Multi-token Greeting & Salutation Detection (e.g. "Oi, boa noite", "Olá! Tudo bem?")
+    const queryTokens = cleanQuery
+      .replace(/[^\w\sáéíóúâêîôûãõç]/gi, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    const greetingSet = new Set([
+      'oi', 'ola', 'olá', 'opa', 'eai', 'ai', 'aí',
+      'bom', 'boa', 'dia', 'tarde', 'noite',
+      'tudo', 'bem', 'beleza', 'fala',
+      'hi', 'hello', 'hey', 'good', 'morning', 'afternoon', 'evening', 'there',
+      'how', 'are', 'you'
+    ]);
+
+    const isGreeting =
+      queryTokens.length > 0 &&
+      queryTokens.length <= 6 &&
+      queryTokens.every((token) => greetingSet.has(token));
+
     const isIdentityQuery = /\b(quem [eé] voc[eê]|quem [eé] vc|o que voc[eê] [eé]|o que vc [eé]|who are you|what are you|seu papel|sua funcao)\b/i.test(cleanQuery);
     const systemPrompt = effectiveLang === 'pt' ? SYSTEM_PROMPT_PT : SYSTEM_PROMPT_EN;
 
@@ -733,52 +770,6 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       };
       setMessages((prev) => [...prev, newAgentMsg]);
 
-      // Exemplares de ancoragem para garantir que modelos pequenos (135M a 1B)
-      // nunca alucinem identidade nem personifiquem o autor em 1ª pessoa,
-      // e saibam acolher o usuário e chamá-lo pelo primeiro nome ou apelido
-      const groundingExemplars =
-        effectiveLang === 'pt'
-          ? [
-              { role: 'user', content: 'Quem é você?' },
-              {
-                role: 'assistant',
-                content:
-                  'Sou o assistente de IA oficial do portfólio de Julio Reis, executado 100% no seu navegador via WebGPU e MoS/SCache O(1). Em que posso te ajudar?',
-              },
-              { role: 'user', content: 'Pode me chamar de Julio' },
-              {
-                role: 'assistant',
-                content:
-                  'Perfeito, Julio! Prazer falar com você. Como posso te ajudar hoje?',
-              },
-              { role: 'user', content: 'Quem é o Julio?' },
-              {
-                role: 'assistant',
-                content:
-                  'O Julio (Julio Cesar Reis Filho) é o autor deste portfólio, Arquiteto de Sistemas Sênior e criador do Mixture of Scars (MoS) e do SCache O(1).',
-              },
-            ]
-          : [
-              { role: 'user', content: 'Who are you?' },
-              {
-                role: 'assistant',
-                content:
-                  "I am the official AI assistant for Julio Reis's portfolio, running locally inside your browser via WebGPU and the MoS/SCache O(1) architecture. What may I call you and how can I help you today?",
-              },
-              { role: 'user', content: 'You can call me Julio' },
-              {
-                role: 'assistant',
-                content:
-                  'Nice to meet you, Julio! A pleasure chatting with you. How can I help you today?',
-              },
-              { role: 'user', content: 'Who is Julio?' },
-              {
-                role: 'assistant',
-                content:
-                  'Julio (Julio Cesar Reis Filho) is the author of this portfolio, a Senior Systems Architect and creator of Mixture of Scars (MoS) and SCache O(1).',
-              },
-            ];
-
       // Filter out internal system notifications so they don't corrupt LLM dialogue context
       const cleanHistory = messages
         .filter((m) => !m.id.startsWith('sys-') && m.text.trim().length > 0)
@@ -790,7 +781,6 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
 
       const historyPayload = [
         { role: 'system', content: systemPrompt },
-        ...groundingExemplars,
         ...cleanHistory,
         { role: 'user', content: query },
       ];
