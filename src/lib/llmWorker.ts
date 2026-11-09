@@ -20,7 +20,7 @@ interface ModelConfig {
 
 export const MODELS_CONFIG: Record<string, ModelConfig> = {
   leve: {
-    id: 'onnx-community/SmolLM2-135M-Instruct',
+    id: 'HuggingFaceTB/SmolLM2-135M-Instruct',
     name: 'SmolLM2-135M-Instruct (INT4)',
     dtype: 'q4',
   },
