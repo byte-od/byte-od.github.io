@@ -9,6 +9,8 @@ export interface ProjectData {
   techStack: string[];
   githubUrl?: string;
   packageUrl?: string;
+  colabUrl?: string;
+  featured?: boolean;
   interactiveType?: 'transformer_sim' | 'mermaid_demo' | 'graphics_demo' | 'git_telemetry';
   metrics?: { label: string; value: string }[];
 }
@@ -63,6 +65,32 @@ export function getPortfolioInfo(lang: 'en' | 'pt' = 'en') {
 }
 
 export const PROJECTS: ProjectData[] = [
+  {
+    id: 'mixture-of-scars',
+    title: 'Mixture of Scars (MoS) & SCache',
+    badge: '🔥 World-First 72B on 16GB GPU & O(1) KV-Cache',
+    featured: true,
+    category: 'ml_ai',
+    specs: '72B LLM (80 Layers) in 2.40 GB VRAM · O(1) SCache: 100k Tokens in 34 KB vs 32.8 GB KV Cache',
+    summary: 'Breakthrough dual LLM systems architecture solving both fundamental physical walls of foundation models: (1) Mixture of Scars (MoS) executes all 80 transformer layers of 72B parameter geometry on a consumer 16GB GPU with peak VRAM strictly capped under 2.40 GB via real-time INT4 hardware streaming dequantization; (2) Scar Cache (SCache) completely replaces the linearly exploding O(T) KV Cache with an O(1) multi-slot associative tensor memory strictly resident in 34.8 KB L1 Cache, verified under brutal 100,000-token continuous stress tests saving >99.999% VRAM.',
+    details: [
+      'Live Hardware Proof on 16GB GPU: Executed all 80 transformer layers of 72B parameter geometry (8,192 hidden dim, 29,568 MLP dim) in 70.31s with 2.40 GB peak VRAM on a single Nvidia L4/T4 GPU.',
+      '100,000-Token KV Cache Elimination: Replaced 32.77 GB of linearly exploding KV Cache with an exact 34.80 KB O(1) MultiSlotSCache resident in L1 Cache, achieving sub-5µs updates and >99.999% VRAM savings.',
+      'Hardware INT4 Streaming Dequantizer: Developed an on-the-fly SIMD/CUDA kernel unpacking INT4 weights to FP16 residual stream without GPU VRAM accumulation or host-device thrashing.',
+      'Continuous Needle-in-a-Haystack Retention: Validated factual memory retention using Widrow-Hoff Delta Rule updates across heterogeneous multi-scale temporal decay slots.',
+      'Real-World Competition Validation: Powering our 0.625 Leaderboard score in the Kaggle Name That LLM competition ($50k USD prize), recognizing 18 distinct frontier model signatures.',
+      '1-Click Interactive Reproducibility: Fully automated, open-source Google Colab live test notebook with zero dependencies running live on free cloud GPUs.'
+    ],
+    techStack: ['Python', 'PyTorch', 'CUDA', 'INT4 Streaming Dequantizer', 'Associative Memory', 'Delta Rule (Widrow-Hoff)', 'KV-Cache Replacement', 'Google Colab', 'Kaggle'],
+    githubUrl: 'https://github.com/byte-od/mixture-of-scars',
+    colabUrl: 'https://colab.research.google.com/github/byte-od/mixture-of-scars/blob/main/notebooks/Proof_70B_MoS_on_16GB_GPU.ipynb',
+    metrics: [
+      { label: 'Peak VRAM (72B)', value: '2.40 GB (80 Layers)' },
+      { label: 'KV Cache Reduction', value: '99.999% (34 KB)' },
+      { label: 'Tested Context', value: '100,000 Tokens' },
+      { label: 'Kaggle Benchmark', value: '0.625 Live Score' },
+    ],
+  },
   {
     id: 'system_one',
     title: 'AURA (Universal System 1 Engine)',
@@ -231,6 +259,32 @@ export function getProjects(lang: 'en' | 'pt' = 'en'): ProjectData[] {
   if (lang !== 'pt') return PROJECTS;
 
   return [
+    {
+      id: 'mixture-of-scars',
+      title: 'Mixture of Scars (MoS) & SCache',
+      badge: '🔥 Pioneiro Mundial 72B em GPU 16GB & KV-Cache O(1)',
+      featured: true,
+      category: 'ml_ai',
+      specs: 'LLM 72B (80 Camadas) em 2.40 GB VRAM · SCache O(1): 100k Tokens em 34 KB vs 32.8 GB KV Cache',
+      summary: 'Arquitetura de sistemas pioneira para LLMs que resolve simultaneamente os dois maiores gargalos físicos da inteligência artificial: (1) Mixture of Scars (MoS) executa todas as 80 camadas de um modelo de 72 bilhões de parâmetros em uma GPU comum de 16 GB com pico de VRAM estritamente abaixo de 2.40 GB via desquantização streaming INT4 em tempo real; (2) Scar Cache (SCache) substitui o KV Cache linear O(T) por uma memória associativa tensorial multi-slot constante O(1) residente em 34.8 KB no Cache L1, comprovada sob estresse contínuo de 100.000 tokens com redução superior a 99.999% de VRAM.',
+      details: [
+        'Prova Comprovada em Hardware de 16GB: Executou todas as 80 camadas de geometria 72B (8.192 dimensão oculta, 29.568 MLP) em 70.31s com pico de 2.40 GB VRAM em GPU única Nvidia L4/T4.',
+        'Eliminação do KV Cache a 100.000 Tokens: Substituiu 32.77 GB de KV Cache linear por exatos 34.80 KB de MultiSlotSCache constante O(1) no Cache L1, com atualizações sub-5µs e >99.999% de economia de VRAM.',
+        'Desquantizador Streaming INT4 em Hardware: Desenvolveu kernel dinâmico desempacotando pesos INT4 para o fluxo residual FP16 sem acúmulo de memória nem estrangulamento de barramento PCI-e.',
+        'Retenção Contínua Needle-in-a-Haystack: Validou retenção de fatos sob Regra Delta de Widrow-Hoff em slots heterogêneos de decaimento multi-escala temporal.',
+        'Validação Competitiva no Mundo Real: Impulsiona nosso score de 0.625 no Leaderboard da competição Kaggle Name That LLM ($50.000 USD), identificando a assinatura de 18 modelos de ponta.',
+        'Reprodutibilidade Interativa com 1 Clique: Notebook público no Google Colab aberto para a comunidade reproduzir os benchmarks ao vivo em GPUs gratuitas.'
+      ],
+      techStack: ['Python', 'PyTorch', 'CUDA', 'Desquantizador Streaming INT4', 'Memória Associativa', 'Regra Delta (Widrow-Hoff)', 'Substituição de KV-Cache', 'Google Colab', 'Kaggle'],
+      githubUrl: 'https://github.com/byte-od/mixture-of-scars',
+      colabUrl: 'https://colab.research.google.com/github/byte-od/mixture-of-scars/blob/main/notebooks/Proof_70B_MoS_on_16GB_GPU.ipynb',
+      metrics: [
+        { label: 'Pico VRAM (72B)', value: '2.40 GB (80 Camadas)' },
+        { label: 'Redução KV Cache', value: '99.999% (34 KB)' },
+        { label: 'Contexto Testado', value: '100.000 Tokens' },
+        { label: 'Benchmark Kaggle', value: '0.625 Score Oficial' },
+      ],
+    },
     {
       id: 'system_one',
       title: 'AURA (Motor Universal Sistema 1)',

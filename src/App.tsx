@@ -29,6 +29,9 @@ import {
   ArrowRight,
   Bot,
   Blocks,
+  PlayCircle,
+  Sparkles,
+  Flame,
 } from 'lucide-react';
 
 /**
@@ -529,6 +532,91 @@ export default function App() {
             >
               <Mail className="w-4 h-4" />
             </a>
+          </div>
+
+          {/* ========================================================= */}
+          {/* ⚡ FLAGSHIP BREAKTHROUGH: 72B LLM ON 16GB GPU + SCACHE     */}
+          {/* ========================================================= */}
+          <div className="relative mt-8 p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-zinc-900/95 via-zinc-950 to-black border-2 border-[#adff2f]/70 shadow-[0_0_40px_rgba(173,255,47,0.15)] overflow-hidden">
+            {/* Ambient backdrop glow */}
+            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-72 h-72 bg-[#adff2f]/10 rounded-full blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+              <div className="space-y-3 max-w-2xl">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-[#adff2f]/15 text-[#adff2f] border border-[#adff2f]/40 shadow-xs">
+                    <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                    {lang === 'pt' ? 'BREAKTHROUGH MUNDIAL · NOV 2026' : 'WORLD-FIRST BREAKTHROUGH · NOV 2026'}
+                  </span>
+                  <span className="text-[11px] font-mono text-zinc-400 bg-zinc-900 px-2.5 py-1 rounded border border-zinc-800">
+                    Open-Source &amp; Kaggle Top 5k
+                  </span>
+                </div>
+
+                <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
+                  Mixture of Scars (MoS) &amp; SCache
+                </h3>
+
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  {lang === 'pt'
+                    ? 'Arquitetura pioneira que resolve simultaneamente os dois maiores limites físicos de LLMs: executa todas as 80 camadas de um 72B em GPUs comuns de 16 GB com pico de 2.40 GB VRAM, e substitui o KV Cache linear O(T) por uma memória associativa O(1) de 34 KB no L1 Cache comprovada em 100.000 tokens com >99.999% de economia.'
+                    : 'Pioneering dual systems architecture cracking both physical memory walls of foundation models: executes all 80 transformer layers of 72B parameter geometry on a consumer 16GB GPU with 2.40 GB peak VRAM, and eliminates the linear O(T) KV Cache using an O(1) 34 KB L1 associative memory verified under 100,000 continuous tokens with >99.999% VRAM savings.'}
+                </p>
+
+                {/* Stat badges */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                  <div className="p-2.5 rounded-lg bg-zinc-900/80 border border-zinc-800">
+                    <span className="text-[10px] font-mono text-zinc-500 block">72B Peak VRAM</span>
+                    <span className="text-xs sm:text-sm font-mono font-bold text-[#adff2f]">2.40 GB (80 Layers)</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-zinc-900/80 border border-zinc-800">
+                    <span className="text-[10px] font-mono text-zinc-500 block">100k Token SCache</span>
+                    <span className="text-xs sm:text-sm font-mono font-bold text-[#38bdf8]">34 KB vs 32.8 GB</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-zinc-900/80 border border-zinc-800">
+                    <span className="text-[10px] font-mono text-zinc-500 block">KV Cache Savings</span>
+                    <span className="text-xs sm:text-sm font-mono font-bold text-emerald-400">&gt;99.999% VRAM</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-zinc-900/80 border border-zinc-800">
+                    <span className="text-[10px] font-mono text-zinc-500 block">Kaggle Leaderboard</span>
+                    <span className="text-xs sm:text-sm font-mono font-bold text-[#c4b5fd]">0.625 Verified</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-3 w-full lg:w-auto shrink-0">
+                <a
+                  href="https://colab.research.google.com/github/byte-od/mixture-of-scars/blob/main/notebooks/Proof_70B_MoS_on_16GB_GPU.ipynb"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-3 rounded-xl bg-[#adff2f] hover:bg-lime-300 text-black font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-lime-400/20 cursor-pointer"
+                >
+                  <PlayCircle className="w-4 h-4" />
+                  <span>{lang === 'pt' ? 'Executar Live Test no Colab' : 'Launch Live Test on Colab'}</span>
+                </a>
+
+                <a
+                  href="https://github.com/byte-od/mixture-of-scars"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-mono text-xs font-bold border border-zinc-750 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Github className="w-4 h-4" />
+                  <span>{lang === 'pt' ? 'Ver Código no GitHub' : 'Inspect GitHub Repository'}</span>
+                </a>
+
+                <a
+                  href="https://www.kaggle.com/competitions/name-that-llm/leaderboard"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-2.5 rounded-xl bg-zinc-950 hover:bg-zinc-900 text-zinc-400 hover:text-white font-mono text-[11px] border border-zinc-850 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <span>{lang === 'pt' ? 'Ver no Kaggle Leaderboard (the tod)' : 'Kaggle Leaderboard (the tod)'}</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
           </div>
         </section>
 

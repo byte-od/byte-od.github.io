@@ -6,6 +6,8 @@ import {
   Package,
   Check,
   Copy,
+  PlayCircle,
+  Sparkles,
 } from 'lucide-react';
 
 interface ProjectShowcaseProps {
@@ -90,15 +92,32 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
         {filteredProjects.map((project) => (
           <div
             key={project.id}
-            className="group flex flex-col justify-between p-6 bg-zinc-950/70 border border-zinc-800/80 hover:border-zinc-700 rounded-2xl transition-all duration-200 hover:-translate-y-1 shadow-lg"
+            className={`group flex flex-col justify-between p-6 rounded-2xl transition-all duration-200 hover:-translate-y-1 shadow-lg ${
+              project.featured
+                ? 'bg-gradient-to-b from-zinc-900/95 via-zinc-950/90 to-zinc-950 border-2 border-[#adff2f]/70 shadow-[0_0_35px_rgba(173,255,47,0.12)] relative'
+                : 'bg-zinc-950/70 border border-zinc-800/80 hover:border-zinc-700'
+            }`}
           >
             <div>
               {/* Category indicator & Github link */}
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="text-[11px] font-mono text-zinc-400">
+                <span className={`text-[11px] font-mono flex items-center gap-1.5 ${project.featured ? 'text-[#adff2f] font-bold' : 'text-zinc-400'}`}>
+                  {project.featured && <Sparkles className="w-3.5 h-3.5 text-[#adff2f] animate-pulse" />}
                   {project.badge}
                 </span>
                 <div className="flex items-center gap-2">
+                  {project.colabUrl && (
+                    <a
+                      href={project.colabUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#adff2f]/15 text-[#adff2f] border border-[#adff2f]/40 text-[10px] font-mono font-bold hover:bg-[#adff2f]/25 transition-colors"
+                      title={lang === 'pt' ? 'Abrir Live Test no Google Colab' : 'Launch Live Test on Google Colab'}
+                    >
+                      <PlayCircle className="w-3 h-3" />
+                      <span>Colab</span>
+                    </a>
+                  )}
                   {project.packageUrl && (
                     <a
                       href={project.packageUrl}
@@ -179,6 +198,18 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
                 )}
               </div>
 
+              {project.colabUrl && (
+                <a
+                  href={project.colabUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full text-xs font-mono py-2 rounded-lg bg-[#adff2f] hover:bg-lime-300 text-black font-bold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-lime-400/10 mb-2 cursor-pointer"
+                >
+                  <PlayCircle className="w-3.5 h-3.5" />
+                  <span>{lang === 'pt' ? 'Executar Live Test no Colab' : 'Run Live Test on Colab'}</span>
+                </a>
+              )}
+
               <button
                 type="button"
                 onClick={() => setActiveProjectModal(project)}
@@ -258,22 +289,35 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
             </div>
 
             {/* Modal Footer */}
-            <div className="pt-4 border-t border-zinc-850 flex items-center justify-between">
-              {activeProject.githubUrl ? (
-                <a
-                  href={activeProject.githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 bg-white text-black font-mono text-xs font-bold rounded-lg hover:bg-zinc-200 transition-colors"
-                >
-                  <Github className="w-4 h-4" />
-                  <span>{lang === 'pt' ? 'Ver no GitHub' : 'View on GitHub'}</span>
-                </a>
-              ) : (
-                <span className="text-xs font-mono text-zinc-500 italic">
-                  {lang === 'pt' ? 'Repositório Interno / Proprietário' : 'Internal / Proprietary Repository'}
-                </span>
-              )}
+            <div className="pt-4 border-t border-zinc-850 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {activeProject.colabUrl && (
+                  <a
+                    href={activeProject.colabUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#adff2f] text-black font-mono text-xs font-bold rounded-lg hover:bg-lime-300 transition-colors shadow-lg shadow-lime-400/10 cursor-pointer"
+                  >
+                    <PlayCircle className="w-4 h-4" />
+                    <span>{lang === 'pt' ? 'Abrir Live Test no Colab' : 'Launch Live Test on Colab'}</span>
+                  </a>
+                )}
+                {activeProject.githubUrl ? (
+                  <a
+                    href={activeProject.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-white text-black font-mono text-xs font-bold rounded-lg hover:bg-zinc-200 transition-colors cursor-pointer"
+                  >
+                    <Github className="w-4 h-4" />
+                    <span>{lang === 'pt' ? 'Ver no GitHub' : 'View on GitHub'}</span>
+                  </a>
+                ) : (
+                  <span className="text-xs font-mono text-zinc-500 italic">
+                    {lang === 'pt' ? 'Repositório Interno / Proprietário' : 'Internal / Proprietary Repository'}
+                  </span>
+                )}
+              </div>
 
               <button
                 type="button"
