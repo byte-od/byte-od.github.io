@@ -209,7 +209,7 @@ self.onmessage = async (e: MessageEvent) => {
       return;
     }
 
-    const { messages, maxTokens = 160, temperature = 0.25, isGreeting = false, isIdentityQuery = false } = payload;
+    const { messages, maxTokens = 400, temperature = 0.25, isGreeting = false, isIdentityQuery = false } = payload;
     isGenerating = true;
 
     try {
@@ -290,8 +290,8 @@ self.onmessage = async (e: MessageEvent) => {
           }
 
           // 3. Trava de segurança para evitar loop infinito sem pontuação (diarreia de buzzwords)
-          const wordsWithoutPunct = fullGeneratedText.split(/[.!?\n]/).pop()?.trim().split(/\s+/) || [];
-          if (wordsWithoutPunct.length > 35) {
+          const wordsWithoutPunct = fullGeneratedText.split(/[.!?\n;:]/).pop()?.trim().split(/\s+/) || [];
+          if (wordsWithoutPunct.length > 50) {
             hasInterrupted = true;
             stoppingCriteria.interrupt();
           }

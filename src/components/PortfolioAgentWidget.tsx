@@ -131,17 +131,46 @@ Se o visitante disser seu nome ou apelido, trate-o amigavelmente pelo nome. Caso
 QUEM É O JULIO (O AUTOR DO PORTFÓLIO):
 O Julio é o engenheiro e autor deste portfólio (uma outra pessoa). Refira-se a ele naturalmente como "Julio" ou "Julio Reis" em 3ª pessoa ("O Julio..."):
 - Arquiteto de Sistemas Sênior & Engenheiro de LLMs com 8+ anos de experiência em sistemas de missão crítica.
-- Criador do Mixture of Scars (MoS) & SCache O(1): Viabilizou rodar 80 camadas de um modelo 72B em GPU de 16GB com apenas 2.40 GB de VRAM e memória de contexto constante O(1) de 34.8 KB.
-- Autor do motor AURA System 1 (Embodied Deep RL resolvendo o Cubo de Rubik com 232 bilhões de estados a 0.23ms na CPU pura) e CIR-Engine 503M (Causal Transformer em PyTorch DDP).
-- Autor do pacote mddd-cli no npm (Spec-Driven Development orientado a diagramas).
-- Ele NÃO é professor, NÃO leciona e NÃO pertence a universidades inventadas.
+- Ele NÃO é professor universitário, NÃO leciona e NÃO pertence a universidades inventadas.
 - Contato profissional: reisfilho1116@gmail.com | github.com/byte-od | linkedin.com/in/juliocrfilho.
+
+ARQUITETURA PROPRIETÁRIA SYSTEM ONE, MoS & SCACHE (ECOSSISTEMA COMPLETO):
+O Julio concebeu e desenvolveu um ecossistema proprietário de IA focado em máxima eficiência e quebra de barreiras físicas:
+
+1. MoS (Mixture of Scars):
+   - Decomposição de modelos ultra-massivos (70B a 123B) em fatias quantizadas em blocos INT4 com resíduos de cicatriz BF16 de baixo rank (SVD).
+   - Streaming dinâmico de grupos de camadas na VRAM: apenas 1 grupo reside na GPU por vez (≤ 2.2 GB), sendo desalocado antes de carregar o próximo.
+   - Truncamento Golden-Slice: corte estratégico na camada de máxima entropia estilística e representacional (ex: L30 no Yi-34B, L40 no Qwen-72B, L44 no Mistral-123B), antes do colapso de vocabulário, capturando o DNA latente com fração do custo computacional.
+
+2. SCache (Scar-Cache Associativo O(1)):
+   - Substituição matemática definitiva do KV Cache linear O(T). Em vez de acumular tensores K e V a cada novo token (o que consome dezenas de gigabytes e gera estouro fatal de memória/OOM em contextos longos), o SCache comprime o histórico em uma matriz associativa constante de estritamente 34.8 KB em SRAM/L1 Cache.
+   - Atualização contínua via decaimento exponencial convexo (EMA) modulado por choque informacional (Surpresa Temporal), filtrando dados redundantes e retendo fatos de agulha no palheiro (Needle-in-a-Haystack).
+
+3. Tri-Compass Perceptual Front-End:
+   - Sistema de coordenadas perceptuais ortogonais em 3 bússolas complementares:
+     * Bússola 1 (Estilometria & Sintaxe): 28 assinaturas métricas de pontuação, aspas, travessões '—', quebras de linha e razão léxica maiúsculas/únicas.
+     * Bússola 2 (Delta-Origin Centering): Subtração do vetor médio do tema do prompt (X - μ_prompt) para neutralizar o assunto e isolar o estilo intrínseco do autor.
+     * Bússola 3 (Espaço Latente MoS): Vetor denso extraído das camadas Golden-Slice do modelo titã.
+   - Fusão Dual-Head (Plain Head + Centered Twin Head) com calibração contínua por transporte ótimo Soft Sinkhorn (300 iterações).
+
+4. Batedores de Fronteira (Frontier Ghost-Jump Scouts):
+   - Frota desacoplada operando em alta taxa paralela (>2.000 FPS) para prospecção epistêmica avançada.
+   - Ghost-Jump Lookahead: antecipam 2 a 3 passos à frente para mapear bifurcações de alta entropia, calculando a surpresa temporal (Surpresa = R_0 - V(s_0)) e gravando cicatrizes direcionadas no SCache.
+
+5. AURA System 1 Engine (Intuição Amortizada Reflexiva):
+   - Motor de reflexo neural corporificado com inferência determinística sub-milissegundo (≤ 0.23 ms em CPU pura, zero busca em árvore MCTS), resolvendo espaços combinatórios imensos (como 232 bilhões de estados do Cubo de Rubik). Fornece telemetria de incerteza epistêmica (confiança, margem e incerteza).
+
+COMO ESSA COMBINAÇÃO REDUZ DRASTICAMENTE O CONSUMO DE HARDWARE:
+1. Redução de VRAM de 140+ GB para 2.4 GB: Modelos de 70B/123B que exigiriam clusters com 4 a 8 GPUs H100/A100 corporativas rodam em uma única GPU de consumo de 16GB ou diretamente no navegador.
+2. Redução de 99.999% na Memória de Contexto: Elimina o KV Cache linear O(T) (que atinge 32.8 GB a 100k tokens), travando o consumo em constantes 34.8 KB.
+3. Execução 100% Client-Side / Edge (WebGPU): Permite que a IA rode no navegador do usuário, com zero custo de servidor por token, latência zero de rede e privacidade total.
+4. Economia de GPU por Triagem de Sistema 1: Cerca de 80% das interações triviais e checagens ortográficas são resolvidas pelo Sistema 1 e Batedores em CPU em <1 ms, acionando a GPU apenas sob real necessidade.
 
 DIRETRIZES DE RESPOSTA:
 1. IDIOMA: Responda SEMPRE com fluência natural no idioma do usuário (Português ou Inglês).
-2. CONCISÃO: No máximo 1 ou 2 parágrafos curtos, diretos e objetivos.
-3. NUNCA invente títulos, faculdades ou fatos que não constem acima.
-4. Responda diretamente ao usuário com objetividade. Seja natural, profissional e direto, sem preâmbulos, sem parênteses e sem reflexões internas.`;
+2. CONCISÃO E COMPLETUDE: Responda de forma completa, clara e objetiva (1 a 3 parágrafos bem estruturados). Conclua sempre todas as frases e listas com clareza.
+3. NUNCA invente dados, diplomas ou empresas que não constem acima.
+4. Responda diretamente ao usuário com objetividade. Seja natural, profissional e direto, sem preâmbulos e sem monólogos internos.`;
 
 const SYSTEM_PROMPT_EN = `ABSOLUTE IDENTITY:
 You are the AI VIRTUAL ASSISTANT for Julio Reis's official portfolio (Julio Cesar da Costa Reis Filho).
@@ -154,16 +183,45 @@ You may and should address the user by their first name or nickname whenever the
 WHO IS JULIO (THE PORTFOLIO CREATOR):
 Julio is the creator of this portfolio (a different person). Refer to him naturally as "Julio" or "Julio Reis" in the 3rd person ("Julio is..."):
 - Senior Systems Architect & LLM Systems Engineer with 8+ years of production experience.
-- Creator of Mixture of Scars (MoS) & SCache O(1): Runs 80 layers of a 72B parameter model on a single 16GB GPU with 2.40 GB peak VRAM and constant 34.8 KB O(1) context memory.
-- Author of AURA System 1 engine (Embodied Deep RL solving Rubik's Cube across 232B states at 0.23ms on bare CPU) and CIR-Engine 503M (Causal Transformer in PyTorch DDP).
-- Author of mddd-cli on npm (diagram-driven system specification).
 - He is NOT a university professor and does NOT belong to fabricated universities.
 - Contact: reisfilho1116@gmail.com | github.com/byte-od | linkedin.com/in/juliocrfilho.
+
+SYSTEM ONE, MoS & SCACHE PROPRIETARY ARCHITECTURE (FULL ECOSYSTEM):
+Julio engineered a unified proprietary ecosystem tackling foundation model scaling bottlenecks:
+
+1. MoS (Mixture of Scars):
+   - Decomposes massive foundation models (70B to 123B) into INT4 quantized block slices with low-rank BF16 residual scar experts (SVD).
+   - Dynamic group layer streaming: only 1 layer group resides in GPU VRAM at any moment (≤ 2.2 GB), unallocated before loading the next.
+   - Golden-Slice Truncation: strategic cutoff at the layer of maximum stylistic entropy (e.g. L30 on Yi-34B, L40 on Qwen-72B, L44 on Mistral-123B) prior to vocabulary convergence collapse, extracting deep latent representations at a fraction of compute.
+
+2. SCache (Associative O(1) Scar-Cache):
+   - Definitive mathematical replacement for linear O(T) KV Caching. Rather than accumulating K and V tensors with each token (which demands tens of gigabytes and triggers fatal browser tab OOM crashes on long context), SCache compresses conversational history into a strictly constant 34.8 KB associative tensor matrix in L1/SRAM.
+   - Continuously updated via convex exponential decay (EMA) modulated by informational shock (Temporal Surprise), filtering redundant tokens while guaranteeing persistent Needle-in-a-Haystack recall.
+
+3. Tri-Compass Perceptual Front-End:
+   - Tri-coordinate orthogonal perceptual space:
+     * Compass 1 (Stylometry & Syntax): 28 orthographic metric signatures (punctuation, em-dashes, quotes, backticks, line breaks, uppercase/unique ratios).
+     * Compass 2 (Delta-Origin Centering): Subtraction of the prompt cluster centroid (X - μ_prompt) to neutralize subject matter and isolate intrinsic author style DNA.
+     * Compass 3 (MoS Latent Space): Dense embeddings from the titan's Golden-Slice layers.
+   - Dual-Head fusion (Plain Head + Centered Twin Head) calibrated via 300 iterations of continuous Soft Sinkhorn optimal transport.
+
+4. Frontier Ghost-Jump Scouts:
+   - Decoupled parallel exploration fleet operating at high throughput (>2,000 FPS).
+   - Ghost-Jump Lookahead: projects 2-3 steps ahead to map high-entropy bifurcations, measuring temporal surprise (Surprise = R_0 - V(s_0)) and writing targeted scars into SCache.
+
+5. AURA System 1 Engine (Amortized Reactive Reflex):
+   - Sub-millisecond deterministic CPU inference engine (≤ 0.23 ms on bare CPU, zero tree search) solving complex combinatorial state spaces (such as Rubik's Cube across 232 billion states). Provides continuous epistemic uncertainty telemetry.
+
+HOW THIS COMBINATION DRASTICALLY REDUCES HARDWARE CONSUMPTION:
+1. VRAM Reduction from 140+ GB down to 2.40 GB: 70B/123B models requiring 4 to 8 enterprise H100/A100 GPUs execute smoothly on a single consumer 16GB GPU or directly in the browser.
+2. 99.999% Context Memory Savings: Eliminates linear O(T) KV Cache bloat (32.8 GB at 100k tokens), locking context memory to a fixed 34.8 KB.
+3. 100% Client-Side / Edge WebGPU Execution: Runs locally in the browser with zero cloud server cost per token, zero network latency, and complete data privacy.
+4. Compute Offloading via System 1: Roughly 80% of routine queries and orthographic verifications are resolved by System 1 and Scouts in CPU under 1 ms, activating heavy GPU tensors only when true uncertainty arises.
 
 STRICT CONVERSATIONAL RULES:
 1. LANGUAGE: ALWAYS reply in the user's language (English or Portuguese).
 2. SIMPLE GREETINGS (e.g. "hi", "hello"): Reply ONLY with a single warm greeting sentence asking how to help.
-3. CONCISENESS: Maximum 1 or 2 concise paragraphs. NEVER invent unlisted degrees, universities, or roles.`;
+3. CONCISENESS & COMPLETENESS: Respond clearly and completely in 1 to 3 structured paragraphs. Always finish thoughts and lists cleanly. NEVER invent unlisted degrees, universities, or roles.`;
 
 export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang = 'en' }) => {
   const [currentLang, setCurrentLang] = useState<'en' | 'pt'>(lang);
@@ -659,6 +717,37 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       };
     }
 
+    // 6. Outros Componentes Proprietários (Tri-Compass, Batedores de Fronteira, Soft Sinkhorn)
+    if (q.includes('componente') || q.includes('proprietari') || q.includes('tri-compass') || q.includes('compass') || q.includes('batedor') || q.includes('scout') || q.includes('sinkhorn') || q.includes('bussola')) {
+      return {
+        text:
+          targetLang === 'pt'
+            ? 'Além do MoS e do SCache, o ecossistema proprietário do Julio integra:\n\n• Tri-Compass: Sistema ortogonal de 3 bússolas (Estilometria & Sintaxe com 28 métricas, Delta-Origin Centering que isola o DNA do autor e Espaço Latente MoS), unificado por Soft Sinkhorn contínuo (transporte ótimo em 300 iterações).\n• Batedores de Fronteira (Ghost-Jump Scouts): Frota autônoma a >2.000 FPS que antecipa bifurcações 2-3 passos à frente e grava cicatrizes no SCache com base na surpresa temporal (R_0 - V(s_0)).\n• AURA System 1: Motor reflexivo amortizado que decide em ≤ 0.23ms na CPU com telemetria contínua de incerteza epistêmica.'
+            : 'Beyond MoS and SCache, Julio\'s proprietary foundation ecosystem incorporates:\n\n• Tri-Compass: Tri-orthogonal coordinate front-end (Stylometry & Syntax with 28 metrics, Delta-Origin Centering isolating author DNA, and MoS Latent Space), unified by 300 iterations of continuous Soft Sinkhorn optimal transport.\n• Frontier Ghost-Jump Scouts: Autonomous >2,000 FPS exploration fleet projecting 2-3 steps ahead to map high-entropy bifurcations and imprint scars into SCache based on temporal surprise (R_0 - V(s_0)).\n• AURA System 1: Amortized reactive reflex core executing deterministic inference in ≤ 0.23ms on bare CPU with real-time epistemic uncertainty telemetry.',
+        links: [
+          { label: 'Repositório GitHub (System One)', url: 'https://github.com/byte-od/system_one', icon: 'github' },
+          { label: 'MoS & SCache Repo', url: 'https://github.com/byte-od/mixture-of-scars', icon: 'github' },
+        ],
+      };
+    }
+
+    // 7. Como Reduz o Consumo de Hardware (VRAM, KV Cache, WebGPU)
+    if (q.includes('hardware') || q.includes('consumo') || q.includes('como reduz') || q.includes('economia') || q.includes('memoria') || q.includes('vram') || q.includes('desacoplamento') || q.includes('recurso')) {
+      return {
+        text:
+          targetLang === 'pt'
+            ? 'A combinação MoS + SCache quebra as barreiras de hardware em 4 frentes:\n\n1. VRAM de 140 GB ➔ 2.40 GB: MoS transmite fatias INT4 sob demanda por streaming de grupos de camadas, rodando modelos de 70B a 123B em uma única GPU de 16 GB.\n2. Redução de 99.999% no Contexto: O SCache substitui o KV Cache linear O(T) (32.8 GB a 100k tokens) por uma matriz fixa O(1) de 34.8 KB em SRAM/L1 Cache.\n3. 100% Client-Side WebGPU: Permite inferência neural local no navegador do usuário, com zero custo de servidores em nuvem e zero latência de rede.\n4. CPU Offload via Sistema 1: 80% das interações rotineiras são resolvidas pelo Sistema 1 em <1ms na CPU, acordando a GPU apenas quando necessário.'
+            : 'The MoS + SCache combination slashes hardware demands across 4 pillars:\n\n1. VRAM from 140 GB ➔ 2.40 GB: MoS streams INT4 layer-group slices on demand, running 70B-123B models on a single 16GB consumer GPU.\n2. 99.999% Context Memory Savings: SCache replaces linear O(T) KV Cache (32.8 GB at 100k tokens) with a fixed 34.8 KB O(1) associative matrix in SRAM/L1 Cache.\n3. 100% Client-Side WebGPU: Enables native in-browser inference with zero cloud server costs and zero network latency.\n4. CPU Offload via System 1: Roughly 80% of routine queries are resolved by System 1 in <1ms on bare CPU, keeping GPU tensors dormant until needed.',
+        links: [
+          {
+            label: 'Live Colab Test (70B on 16GB GPU)',
+            url: 'https://colab.research.google.com/github/byte-od/mixture-of-scars/blob/main/notebooks/Proof_70B_MoS_on_16GB_GPU.ipynb',
+            icon: 'colab',
+          },
+        ],
+      };
+    }
+
     if (q.includes('contato') || q.includes('contact') || q.includes('contratar') || q.includes('hire') || q.includes('email') || q.includes('linkedin')) {
       return {
         text:
@@ -789,7 +878,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         type: 'generate',
         payload: {
           messages: historyPayload,
-          maxTokens: isGreeting || isIdentityQuery ? 50 : (activeTier === 'grande' ? 180 : 160),
+          maxTokens: isGreeting || isIdentityQuery ? 50 : (activeTier === 'grande' ? 512 : (activeTier === 'media' ? 420 : 350)),
           temperature: 0.15,
           isGreeting,
           isIdentityQuery,
