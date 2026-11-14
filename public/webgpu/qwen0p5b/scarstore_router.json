@@ -1,0 +1,737 @@
+{
+  "format": "WebGPUScarStoreRouterV1",
+  "version": "4.0.0",
+  "routing_architecture": "golden_slice_v4",
+  "hidden_dim": 896,
+  "num_layers": 24,
+  "mid_layer_idx": 15,
+  "num_heads": 14,
+  "head_dim": 64,
+  "rank_mid": 12,
+  "rank_final": 52,
+  "rank": 64,
+  "num_key_prototypes": 0,
+  "attention_beta": 0.0,
+  "k_lang": 14,
+  "seed_horizon": 50,
+  "seed_fade_steps": 6,
+  "winner_margin": 0.0002,
+  "record_bytes": 62720,
+  "record_kb": 61.25,
+  "payload_offset": 3416064,
+  "user_turn_prefix_ids": [
+    151644,
+    872,
+    198
+  ],
+  "user_turn_suffix_ids": [
+    151645,
+    198,
+    151644,
+    77091,
+    198
+  ],
+  "routing_mode": "span_max",
+  "span_window": 10,
+  "span_stride": 3,
+  "router_bin_file": "scarstore_router.bin",
+  "router_bin_bytes": 107520,
+  "router_bin_layout": {
+    "mu_query_mid": {
+      "offset_floats": 0,
+      "length_floats": 896
+    },
+    "mu_hidden_mid": {
+      "offset_floats": 896,
+      "length_floats": 896
+    },
+    "mu_hidden_final": {
+      "offset_floats": 1792,
+      "length_floats": 896
+    },
+    "u_lang_mid": {
+      "offset_floats": 2688,
+      "length_floats": 12544
+    },
+    "z_anchors": {
+      "offset_floats": 15232,
+      "length_floats": 11648
+    }
+  },
+  "local_http206_store_url": "capsules.scarstore",
+  "cloud_http206_store_url": null,
+  "num_capsules": 13,
+  "capsules": [
+    {
+      "index": 0,
+      "capsule_id": "portfolio_agent_identity",
+      "slot_idx": 0,
+      "coord": [
+        0,
+        0
+      ],
+      "byte_offset": 3416064,
+      "record_bytes": 62720,
+      "record_kb": 61.25,
+      "local_store_has_bytes": true,
+      "tau": 0.52,
+      "ramp": 0.04,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "System One — Official In-Browser Portfolio AI Assistant",
+        "title_pt": "System One — Assistente Oficial de IA do Portfólio no Browser",
+        "category": "Agent Identity",
+        "summary": "Official client-side AI assistant for Julio Reis's portfolio (never impersonating Julio), executing 100% locally via WebGPU WGSL, MoS INT4, and SCache O(1).",
+        "links": [
+          {
+            "label": "GitHub @byte-od",
+            "url": "https://github.com/byte-od",
+            "icon": "github"
+          },
+          {
+            "label": "LinkedIn Julio Reis",
+            "url": "https://linkedin.com/in/juliocrfilho",
+            "icon": "ext"
+          }
+        ],
+        "example_prompt": "Quem é você e qual é o seu nome neste portfólio?",
+        "prompts_polyglot": {
+          "pt": "Quem é você e qual é o seu nome neste portfólio?",
+          "en": "Who are you and what is your name on this portfolio?",
+          "es": "¿Quién eres y cuál es tu nombre en este portafolio?",
+          "fr": "Qui êtes-vous et quel est votre nom sur ce portfolio ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Zero-SGD, INT4-Matched)",
+        "teacher_reference": "Hello! My name is System One, the official AI assistant on Julio Reis's portfolio, running locally via WebGPU WGSL, MoS INT4, and SCache O(1).",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 15,
+        "k_lang": 14,
+        "surprise_steps": 152,
+        "total_seed_steps": 264
+      }
+    },
+    {
+      "index": 1,
+      "capsule_id": "portfolio_agent_capabilities",
+      "slot_idx": 1,
+      "coord": [
+        1,
+        1
+      ],
+      "byte_offset": 3478784,
+      "record_bytes": 62720,
+      "record_kb": 61.25,
+      "local_store_has_bytes": true,
+      "tau": 0.5,
+      "ramp": 0.04,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "System One — Knowledge Cutoff, Offline Privacy & HTTP 206 Updates",
+        "title_pt": "System One — Atualização de Conhecimento, Privacidade Offline & HTTP 206",
+        "category": "Agent Identity",
+        "summary": "Combines offline Qwen2.5-0.5B general pretraining (zero external API calls) with live 2026 HTTP 206 ScarStore v4.0 cartridges covering Julio Reis's portfolio.",
+        "links": [
+          {
+            "label": "GitHub mixture-of-scars",
+            "url": "https://github.com/byte-od/mixture-of-scars",
+            "icon": "github"
+          }
+        ],
+        "example_prompt": "Qual sua última atualização sobre conhecimentos gerais?",
+        "prompts_polyglot": {
+          "pt": "Qual sua última atualização sobre conhecimentos gerais?",
+          "en": "What is your last update or knowledge cutoff on general knowledge?",
+          "es": "¿Cuál es tu última actualización sobre conocimientos generales?",
+          "fr": "Quelle est votre dernière mise à jour sur les connaissances générales ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Zero-SGD, INT4-Matched)",
+        "teacher_reference": "My general knowledge comes from offline Qwen2.5-0.5B pretraining (no live web search), paired with 2026 HTTP 206 cartridges on Julio Reis's portfolio.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 15,
+        "k_lang": 14,
+        "surprise_steps": 161,
+        "total_seed_steps": 179
+      }
+    },
+    {
+      "index": 2,
+      "capsule_id": "portfolio_julio_bio_career",
+      "slot_idx": 2,
+      "coord": [
+        2,
+        2
+      ],
+      "byte_offset": 3541504,
+      "record_bytes": 62720,
+      "record_kb": 61.25,
+      "local_store_has_bytes": true,
+      "tau": 0.54,
+      "ramp": 0.04,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "Julio Reis — Senior Systems Architect & LLM Engineer (8+ Years)",
+        "title_pt": "Julio Reis — Arquiteto de Sistemas Sênior & Engenheiro de LLMs (8+ Anos)",
+        "category": "Portfolio Dossier",
+        "summary": "Julio Cesar da Costa Reis Filho (@byte-od): 8+ years across Causal Transformers, PyTorch DDP, Go, C++/Rust, and Flutter (Asapp, Opah IT, Arlequim, Grupo Data, GFT).",
+        "links": [
+          {
+            "label": "LinkedIn Julio Reis",
+            "url": "https://linkedin.com/in/juliocrfilho",
+            "icon": "ext"
+          },
+          {
+            "label": "GitHub @byte-od",
+            "url": "https://github.com/byte-od",
+            "icon": "github"
+          }
+        ],
+        "example_prompt": "Quem é o Julio Reis e qual é a experiência e trajetória profissional dele?",
+        "prompts_polyglot": {
+          "pt": "Quem é o Julio Reis e qual é a experiência e trajetória profissional dele?",
+          "en": "Who is Julio Reis and what is his professional background and career?",
+          "es": "¿Quién es Julio Reis y cuál es su trayectoria y experiencia profesional?",
+          "fr": "Qui est Julio Reis et quel est son parcours professionnel et son expérience ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Zero-SGD, INT4-Matched)",
+        "teacher_reference": "Julio Reis is a Senior Systems Architect and LLM Engineer with 8+ years of experience across Asapp Desenvolvimento, Opah IT, Arlequim, and enterprise banking.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 15,
+        "k_lang": 14,
+        "surprise_steps": 140,
+        "total_seed_steps": 177
+      }
+    },
+    {
+      "index": 3,
+      "capsule_id": "portfolio_mos_scache_72b",
+      "slot_idx": 3,
+      "coord": [
+        3,
+        3
+      ],
+      "byte_offset": 3604224,
+      "record_bytes": 62720,
+      "record_kb": 61.25,
+      "local_store_has_bytes": true,
+      "tau": 0.48,
+      "ramp": 0.04,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "Mixture of Scars (72B in 2.40 GB VRAM) & Associative SCache O(1)",
+        "title_pt": "Mixture of Scars (72B em 2.40 GB VRAM) & Memória Associativa SCache O(1)",
+        "category": "Flagship AI Architecture",
+        "summary": "MoS streams 80 layers of 72B LLM geometry in 2.40 GB peak VRAM via Block-64 INT4 + ASVD, while SCache O(1) replaces 32.77 GB KV Cache at 100k tokens with fixed Widrow-Hoff memory.",
+        "links": [
+          {
+            "label": "⚡ Live Colab Proof (72B + SCache)",
+            "url": "https://colab.research.google.com/github/byte-od/mixture-of-scars/blob/main/notebooks/Proof_70B_MoS_on_16GB_GPU.ipynb",
+            "icon": "colab"
+          },
+          {
+            "label": "GitHub mixture-of-scars",
+            "url": "https://github.com/byte-od/mixture-of-scars",
+            "icon": "github"
+          }
+        ],
+        "example_prompt": "O que é o Mixture of Scars (MoS) e o SCache e como reduzem o consumo de VRAM?",
+        "prompts_polyglot": {
+          "pt": "O que é o Mixture of Scars (MoS) e o SCache e como reduzem o consumo de VRAM?",
+          "en": "What is Mixture of Scars (MoS) and SCache, and how do they slash VRAM usage?",
+          "es": "¿Qué es Mixture of Scars (MoS) y SCache y cómo reducen el consumo de VRAM?",
+          "fr": "Qu'est-ce que Mixture of Scars (MoS) et SCache et comment réduisent-ils la VRAM ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Zero-SGD, INT4-Matched)",
+        "teacher_reference": "MoS runs a 72B LLM in 2.40 GB VRAM via INT4+ASVD, while SCache O(1) replaces linear KV Cache with fixed memory.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 15,
+        "k_lang": 14,
+        "surprise_steps": 154,
+        "total_seed_steps": 186
+      }
+    },
+    {
+      "index": 4,
+      "capsule_id": "portfolio_browser_webgpu_wgsl",
+      "slot_idx": 4,
+      "coord": [
+        4,
+        4
+      ],
+      "byte_offset": 3666944,
+      "record_bytes": 62720,
+      "record_kb": 61.25,
+      "local_store_has_bytes": true,
+      "tau": 0.48,
+      "ramp": 0.04,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "Zero-ONNX In-Browser WebGPU / WGSL Engine & HTTP 206 ScarStore v4.0",
+        "title_pt": "Motor Nativo WebGPU / WGSL no Navegador & ScarStore v4.0 HTTP 206",
+        "category": "Edge & Browser GPU",
+        "summary": "15 custom WGSL 1.0 compute shaders executing INT4+ASVD GEMV, Widrow-Hoff SCache O(1), Golden-Slice P_perp_lang routing, and HTTP 206 61.25 KB conceptual cartridges.",
+        "links": [
+          {
+            "label": "GitHub mixture-of-scars",
+            "url": "https://github.com/byte-od/mixture-of-scars",
+            "icon": "github"
+          }
+        ],
+        "example_prompt": "Como você roda 100% no navegador via WebGPU/WGSL e baixa cartuchos via HTTP 206?",
+        "prompts_polyglot": {
+          "pt": "Como você roda 100% no navegador via WebGPU/WGSL e baixa cartuchos via HTTP 206?",
+          "en": "How do you run 100% in-browser via WebGPU/WGSL and stream cartridges via HTTP 206?",
+          "es": "¿Cómo funcionas 100% en el navegador con WebGPU/WGSL y cartuchos HTTP 206?",
+          "fr": "Comment fonctionnez-vous 100% dans le navigateur via WebGPU/WGSL et HTTP 206 ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Zero-SGD, INT4-Matched)",
+        "teacher_reference": "In the browser, 15 WGSL shaders run MoS INT4+ASVD without Python or ONNX, streaming 61.25 KB cartridges via HTTP 206.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 15,
+        "k_lang": 14,
+        "surprise_steps": 143,
+        "total_seed_steps": 179
+      }
+    },
+    {
+      "index": 5,
+      "capsule_id": "portfolio_aura_system_one",
+      "slot_idx": 5,
+      "coord": [
+        5,
+        5
+      ],
+      "byte_offset": 3729664,
+      "record_bytes": 62720,
+      "record_kb": 61.25,
+      "local_store_has_bytes": true,
+      "tau": 0.48,
+      "ramp": 0.05,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "AURA (Universal System 1 Engine — 0.23 ms Deep RL on Rubik's Cube)",
+        "title_pt": "AURA (Motor Universal Sistema 1 — Deep RL em 0.23 ms no Cubo de Rubik)",
+        "category": "Embodied Deep RL",
+        "summary": "Sub-millisecond (0.23 ms CPU P50, zero MCTS) Recurrent PPO + Teacher SIL + Online DPO engine solving Rubik's Cube up to Depth 10 (232.2B states) across 430M+ steps at >20,000 FPS.",
+        "links": [
+          {
+            "label": "GitHub system_one (AURA)",
+            "url": "https://github.com/byte-od/system_one",
+            "icon": "github"
+          }
+        ],
+        "example_prompt": "Explique o projeto AURA (Motor Sistema 1 de Deep RL no Cubo de Rubik).",
+        "prompts_polyglot": {
+          "pt": "Explique o projeto AURA (Motor Sistema 1 de Deep RL no Cubo de Rubik).",
+          "en": "Explain the AURA Universal System 1 Deep Reinforcement Learning engine.",
+          "es": "Explica el motor AURA (Sistema 1 de Aprendizaje por Refuerzo en el Cubo de Rubik).",
+          "fr": "Expliquez le moteur AURA (Système 1 d'apprentissage par renforcement sur le Rubik's Cube)."
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Zero-SGD, INT4-Matched)",
+        "teacher_reference": "AURA is Julio Reis's System 1 Deep RL engine achieving 0.23 ms CPU latency without MCTS across 232B Rubik's Cube states.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 15,
+        "k_lang": 14,
+        "surprise_steps": 132,
+        "total_seed_steps": 163
+      }
+    },
+    {
+      "index": 6,
+      "capsule_id": "portfolio_tricompass_scouts",
+      "slot_idx": 6,
+      "coord": [
+        6,
+        6
+      ],
+      "byte_offset": 3792384,
+      "record_bytes": 62720,
+      "record_kb": 61.25,
+      "local_store_has_bytes": true,
+      "tau": 0.48,
+      "ramp": 0.05,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "Tri-Compass, Frontier Ghost-Jump Scouts & Soft Sinkhorn ($50k Kaggle)",
+        "title_pt": "Tri-Compass, Batedores Ghost-Jump & Soft Sinkhorn (Kaggle $50k)",
+        "category": "Proprietary Perception",
+        "summary": "Tri-orthogonal perceptual front-end (28 stylometric metrics + Delta-Origin Centering + Golden-Slice MoS) with 300-iter Soft Sinkhorn and >2,000 FPS Ghost-Jump Scouts.",
+        "links": [
+          {
+            "label": "GitHub system_one",
+            "url": "https://github.com/byte-od/system_one",
+            "icon": "github"
+          },
+          {
+            "label": "GitHub mixture-of-scars",
+            "url": "https://github.com/byte-od/mixture-of-scars",
+            "icon": "github"
+          }
+        ],
+        "example_prompt": "O que são o Tri-Compass, os Batedores de Fronteira (Ghost-Jump) e o Soft Sinkhorn?",
+        "prompts_polyglot": {
+          "pt": "O que são o Tri-Compass, os Batedores de Fronteira (Ghost-Jump) e o Soft Sinkhorn?",
+          "en": "What are Tri-Compass, Frontier Ghost-Jump Scouts, and Soft Sinkhorn?",
+          "es": "¿Qué son Tri-Compass, los Exploradores Ghost-Jump y el transporte Soft Sinkhorn?",
+          "fr": "Que sont Tri-Compass, les Éclaireurs Ghost-Jump et la calibration Soft Sinkhorn ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Zero-SGD, INT4-Matched)",
+        "teacher_reference": "Tri-Compass fuses 28 stylometric metrics, Delta-Origin Centering, and Golden-Slice MoS via Soft Sinkhorn with >2k FPS Ghost-Jump Scouts.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 15,
+        "k_lang": 14,
+        "surprise_steps": 133,
+        "total_seed_steps": 172
+      }
+    },
+    {
+      "index": 7,
+      "capsule_id": "portfolio_cir_engine_503m",
+      "slot_idx": 7,
+      "coord": [
+        7,
+        7
+      ],
+      "byte_offset": 3855104,
+      "record_bytes": 62720,
+      "record_kb": 61.25,
+      "local_store_has_bytes": true,
+      "tau": 0.48,
+      "ramp": 0.05,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "CIR-Engine & Cir-Jev — 503M Causal Transformer Trained from Scratch",
+        "title_pt": "CIR-Engine & Cir-Jev — Transformer Causal de 503M Treinado do Zero",
+        "category": "Causal Transformers",
+        "summary": "503M-parameter 16-layer causal Transformer trained from scratch in PyTorch DDP (~6,200 tok/s, RoPE, RMSNorm, GQA, FlashAttention) with O(1) deterministic [OP:CALC] tool interception.",
+        "links": [
+          {
+            "label": "GitHub cir-jev (503M)",
+            "url": "https://github.com/byte-od/cir-jev",
+            "icon": "github"
+          }
+        ],
+        "example_prompt": "O que é o CIR-Engine 503M (Cir-Jev) treinado do zero em PyTorch DDP?",
+        "prompts_polyglot": {
+          "pt": "O que é o CIR-Engine 503M (Cir-Jev) treinado do zero em PyTorch DDP?",
+          "en": "What is CIR-Engine 503M (Cir-Jev), the causal Transformer trained from scratch?",
+          "es": "¿Qué es CIR-Engine 503M (Cir-Jev), el Transformer causal entrenado desde cero?",
+          "fr": "Qu'est-ce que CIR-Engine 503M (Cir-Jev), le Transformer causal entraîné de zéro ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Zero-SGD, INT4-Matched)",
+        "teacher_reference": "CIR-Engine is Julio Reis's 503M causal Transformer trained from scratch in PyTorch DDP at 6.2k tok/s with [OP:CALC] verification.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 15,
+        "k_lang": 14,
+        "surprise_steps": 131,
+        "total_seed_steps": 180
+      }
+    },
+    {
+      "index": 8,
+      "capsule_id": "portfolio_devtools_fullstack",
+      "slot_idx": 8,
+      "coord": [
+        8,
+        8
+      ],
+      "byte_offset": 3917824,
+      "record_bytes": 62720,
+      "record_kb": 61.25,
+      "local_store_has_bytes": true,
+      "tau": 0.48,
+      "ramp": 0.05,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "Open-Source & Full-Stack Systems (mddd-cli, MAD-cli, flutter_scene, Register-red)",
+        "title_pt": "Ferramentas Open-Source & Full-Stack (mddd-cli, MAD-cli, flutter_scene, Register-red)",
+        "category": "Developer Tooling & Graphics",
+        "summary": "Spec-Driven Dev via Mermaid ASTs on npm (mddd-cli), living docs (MAD-cli), 3D Metal/Vulkan shaders (flutter_scene), Go telemetry (GitTrack), and Register-red Apple Numbers daemon.",
+        "links": [
+          {
+            "label": "NPM mddd-cli",
+            "url": "https://www.npmjs.com/package/mddd-cli",
+            "icon": "ext"
+          },
+          {
+            "label": "GitHub Register-red",
+            "url": "https://github.com/byte-od/Register-red",
+            "icon": "github"
+          }
+        ],
+        "example_prompt": "Quais ferramentas open-source e sistemas full-stack o Julio criou (mddd-cli, MAD-cli, Register-red)?",
+        "prompts_polyglot": {
+          "pt": "Quais ferramentas open-source e sistemas full-stack o Julio criou (mddd-cli, MAD-cli, Register-red)?",
+          "en": "What open-source tools and full-stack systems did Julio build (mddd-cli, MAD-cli, Register-red)?",
+          "es": "¿Qué herramientas open-source y sistemas full-stack creó Julio (mddd-cli, MAD-cli, Register-red)?",
+          "fr": "Quels outils open-source et systèmes full-stack Julio a-t-il créés (mddd-cli, MAD-cli, Register-red) ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Zero-SGD, INT4-Matched)",
+        "teacher_reference": "Julio built mddd-cli on npm (Clean Architecture from Mermaid ASTs), MAD-cli, 3D Metal/Vulkan shaders in flutter_scene, GitTrack in Go, and Register-red.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 15,
+        "k_lang": 14,
+        "surprise_steps": 132,
+        "total_seed_steps": 156
+      }
+    },
+    {
+      "index": 9,
+      "capsule_id": "portfolio_contact_hire",
+      "slot_idx": 9,
+      "coord": [
+        9,
+        9
+      ],
+      "byte_offset": 3980544,
+      "record_bytes": 62720,
+      "record_kb": 61.25,
+      "local_store_has_bytes": true,
+      "tau": 0.5,
+      "ramp": 0.04,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "Contact, Global Remote Availability & Relocation (Hire Julio Reis)",
+        "title_pt": "Contato, Contratação & Disponibilidade Global (Falar com Julio Reis)",
+        "category": "Contact & Hiring",
+        "summary": "Available globally for Staff/Principal Systems Architect & Senior LLM/ML Systems Engineer roles (remote or relocation): reisfilho1116@gmail.com | github.com/byte-od | linkedin.com/in/juliocrfilho.",
+        "links": [
+          {
+            "label": "E-mail: reisfilho1116@gmail.com",
+            "url": "mailto:reisfilho1116@gmail.com",
+            "icon": "ext"
+          },
+          {
+            "label": "LinkedIn /in/juliocrfilho",
+            "url": "https://linkedin.com/in/juliocrfilho",
+            "icon": "ext"
+          },
+          {
+            "label": "GitHub @byte-od",
+            "url": "https://github.com/byte-od",
+            "icon": "github"
+          }
+        ],
+        "example_prompt": "Como posso entrar em contato ou contratar o Julio Reis (e-mail, LinkedIn e GitHub)?",
+        "prompts_polyglot": {
+          "pt": "Como posso entrar em contato ou contratar o Julio Reis (e-mail, LinkedIn e GitHub)?",
+          "en": "How can I contact or hire Julio Reis (email, LinkedIn, and GitHub)?",
+          "es": "¿Cómo puedo contactar o contratar a Julio Reis (correo, LinkedIn y GitHub)?",
+          "fr": "Comment puis-je contacter ou recruter Julio Reis (e-mail, LinkedIn et GitHub) ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Zero-SGD, INT4-Matched)",
+        "teacher_reference": "Julio Reis is available globally (remote or relocation) at reisfilho1116@gmail.com, linkedin.com/in/juliocrfilho, and github.com/byte-od.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 15,
+        "k_lang": 14,
+        "surprise_steps": 136,
+        "total_seed_steps": 177
+      }
+    },
+    {
+      "index": 10,
+      "capsule_id": "concept_landauer_principle",
+      "slot_idx": 10,
+      "coord": [
+        10,
+        10
+      ],
+      "byte_offset": 4043264,
+      "record_bytes": 62720,
+      "record_kb": 61.25,
+      "local_store_has_bytes": true,
+      "tau": 0.45,
+      "ramp": 0.05,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "Landauer's Principle (Thermodynamic Cost of Irreversible Bit Erasure)",
+        "title_pt": "Princípio de Landauer (Limite Termodinâmico de Apagamento de 1 Bit)",
+        "category": "Physics of Information",
+        "summary": "Irreversibly erasing 1 bit of information in a thermal bath at temperature T dissipates at least E_min = k_B T ln 2 of heat.",
+        "links": [],
+        "example_prompt": "Me fale sobre o princípio de Landauer na física da informação.",
+        "prompts_polyglot": {
+          "pt": "Me fale sobre o princípio de Landauer na física da informação.",
+          "en": "Explain Landauer's principle in the physics of information.",
+          "es": "Explícame el principio de Landauer en la física de la información.",
+          "fr": "Expliquez le principe de Landauer en physique de l'information."
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Zero-SGD, INT4-Matched)",
+        "teacher_reference": "Landauer's principle states that irreversibly erasing 1 bit of information at temperature T dissipates at least E_min = k_B T ln 2 of heat.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 15,
+        "k_lang": 14,
+        "surprise_steps": 117,
+        "total_seed_steps": 154
+      }
+    },
+    {
+      "index": 11,
+      "capsule_id": "concept_immerman_szelepcsenyi",
+      "slot_idx": 11,
+      "coord": [
+        11,
+        11
+      ],
+      "byte_offset": 4105984,
+      "record_bytes": 62720,
+      "record_kb": 61.25,
+      "local_store_has_bytes": true,
+      "tau": 0.54,
+      "ramp": 0.05,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "Immerman-Szelepcsényi Theorem (NSPACE = co-NSPACE Inductive Counting)",
+        "title_pt": "Teorema de Immerman-Szelepcsényi (NSPACE = co-NSPACE por Contagem Indutiva)",
+        "category": "Computational Complexity",
+        "summary": "Every nondeterministic space class s(n) >= log n is closed under complementation (NL = coNL) via inductive counting of reachable configurations.",
+        "links": [],
+        "example_prompt": "O que prova o teorema de Immerman-Szelepcsényi sobre classes de espaço não-determinístico?",
+        "prompts_polyglot": {
+          "pt": "O que prova o teorema de Immerman-Szelepcsényi sobre classes de espaço não-determinístico?",
+          "en": "What does the Immerman-Szelepcsényi theorem prove about nondeterministic space classes?",
+          "es": "¿Qué demuestra el teorema de Immerman-Szelepcsényi sobre la complejidad espacial no determinista?",
+          "fr": "Que démontre le théorème d'Immerman-Szelepcsényi sur les classes d'espace non déterministe ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Zero-SGD, INT4-Matched)",
+        "teacher_reference": "The Immerman-Szelepcsényi theorem proves NSPACE(s(n)) = co-NSPACE(s(n)) for s(n) >= log n (NL = coNL) via inductive counting.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 15,
+        "k_lang": 14,
+        "surprise_steps": 117,
+        "total_seed_steps": 190
+      }
+    },
+    {
+      "index": 12,
+      "capsule_id": "bridge_landauer_immerman",
+      "slot_idx": 12,
+      "coord": [
+        12,
+        12
+      ],
+      "byte_offset": 4168704,
+      "record_bytes": 62720,
+      "record_kb": 61.25,
+      "local_store_has_bytes": true,
+      "tau": 0.795,
+      "ramp": 0.018,
+      "parent_capsules": [
+        "concept_landauer_principle",
+        "concept_immerman_szelepcsenyi"
+      ],
+      "metadata": {
+        "title": "Sleep Bridge: Reversible Inductive Counting (Landauer × Immerman)",
+        "title_pt": "Ponte Conjuntiva: Contagem Indutiva Reversível (Landauer × Immerman)",
+        "category": "Cross-Domain Sleep Synthesis",
+        "summary": "Conjunctive bridge co-activated only when both Landauer and Immerman-Szelepcsényi fire together, synthesizing Bennett's reversible pebble game in O(log n) space vs k_B T ln 2.",
+        "links": [],
+        "example_prompt": "Como a reutilização de espaço da contagem indutiva de Immerman-Szelepcsényi interage com a dissipação térmica do princípio de Landauer?",
+        "prompts_polyglot": {
+          "pt": "Como a reutilização de espaço da contagem indutiva de Immerman-Szelepcsényi interage com a dissipação térmica do princípio de Landauer?",
+          "en": "How does space reuse in Immerman-Szelepcsényi inductive counting interact with thermal dissipation under Landauer's principle?",
+          "es": "¿Cómo interactúa la reutilización de espacio del conteo inductivo de Immerman-Szelepcsényi con el principio termodinámico de Landauer?",
+          "fr": "Comment la réutilisation d'espace du comptage inductif d'Immerman-Szelepcsényi interagit-elle avec le principe thermodynamique de Landauer ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Conjunctive Sleep Consolidation (Zero-SGD, INT4-Matched)",
+        "teacher_reference": "By Bennett's reversible pebbling, Immerman-Szelepcsényi O(log n) counter overwrites avoid Landauer's k_B T ln 2 heat dissipation per erased bit.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 15,
+        "k_lang": 14,
+        "surprise_steps": 123,
+        "total_seed_steps": 178
+      }
+    }
+  ],
+  "system_prompt": "You are System One, the official AI assistant for Julio Reis's portfolio (byte-od.github.io), running locally via WebGPU WGSL, MoS, and SCache O(1). Never claim to be Julio; refer to Julio Reis in the third person. Always reply in the same language as the user's message in 2 to 4 complete sentences."
+}

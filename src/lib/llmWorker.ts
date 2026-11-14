@@ -1,195 +1,117 @@
-import { pipeline, env, TextStreamer, InterruptableStoppingCriteria } from '@huggingface/transformers';
-import { SCacheMemoryCore } from './scacheEngine';
-import { MixtureOfScarsCore } from './mosEngine';
+/**
+ * Dedicated WebGPU Worker for Portfolio Agent v4.0
+ *
+ * Runs `BrowserMoSWebGPUEngine` (15 custom WGSL 1.0 compute shaders + `SCache O(1)` +
+ * `GoldenSliceScarStoreV4` `HTTP 206` universal cartridges) off the main UI thread so
+ * 3D portfolio canvases remain locked at 60 FPS.
+ *
+ * Zero `@huggingface/transformers`, Zero ONNX Runtime, Zero linear O(T) KV Cache.
+ */
 
-// Configuration for in-browser client execution
-env.allowLocalModels = false;
-env.useBrowserCache = true;
+import {
+  BrowserMoSWebGPUEngine,
+  checkMosShardsCached,
+} from './mosWebgpuEngine';
+import { BrowserScarStoreHTTP206 } from './scarstoreHttp206Browser';
 
-// Instanciação dos Motores Matemáticos Proprietários:
-// 1. SCache: Memória Associativa Fast-Weights Hebbiana O(1) (~36.8 KB)
-// 2. MoS: Roteador Esparso de Micro-Especialistas em Cicatriz (Top-K Low-Rank)
-const scacheCore = new SCacheMemoryCore(96);
-const mosCore = new MixtureOfScarsCore(96, 8, 2);
-
-interface ModelConfig {
-  id: string;
-  name: string;
-  dtype: 'q4' | 'q4f16' | 'fp16' | 'fp32';
-}
-
-export const MODELS_CONFIG: Record<string, ModelConfig> = {
-  leve: {
-    id: 'HuggingFaceTB/SmolLM2-135M-Instruct',
-    name: 'SmolLM2-135M-Instruct (INT4)',
-    dtype: 'q4',
-  },
-  media: {
-    id: 'onnx-community/Qwen2.5-0.5B-Instruct',
-    name: 'Qwen2.5-0.5B-Instruct (INT4)',
-    dtype: 'q4',
-  },
-  grande: {
-    id: 'onnx-community/Llama-3.2-1B-Instruct',
-    name: 'Llama-3.2-1B-Instruct (INT4)',
-    dtype: 'q4',
-  },
-};
-
-let currentPipeline: any = null;
-let currentModelKey: string | null = null;
-let isGenerating = false;
+let engine: BrowserMoSWebGPUEngine | null = null;
+let standaloneRouter: BrowserScarStoreHTTP206 | null = null;
 let isLoading = false;
+let isGenerating = false;
+let currentAbort: AbortController | null = null;
 
-// Check if WebGPU is available in this worker context
-async function checkWebGPU(): Promise<boolean> {
+async function ensureRouterLoaded(baseUrl: string): Promise<BrowserScarStoreHTTP206 | null> {
+  if (engine && engine.scarStore) return engine.scarStore;
+  if (standaloneRouter) return standaloneRouter;
   try {
-    if (typeof navigator !== 'undefined' && 'gpu' in navigator) {
-      const adapter = await (navigator as any).gpu.requestAdapter();
-      return !!adapter;
-    }
-  } catch (e) {
-    console.warn('[LLM Worker] WebGPU check failed, falling back to WASM:', e);
+    const cleanBase = baseUrl.replace(/\/$/, '');
+    standaloneRouter = await BrowserScarStoreHTTP206.load(`${cleanBase}/scarstore_router.json`);
+    return standaloneRouter;
+  } catch (err) {
+    console.warn('[MoS WebGPU Worker] Router preload notice:', err);
+    return null;
   }
-  return false;
-}
-
-// Check if model files already exist in local browser cache (zero download guarantee)
-async function isModelCached(modelId: string): Promise<boolean> {
-  try {
-    if (typeof self !== 'undefined' && 'caches' in self) {
-      const cache = await self.caches.open('transformers-cache');
-      const keys = await cache.keys();
-      return keys.some((req) => req.url.includes(modelId) && req.url.includes('.onnx'));
-    }
-  } catch (e) {
-    console.warn('[LLM Worker] Cache inspection error:', e);
-  }
-  return false;
 }
 
 self.onmessage = async (e: MessageEvent) => {
-  const { type, payload } = e.data;
+  const { type, payload } = e.data || {};
+  const baseUrl: string = payload?.baseUrl || '/webgpu/qwen0p5b';
 
-  // 0. TELEMETRIA DO SCACHE O(1) & MOS
-  if (type === 'get_scache_telemetry' || type === 'get_mos_scache_telemetry') {
+  // 1. Check Cache + Preload Lightweight `< 90 KB` Golden-Slice Router Index (`0 B` cartridge payload!)
+  if (type === 'init_router') {
+    const [shardsCached, router] = await Promise.all([
+      checkMosShardsCached(baseUrl),
+      ensureRouterLoaded(baseUrl),
+    ]);
     self.postMessage({
-      type: 'scache_telemetry',
-      telemetry: scacheCore.getTelemetry(),
-      mosTelemetry: mosCore.getTelemetry(),
+      type: 'router_ready',
+      shardsCached,
+      capsules: router ? router.getCapsulesDirectory() : [],
+      recordKb: router ? Math.round((router.recordBytes / 1024) * 100) / 100 : 61.25,
+      kLang: router ? router.kLang : 14,
+      midLayerIdx: router ? router.midLayerIdx : 15,
     });
     return;
   }
 
-  // 1. VERIFICAR STATUS DO CACHE (GARANTIA DE NÃO RE-BAIXAR)
-  if (type === 'check_cache') {
-    try {
-      const results: Record<string, boolean> = {};
-      for (const [key, cfg] of Object.entries(MODELS_CONFIG)) {
-        results[key] = await isModelCached(cfg.id);
-      }
-      self.postMessage({ type: 'cache_status', results });
-    } catch (err) {
-      console.warn('[LLM Worker] Failed to check cache status:', err);
-    }
-    return;
-  }
-
-  // 2. CARREGAR MODELO
+  // 2. Boot Native WebGPU / WGSL Engine (`15` Compute Pipelines + `SCache O(1)`)
   if (type === 'load') {
-    const { modelKey } = payload;
-    const targetConfig = MODELS_CONFIG[modelKey];
-
-    if (!targetConfig) {
-      self.postMessage({ type: 'error', error: `Modelo inválido: ${modelKey}` });
-      return;
-    }
-
-    // Se já está residente na memória da GPU
-    if (currentPipeline && currentModelKey === modelKey) {
+    if (engine) {
       self.postMessage({
         type: 'ready',
-        modelKey,
-        name: targetConfig.name,
-        device: 'memory_resident',
+        adapterLabel: engine.adapterLabel,
+        scacheBytes: engine.scacheGpuBytes,
+        scacheKb: engine.scacheKbFormatted,
+        vramWeightsMiB: Math.round((engine.totalWeightGpuBytes / (1024 * 1024)) * 100) / 100,
         fromCache: true,
+        capsules: engine.scarStore ? engine.scarStore.getCapsulesDirectory() : [],
       });
       return;
     }
-
-    // Trava de concorrência: impede downloads paralelos duplicados
-    if (isLoading) {
-      console.warn('[LLM Worker] Carregamento já em andamento. Ignorando requisição concorrente.');
-      return;
-    }
-
+    if (isLoading) return;
     isLoading = true;
 
     try {
-      // Liberar pipeline anterior da VRAM antes de carregar o novo (preservação de memória da aba)
-      if (currentPipeline) {
-        currentPipeline = null;
-        currentModelKey = null;
-      }
-
-      const hasWebGPU = await checkWebGPU();
-      const preferredDevice = hasWebGPU ? 'webgpu' : 'wasm';
-      const wasAlreadyCached = await isModelCached(targetConfig.id);
-
+      const preCached = await checkMosShardsCached(baseUrl);
       self.postMessage({
         type: 'loading_start',
-        modelKey,
-        device: preferredDevice,
-        wasAlreadyCached,
+        wasAlreadyCached: preCached,
       });
 
-      // Progress callback tracking download percentage
-      const progressCallback = (p: any) => {
-        if (p.status === 'progress' && p.total > 0) {
-          const percent = Math.min(100, Math.round((p.loaded / p.total) * 100));
-          self.postMessage({
-            type: 'download_progress',
-            modelKey,
-            percent,
-            loaded: p.loaded,
-            total: p.total,
-            file: p.file || 'weights',
-          });
-        } else if (p.status === 'initiate') {
-          self.postMessage({
-            type: 'download_initiate',
-            modelKey,
-            file: p.file,
-          });
-        } else if (p.status === 'ready') {
-          self.postMessage({
-            type: 'download_ready',
-            modelKey,
-            file: p.file,
-          });
+      engine = await BrowserMoSWebGPUEngine.create(baseUrl, (prog) => {
+        self.postMessage({
+          type: 'download_progress',
+          phase: prog.phase,
+          percent: prog.pct,
+          detail: prog.detail,
+          loaded: prog.loadedBytes ?? 0,
+          total: prog.totalBytes ?? 0,
+          fromCache: prog.fromCache ?? preCached,
+        });
+      });
+
+      // Preserve any unlearn state applied before engine boot
+      if (standaloneRouter && engine.scarStore) {
+        for (const uid of standaloneRouter.unlearnedIds) {
+          engine.scarStore.unlearnCapsule(uid);
         }
-      };
-
-      currentPipeline = await pipeline('text-generation', targetConfig.id, {
-        dtype: targetConfig.dtype,
-        device: preferredDevice,
-        progress_callback: progressCallback,
-      });
-
-      currentModelKey = modelKey;
+      }
 
       self.postMessage({
         type: 'ready',
-        modelKey,
-        name: targetConfig.name,
-        device: preferredDevice,
-        fromCache: wasAlreadyCached,
+        adapterLabel: engine.adapterLabel,
+        scacheBytes: engine.scacheGpuBytes,
+        scacheKb: engine.scacheKbFormatted,
+        vramWeightsMiB: Math.round((engine.totalWeightGpuBytes / (1024 * 1024)) * 100) / 100,
+        fromCache: engine.loadedFromCache,
+        capsules: engine.scarStore ? engine.scarStore.getCapsulesDirectory() : [],
       });
     } catch (err: any) {
-      console.error('[LLM Worker] Failed to load model:', err);
+      console.error('[MoS WebGPU Worker] Engine boot error:', err);
       self.postMessage({
         type: 'error',
-        error: err?.message || 'Falha ao compilar shaders WebGPU ou ler tensores do cache.',
+        code: 'WEBGPU_BOOT_FAILED',
+        error: err?.message || 'Falha ao inicializar o motor WebGPU/WGSL.',
       });
     } finally {
       isLoading = false;
@@ -197,169 +119,139 @@ self.onmessage = async (e: MessageEvent) => {
     return;
   }
 
-  // 3. GERAR TEXTO
+  // 3. Generate Streaming Response on GPU (`MoS INT4+ASVD` + `SCache O(1)` + `HTTP 206` Cartridges)
   if (type === 'generate') {
-    if (!currentPipeline) {
-      self.postMessage({ type: 'error', error: 'Nenhum modelo neural carregado na GPU.' });
+    if (!engine) {
+      self.postMessage({ type: 'error', error: 'Motor WebGPU/WGSL ainda não está carregado na GPU.' });
       return;
     }
-
     if (isGenerating) {
-      self.postMessage({ type: 'error', error: 'Uma inferência já está em andamento.' });
+      self.postMessage({ type: 'error', error: 'Uma geração já está em andamento na GPU.' });
       return;
     }
 
-    const { messages, maxTokens = 400, temperature = 0.25, isGreeting = false, isIdentityQuery = false } = payload;
+    const {
+      query,
+      maxNewTokens = 260,
+      enableScarStore = true,
+      resetCache = false,
+      msgId,
+    } = payload || {};
+
     isGenerating = true;
+    currentAbort = new AbortController();
 
     try {
-      let tokenCount = 0;
-      let fullGeneratedText = '';
-      const startTime = performance.now();
-
-      const lastUserMsg = Array.isArray(messages) && messages.length > 0
-        ? messages[messages.length - 1]?.content || ''
-        : '';
-
-      // 1. Projeção Semântica e Roteamento Mixture of Scars (MoS Top-K)
-      const userEmbedding = scacheCore.embedText(lastUserMsg);
-      const mosResult = mosCore.routeAndProject(userEmbedding);
-
-      // 2. Consulta Associativa SCache O(1)
-      const scacheRetrieval = scacheCore.retrieve(lastUserMsg);
-
-      const stoppingCriteria = new InterruptableStoppingCriteria();
-      let hasInterrupted = false;
-
-      const STOP_TOKENS = [
-        '<|eot_id|>',
-        '<|end_of_text|>',
-        '<|im_end|>',
-        '</s>',
-        '<|end|>',
-        '[END]',
-        'User:',
-        'Visitor:',
-        'Usuário:',
-      ];
-
-      const streamer = new TextStreamer(currentPipeline.tokenizer, {
-        skip_prompt: true,
-        skip_special_tokens: true,
-        callback_function: (chunk: string) => {
-          if (hasInterrupted) return;
-
-          tokenCount++;
-          fullGeneratedText += chunk;
-
-          // 0. Trava de Segurança Anti-Personificação Imediata
-          // Se o modelo tentar falar "Eu sou Julio" em 1ª pessoa, interceptamos na hora
-          const trimmedGen = fullGeneratedText.trim();
-          if (/^(eu sou julio|eu sou o julio|eu me chamo julio|me chamo julio)/i.test(trimmedGen)) {
-            hasInterrupted = true;
-            stoppingCriteria.interrupt();
-            self.postMessage({
-              type: 'token',
-              token: ' o assistente de IA oficial do portfólio de Julio Reis, executado no seu navegador via WebGPU e MoS/SCache. Como posso te ajudar?',
-            });
-            return;
-          }
-          if (/^(i am julio|i'm julio|my name is julio)/i.test(trimmedGen)) {
-            hasInterrupted = true;
-            stoppingCriteria.interrupt();
-            self.postMessage({
-              type: 'token',
-              token: " the official AI assistant for Julio Reis's portfolio, running locally via WebGPU and MoS/SCache. How can I help you today?",
-            });
-            return;
-          }
-
-          // 1. Checagem de tokens de parada residuais no texto decodificado
-          for (const stopTok of STOP_TOKENS) {
-            if (fullGeneratedText.includes(stopTok)) {
-              hasInterrupted = true;
-              stoppingCriteria.interrupt();
-              return;
-            }
-          }
-
-          // 2. Trava anti-alucinação / anti-prolixidade em saudações e consultas de identidade
-          if ((isGreeting || isIdentityQuery) && tokenCount >= 18 && /[.!?]\s*$/.test(fullGeneratedText.trim())) {
-            hasInterrupted = true;
-            stoppingCriteria.interrupt();
-          }
-
-          // 3. Trava de segurança para evitar loop infinito sem pontuação (diarreia de buzzwords)
-          const wordsWithoutPunct = fullGeneratedText.split(/[.!?\n;:]/).pop()?.trim().split(/\s+/) || [];
-          if (wordsWithoutPunct.length > 50) {
-            hasInterrupted = true;
-            stoppingCriteria.interrupt();
-          }
-
+      const result = await engine.generate(query, {
+        maxNewTokens,
+        enableScarStore,
+        resetCache,
+        signal: currentAbort.signal,
+        onRouting: (routeRes) => {
+          self.postMessage({
+            type: 'routing_telemetry',
+            msgId,
+            activeCapsules: routeRes.active.map((a) => ({
+              capsuleId: a.capsuleId,
+              gate: Math.round(a.gate * 10000) / 10000,
+              fromCache: a.fromCache,
+              title: a.meta?.metadata?.title,
+              titlePt: a.meta?.metadata?.title_pt,
+              category: a.meta?.metadata?.category,
+              links: a.meta?.metadata?.links || [],
+            })),
+            turnHttp206Bytes: routeRes.turnBytesFetched,
+            httpEvents: routeRes.httpEvents,
+            capsules: engine?.scarStore ? engine.scarStore.getCapsulesDirectory() : [],
+          });
+        },
+        onToken: (tokUpdate) => {
           self.postMessage({
             type: 'token',
-            token: chunk,
+            msgId,
+            text: tokUpdate.text,
+            deltaToken: tokUpdate.deltaToken,
+            generatedTokens: tokUpdate.generatedTokens,
+            tokPerSec: Math.round(tokUpdate.tokPerSec * 10) / 10,
+            scacheBytes: tokUpdate.scacheBytes,
+            scacheDeltaBytes: tokUpdate.scacheDeltaBytes,
+            confidence: tokUpdate.confidence,
+            margin: tokUpdate.margin,
           });
         },
       });
 
       self.postMessage({
-        type: 'generation_start',
-        scacheResonance: scacheRetrieval.resonance,
-        scacheTelemetry: scacheCore.getTelemetry(),
-        mosTelemetry: mosResult.telemetry,
-      });
-
-      // Lista abrangente de EOS token IDs para Llama 3.2, Qwen 2.5 e SmolLM2
-      const eosTokenIds = [128001, 128009, 151643, 151645, 2, 0];
-
-      await currentPipeline(messages, {
-        max_new_tokens: isGreeting ? Math.min(maxTokens, 45) : maxTokens,
-        temperature: Math.max(0.10, Math.min(0.25, temperature)),
-        do_sample: temperature > 0.05,
-        repetition_penalty: 1.08,
-        top_k: 25,
-        top_p: 0.85,
-        eos_token_id: eosTokenIds,
-        stopping_criteria: [stoppingCriteria],
-        streamer: streamer,
-      });
-
-      // Consolidação na Memória Associativa SCache O(1)
-      if (lastUserMsg && fullGeneratedText) {
-        scacheCore.absorbInteraction(lastUserMsg, fullGeneratedText);
-      }
-
-      const totalTimeMs = performance.now() - startTime;
-      const tokensPerSec = totalTimeMs > 0 ? (tokenCount / (totalTimeMs / 1000)).toFixed(1) : '0';
-
-      self.postMessage({
         type: 'generation_end',
-        stats: {
-          tokenCount,
-          timeMs: Math.round(totalTimeMs),
-          tokensPerSec,
-        },
-        scacheTelemetry: scacheCore.getTelemetry(),
-        mosTelemetry: mosCore.getTelemetry(),
+        msgId,
+        result,
+        capsules: engine.scarStore ? engine.scarStore.getCapsulesDirectory() : [],
       });
     } catch (err: any) {
-      console.error('[LLM Worker] Generation error:', err);
+      console.error('[MoS WebGPU Worker] Generation error:', err);
       self.postMessage({
         type: 'error',
-        error: err?.message || 'Erro durante a decodificação autorregressiva.',
+        msgId,
+        error: err?.message || 'Erro durante a decodificação WebGPU/WGSL.',
       });
     } finally {
       isGenerating = false;
+      currentAbort = null;
     }
     return;
   }
 
-  // 4. DESCARREGAR PIPELINE PARA LIMPAR MEMÓRIA
-  if (type === 'unload') {
-    currentPipeline = null;
-    currentModelKey = null;
-    self.postMessage({ type: 'unloaded' });
+  // 4. Abort Active Decode
+  if (type === 'abort') {
+    if (currentAbort) {
+      currentAbort.abort();
+    }
     return;
+  }
+
+  // 5. Reset SCache O(1) Conversation State
+  if (type === 'reset_scache') {
+    if (engine) {
+      engine.resetSCache();
+    }
+    self.postMessage({
+      type: 'scache_reset',
+      scacheBytes: engine ? engine.scacheGpuBytes : 2799232,
+      scacheKb: engine ? engine.scacheKbFormatted : '2733.6 KB',
+    });
+    return;
+  }
+
+  // 6. LGPD `< 0.2 ms` Physical `0x00` Unlearn or Restore of a Cartridge
+  if (type === 'toggle_unlearn') {
+    const capsuleId: string = payload?.capsuleId;
+    const store = engine?.scarStore || standaloneRouter;
+    if (store && capsuleId) {
+      if (store.unlearnedIds.has(capsuleId)) {
+        store.restoreCapsule(capsuleId);
+        self.postMessage({
+          type: 'capsule_restored',
+          capsuleId,
+          capsules: store.getCapsulesDirectory(),
+        });
+      } else {
+        const wipe = store.unlearnCapsule(capsuleId);
+        self.postMessage({
+          type: 'capsule_unlearned',
+          ...wipe,
+          capsules: store.getCapsulesDirectory(),
+        });
+      }
+    }
+    return;
+  }
+
+  // 7. Unload Engine from VRAM
+  if (type === 'unload') {
+    if (engine) {
+      engine.destroy();
+      engine = null;
+    }
+    self.postMessage({ type: 'unloaded' });
   }
 };

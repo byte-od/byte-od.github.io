@@ -1,0 +1,1932 @@
+{
+  "format": "MoSWebGPUEngineV1",
+  "version": "3.0.0",
+  "model_id": "Qwen/Qwen2.5-0.5B-Instruct",
+  "wgsl_shader": "mos_scache_kernels.wgsl",
+  "tokenizer_file": "tokenizer.json",
+  "scarstore_router_file": "scarstore_router.json",
+  "architecture": {
+    "hidden_dim": 896,
+    "num_layers": 24,
+    "num_q_heads": 14,
+    "num_kv_heads": 2,
+    "head_dim": 64,
+    "intermediate_size": 4864,
+    "vocab_size": 151936,
+    "rms_norm_eps": 1e-06,
+    "rope_theta": 1000000.0,
+    "rope_inv_freq": [
+      1.0,
+      0.6493816315762113,
+      0.4216965034285823,
+      0.27384196342643613,
+      0.17782794100389226,
+      0.1154781984689458,
+      0.07498942093324558,
+      0.04869675251658631,
+      0.03162277660168379,
+      0.020535250264571463,
+      0.01333521432163324,
+      0.008659643233600653,
+      0.005623413251903491,
+      0.003651741272548377,
+      0.002371373705661655,
+      0.0015399265260594918,
+      0.001,
+      0.0006493816315762112,
+      0.0004216965034285823,
+      0.00027384196342643616,
+      0.00017782794100389227,
+      0.00011547819846894582,
+      7.498942093324559e-05,
+      4.869675251658631e-05,
+      3.1622776601683795e-05,
+      2.0535250264571462e-05,
+      1.333521432163324e-05,
+      8.659643233600654e-06,
+      5.623413251903491e-06,
+      3.651741272548377e-06,
+      2.3713737056616552e-06,
+      1.539926526059492e-06
+    ],
+    "mos_rank": 128,
+    "eos_token_ids": [
+      151645,
+      151643
+    ],
+    "user_turn_prefix_ids": [
+      151644,
+      872,
+      198
+    ]
+  },
+  "scache_defaults": {
+    "window_size": 256,
+    "num_sink_tokens": 112,
+    "num_slots": 32,
+    "delta_blend": 0.05
+  },
+  "shards": [
+    {
+      "shard_index": 0,
+      "filename": "mos_shard_00.bin",
+      "byte_length": 46071568,
+      "mib": 43.9373
+    },
+    {
+      "shard_index": 1,
+      "filename": "mos_shard_01.bin",
+      "byte_length": 26249984,
+      "mib": 25.0339
+    },
+    {
+      "shard_index": 2,
+      "filename": "mos_shard_02.bin",
+      "byte_length": 29824768,
+      "mib": 28.4431
+    },
+    {
+      "shard_index": 3,
+      "filename": "mos_shard_03.bin",
+      "byte_length": 29824768,
+      "mib": 28.4431
+    },
+    {
+      "shard_index": 4,
+      "filename": "mos_shard_04.bin",
+      "byte_length": 29824768,
+      "mib": 28.4431
+    },
+    {
+      "shard_index": 5,
+      "filename": "mos_shard_05.bin",
+      "byte_length": 44870144,
+      "mib": 42.7915
+    },
+    {
+      "shard_index": 6,
+      "filename": "mos_shard_06.bin",
+      "byte_length": 45136128,
+      "mib": 43.0452
+    },
+    {
+      "shard_index": 7,
+      "filename": "mos_shard_07.bin",
+      "byte_length": 45136128,
+      "mib": 43.0452
+    },
+    {
+      "shard_index": 8,
+      "filename": "mos_shard_08.bin",
+      "byte_length": 45136128,
+      "mib": 43.0452
+    },
+    {
+      "shard_index": 9,
+      "filename": "mos_shard_09.bin",
+      "byte_length": 45136128,
+      "mib": 43.0452
+    },
+    {
+      "shard_index": 10,
+      "filename": "mos_shard_10.bin",
+      "byte_length": 45136128,
+      "mib": 43.0452
+    },
+    {
+      "shard_index": 11,
+      "filename": "mos_shard_11.bin",
+      "byte_length": 29824768,
+      "mib": 28.4431
+    },
+    {
+      "shard_index": 12,
+      "filename": "mos_shard_12.bin",
+      "byte_length": 29824768,
+      "mib": 28.4431
+    },
+    {
+      "shard_index": 13,
+      "filename": "mos_shard_13.bin",
+      "byte_length": 29824768,
+      "mib": 28.4431
+    },
+    {
+      "shard_index": 14,
+      "filename": "mos_shard_14.bin",
+      "byte_length": 29826560,
+      "mib": 28.4448
+    }
+  ],
+  "total_weights_bytes": 551647504,
+  "total_weights_mib": 526.092,
+  "max_shard_bytes": 46071568,
+  "max_shard_mib": 43.937,
+  "under_128mib_universal_limit": true,
+  "embed_chunks": [
+    {
+      "shard_index": 0,
+      "vocab_start": 0,
+      "vocab_rows": 96789,
+      "packed_u32_off": 0,
+      "scales_u32_off": 10840368
+    },
+    {
+      "shard_index": 1,
+      "vocab_start": 96789,
+      "vocab_rows": 55147,
+      "packed_u32_off": 0,
+      "scales_u32_off": 6176464
+    }
+  ],
+  "lm_head_chunks": [
+    {
+      "shard_index": 0,
+      "vocab_start": 0,
+      "vocab_rows": 96789,
+      "packed_u32_off": 0,
+      "scales_u32_off": 10840368
+    },
+    {
+      "shard_index": 1,
+      "vocab_start": 96789,
+      "vocab_rows": 55147,
+      "packed_u32_off": 0,
+      "scales_u32_off": 6176464
+    }
+  ],
+  "layers": [
+    {
+      "layer_index": 0,
+      "shard_index": 2,
+      "input_layernorm_u32_off": 0,
+      "post_attention_layernorm_u32_off": 448,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 1344,
+          "bias_u32_off": 896,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 402816,
+          "bias_u32_off": 402752,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 460224,
+          "bias_u32_off": 460160,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 517568,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 918976,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 3098048,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "w_u32_off": 5277120,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 1,
+      "shard_index": 3,
+      "input_layernorm_u32_off": 0,
+      "post_attention_layernorm_u32_off": 448,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 1344,
+          "bias_u32_off": 896,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 402816,
+          "bias_u32_off": 402752,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 460224,
+          "bias_u32_off": 460160,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 517568,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 918976,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 3098048,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "w_u32_off": 5277120,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 2,
+      "shard_index": 4,
+      "input_layernorm_u32_off": 0,
+      "post_attention_layernorm_u32_off": 448,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 1344,
+          "bias_u32_off": 896,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 402816,
+          "bias_u32_off": 402752,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 460224,
+          "bias_u32_off": 460160,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 517568,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 918976,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 3098048,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "w_u32_off": 5277120,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 3,
+      "shard_index": 5,
+      "input_layernorm_u32_off": 0,
+      "post_attention_layernorm_u32_off": 448,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 1344,
+          "bias_u32_off": 896,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 402816,
+          "bias_u32_off": 402752,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 460224,
+          "bias_u32_off": 460160,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 517568,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 918976,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 3098048,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "w_u32_off": 5277120,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 4,
+      "shard_index": 5,
+      "input_layernorm_u32_off": 7456192,
+      "post_attention_layernorm_u32_off": 7456640,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 7457536,
+          "bias_u32_off": 7457088,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 7859008,
+          "bias_u32_off": 7858944,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 7916416,
+          "bias_u32_off": 7916352,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 7973760,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 8375168,
+          "scales_u32_off": 8919936,
+          "ascar_u32_off": 8953984,
+          "bscar_u32_off": 9011328,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 9322624,
+          "scales_u32_off": 9867392,
+          "ascar_u32_off": 9901440,
+          "bscar_u32_off": 9958784,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 10270080,
+          "scales_u32_off": 10814848,
+          "ascar_u32_off": 10848896,
+          "bscar_u32_off": 11160192,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 5,
+      "shard_index": 6,
+      "input_layernorm_u32_off": 0,
+      "post_attention_layernorm_u32_off": 448,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 1344,
+          "bias_u32_off": 896,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 402816,
+          "bias_u32_off": 402752,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 460224,
+          "bias_u32_off": 460160,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 517568,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 918976,
+          "scales_u32_off": 1463744,
+          "ascar_u32_off": 1497792,
+          "bscar_u32_off": 1555136,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 1866432,
+          "scales_u32_off": 2411200,
+          "ascar_u32_off": 2445248,
+          "bscar_u32_off": 2502592,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 2813888,
+          "scales_u32_off": 3358656,
+          "ascar_u32_off": 3392704,
+          "bscar_u32_off": 3704000,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 6,
+      "shard_index": 6,
+      "input_layernorm_u32_off": 3761344,
+      "post_attention_layernorm_u32_off": 3761792,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 3762688,
+          "bias_u32_off": 3762240,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 4164160,
+          "bias_u32_off": 4164096,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 4221568,
+          "bias_u32_off": 4221504,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 4278912,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 4680320,
+          "scales_u32_off": 5225088,
+          "ascar_u32_off": 5259136,
+          "bscar_u32_off": 5316480,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 5627776,
+          "scales_u32_off": 6172544,
+          "ascar_u32_off": 6206592,
+          "bscar_u32_off": 6263936,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 6575232,
+          "scales_u32_off": 7120000,
+          "ascar_u32_off": 7154048,
+          "bscar_u32_off": 7465344,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 7,
+      "shard_index": 6,
+      "input_layernorm_u32_off": 7522688,
+      "post_attention_layernorm_u32_off": 7523136,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 7524032,
+          "bias_u32_off": 7523584,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 7925504,
+          "bias_u32_off": 7925440,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 7982912,
+          "bias_u32_off": 7982848,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 8040256,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 8441664,
+          "scales_u32_off": 8986432,
+          "ascar_u32_off": 9020480,
+          "bscar_u32_off": 9077824,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 9389120,
+          "scales_u32_off": 9933888,
+          "ascar_u32_off": 9967936,
+          "bscar_u32_off": 10025280,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 10336576,
+          "scales_u32_off": 10881344,
+          "ascar_u32_off": 10915392,
+          "bscar_u32_off": 11226688,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 8,
+      "shard_index": 7,
+      "input_layernorm_u32_off": 0,
+      "post_attention_layernorm_u32_off": 448,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 1344,
+          "bias_u32_off": 896,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 402816,
+          "bias_u32_off": 402752,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 460224,
+          "bias_u32_off": 460160,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 517568,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 918976,
+          "scales_u32_off": 1463744,
+          "ascar_u32_off": 1497792,
+          "bscar_u32_off": 1555136,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 1866432,
+          "scales_u32_off": 2411200,
+          "ascar_u32_off": 2445248,
+          "bscar_u32_off": 2502592,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 2813888,
+          "scales_u32_off": 3358656,
+          "ascar_u32_off": 3392704,
+          "bscar_u32_off": 3704000,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 9,
+      "shard_index": 7,
+      "input_layernorm_u32_off": 3761344,
+      "post_attention_layernorm_u32_off": 3761792,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 3762688,
+          "bias_u32_off": 3762240,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 4164160,
+          "bias_u32_off": 4164096,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 4221568,
+          "bias_u32_off": 4221504,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 4278912,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 4680320,
+          "scales_u32_off": 5225088,
+          "ascar_u32_off": 5259136,
+          "bscar_u32_off": 5316480,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 5627776,
+          "scales_u32_off": 6172544,
+          "ascar_u32_off": 6206592,
+          "bscar_u32_off": 6263936,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 6575232,
+          "scales_u32_off": 7120000,
+          "ascar_u32_off": 7154048,
+          "bscar_u32_off": 7465344,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 10,
+      "shard_index": 7,
+      "input_layernorm_u32_off": 7522688,
+      "post_attention_layernorm_u32_off": 7523136,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 7524032,
+          "bias_u32_off": 7523584,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 7925504,
+          "bias_u32_off": 7925440,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 7982912,
+          "bias_u32_off": 7982848,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 8040256,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 8441664,
+          "scales_u32_off": 8986432,
+          "ascar_u32_off": 9020480,
+          "bscar_u32_off": 9077824,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 9389120,
+          "scales_u32_off": 9933888,
+          "ascar_u32_off": 9967936,
+          "bscar_u32_off": 10025280,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 10336576,
+          "scales_u32_off": 10881344,
+          "ascar_u32_off": 10915392,
+          "bscar_u32_off": 11226688,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 11,
+      "shard_index": 8,
+      "input_layernorm_u32_off": 0,
+      "post_attention_layernorm_u32_off": 448,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 1344,
+          "bias_u32_off": 896,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 402816,
+          "bias_u32_off": 402752,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 460224,
+          "bias_u32_off": 460160,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 517568,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 918976,
+          "scales_u32_off": 1463744,
+          "ascar_u32_off": 1497792,
+          "bscar_u32_off": 1555136,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 1866432,
+          "scales_u32_off": 2411200,
+          "ascar_u32_off": 2445248,
+          "bscar_u32_off": 2502592,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 2813888,
+          "scales_u32_off": 3358656,
+          "ascar_u32_off": 3392704,
+          "bscar_u32_off": 3704000,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 12,
+      "shard_index": 8,
+      "input_layernorm_u32_off": 3761344,
+      "post_attention_layernorm_u32_off": 3761792,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 3762688,
+          "bias_u32_off": 3762240,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 4164160,
+          "bias_u32_off": 4164096,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 4221568,
+          "bias_u32_off": 4221504,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 4278912,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 4680320,
+          "scales_u32_off": 5225088,
+          "ascar_u32_off": 5259136,
+          "bscar_u32_off": 5316480,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 5627776,
+          "scales_u32_off": 6172544,
+          "ascar_u32_off": 6206592,
+          "bscar_u32_off": 6263936,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 6575232,
+          "scales_u32_off": 7120000,
+          "ascar_u32_off": 7154048,
+          "bscar_u32_off": 7465344,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 13,
+      "shard_index": 8,
+      "input_layernorm_u32_off": 7522688,
+      "post_attention_layernorm_u32_off": 7523136,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 7524032,
+          "bias_u32_off": 7523584,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 7925504,
+          "bias_u32_off": 7925440,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 7982912,
+          "bias_u32_off": 7982848,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 8040256,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 8441664,
+          "scales_u32_off": 8986432,
+          "ascar_u32_off": 9020480,
+          "bscar_u32_off": 9077824,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 9389120,
+          "scales_u32_off": 9933888,
+          "ascar_u32_off": 9967936,
+          "bscar_u32_off": 10025280,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 10336576,
+          "scales_u32_off": 10881344,
+          "ascar_u32_off": 10915392,
+          "bscar_u32_off": 11226688,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 14,
+      "shard_index": 9,
+      "input_layernorm_u32_off": 0,
+      "post_attention_layernorm_u32_off": 448,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 1344,
+          "bias_u32_off": 896,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 402816,
+          "bias_u32_off": 402752,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 460224,
+          "bias_u32_off": 460160,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 517568,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 918976,
+          "scales_u32_off": 1463744,
+          "ascar_u32_off": 1497792,
+          "bscar_u32_off": 1555136,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 1866432,
+          "scales_u32_off": 2411200,
+          "ascar_u32_off": 2445248,
+          "bscar_u32_off": 2502592,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 2813888,
+          "scales_u32_off": 3358656,
+          "ascar_u32_off": 3392704,
+          "bscar_u32_off": 3704000,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 15,
+      "shard_index": 9,
+      "input_layernorm_u32_off": 3761344,
+      "post_attention_layernorm_u32_off": 3761792,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 3762688,
+          "bias_u32_off": 3762240,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 4164160,
+          "bias_u32_off": 4164096,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 4221568,
+          "bias_u32_off": 4221504,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 4278912,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 4680320,
+          "scales_u32_off": 5225088,
+          "ascar_u32_off": 5259136,
+          "bscar_u32_off": 5316480,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 5627776,
+          "scales_u32_off": 6172544,
+          "ascar_u32_off": 6206592,
+          "bscar_u32_off": 6263936,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 6575232,
+          "scales_u32_off": 7120000,
+          "ascar_u32_off": 7154048,
+          "bscar_u32_off": 7465344,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 16,
+      "shard_index": 9,
+      "input_layernorm_u32_off": 7522688,
+      "post_attention_layernorm_u32_off": 7523136,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 7524032,
+          "bias_u32_off": 7523584,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 7925504,
+          "bias_u32_off": 7925440,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 7982912,
+          "bias_u32_off": 7982848,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 8040256,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 8441664,
+          "scales_u32_off": 8986432,
+          "ascar_u32_off": 9020480,
+          "bscar_u32_off": 9077824,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 9389120,
+          "scales_u32_off": 9933888,
+          "ascar_u32_off": 9967936,
+          "bscar_u32_off": 10025280,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 10336576,
+          "scales_u32_off": 10881344,
+          "ascar_u32_off": 10915392,
+          "bscar_u32_off": 11226688,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 17,
+      "shard_index": 10,
+      "input_layernorm_u32_off": 0,
+      "post_attention_layernorm_u32_off": 448,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 1344,
+          "bias_u32_off": 896,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 402816,
+          "bias_u32_off": 402752,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 460224,
+          "bias_u32_off": 460160,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 517568,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 918976,
+          "scales_u32_off": 1463744,
+          "ascar_u32_off": 1497792,
+          "bscar_u32_off": 1555136,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 1866432,
+          "scales_u32_off": 2411200,
+          "ascar_u32_off": 2445248,
+          "bscar_u32_off": 2502592,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 2813888,
+          "scales_u32_off": 3358656,
+          "ascar_u32_off": 3392704,
+          "bscar_u32_off": 3704000,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 18,
+      "shard_index": 10,
+      "input_layernorm_u32_off": 3761344,
+      "post_attention_layernorm_u32_off": 3761792,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 3762688,
+          "bias_u32_off": 3762240,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 4164160,
+          "bias_u32_off": 4164096,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 4221568,
+          "bias_u32_off": 4221504,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 4278912,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 4680320,
+          "scales_u32_off": 5225088,
+          "ascar_u32_off": 5259136,
+          "bscar_u32_off": 5316480,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 5627776,
+          "scales_u32_off": 6172544,
+          "ascar_u32_off": 6206592,
+          "bscar_u32_off": 6263936,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 6575232,
+          "scales_u32_off": 7120000,
+          "ascar_u32_off": 7154048,
+          "bscar_u32_off": 7465344,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 19,
+      "shard_index": 10,
+      "input_layernorm_u32_off": 7522688,
+      "post_attention_layernorm_u32_off": 7523136,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 7524032,
+          "bias_u32_off": 7523584,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 7925504,
+          "bias_u32_off": 7925440,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 7982912,
+          "bias_u32_off": 7982848,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 8040256,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 8441664,
+          "scales_u32_off": 8986432,
+          "ascar_u32_off": 9020480,
+          "bscar_u32_off": 9077824,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "rank": 128,
+          "packed_u32_off": 9389120,
+          "scales_u32_off": 9933888,
+          "ascar_u32_off": 9967936,
+          "bscar_u32_off": 10025280,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "mos_int4_asvd",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "rank": 128,
+          "packed_u32_off": 10336576,
+          "scales_u32_off": 10881344,
+          "ascar_u32_off": 10915392,
+          "bscar_u32_off": 11226688,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 20,
+      "shard_index": 11,
+      "input_layernorm_u32_off": 0,
+      "post_attention_layernorm_u32_off": 448,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 1344,
+          "bias_u32_off": 896,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 402816,
+          "bias_u32_off": 402752,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 460224,
+          "bias_u32_off": 460160,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 517568,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 918976,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 3098048,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "w_u32_off": 5277120,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 21,
+      "shard_index": 12,
+      "input_layernorm_u32_off": 0,
+      "post_attention_layernorm_u32_off": 448,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 1344,
+          "bias_u32_off": 896,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 402816,
+          "bias_u32_off": 402752,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 460224,
+          "bias_u32_off": 460160,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 517568,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 918976,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 3098048,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "w_u32_off": 5277120,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 22,
+      "shard_index": 13,
+      "input_layernorm_u32_off": 0,
+      "post_attention_layernorm_u32_off": 448,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 1344,
+          "bias_u32_off": 896,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 402816,
+          "bias_u32_off": 402752,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 460224,
+          "bias_u32_off": 460160,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 517568,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 918976,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 3098048,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "w_u32_off": 5277120,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    },
+    {
+      "layer_index": 23,
+      "shard_index": 14,
+      "input_layernorm_u32_off": 0,
+      "post_attention_layernorm_u32_off": 448,
+      "projections": {
+        "self_attn.q_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 1344,
+          "bias_u32_off": 896,
+          "has_bias": 1
+        },
+        "self_attn.k_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 402816,
+          "bias_u32_off": 402752,
+          "has_bias": 1
+        },
+        "self_attn.v_proj": {
+          "mode": "fp16",
+          "out_dim": 128,
+          "in_dim": 896,
+          "w_u32_off": 460224,
+          "bias_u32_off": 460160,
+          "has_bias": 1
+        },
+        "self_attn.o_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 896,
+          "w_u32_off": 517568,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.gate_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 918976,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.up_proj": {
+          "mode": "fp16",
+          "out_dim": 4864,
+          "in_dim": 896,
+          "w_u32_off": 3098048,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        },
+        "mlp.down_proj": {
+          "mode": "fp16",
+          "out_dim": 896,
+          "in_dim": 4864,
+          "w_u32_off": 5277120,
+          "bias_u32_off": 0,
+          "has_bias": 0
+        }
+      }
+    }
+  ],
+  "final_norm": {
+    "shard_index": 14,
+    "w_u32_off": 7456192
+  }
+}

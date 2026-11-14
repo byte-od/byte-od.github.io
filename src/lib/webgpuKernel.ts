@@ -1,88 +1,41 @@
 /**
- * WebGPU Hardware Dispatch Layer for MoS and SCache
- * Compiles WGSL shaders and manages compute pipelines on client GPU hardware.
+ * WebGPU Hardware Probe & Canonical Re-Exports for MoS + SCache v4.0
+ *
+ * All tensor execution runs via 15 custom WGSL 1.0 compute shaders in `mosWebgpuEngine.ts`
+ * (`shaders/mos_scache.wgsl`) and `BrowserScarStoreHTTP206` (`scarstoreHttp206Browser.ts`).
  */
 
-import wgslSource from './shaders/mos_scache.wgsl?raw';
+export { BrowserMoSWebGPUEngine, checkMosShardsCached } from './mosWebgpuEngine';
+export { BrowserScarStoreHTTP206 } from './scarstoreHttp206Browser';
 
-export interface WebGPUExecutionStatus {
+export interface WebGPUProbeResult {
   supported: boolean;
-  initialized: boolean;
-  adapterName: string;
-  backend: 'WebGPU (Hardware Accelerated)' | 'WASM/SIMD Float32Array (Fallback)';
+  adapterLabel: string;
+  maxBufferSizeMiB: number;
 }
 
-export class WebGPUMoSRunner {
-  private device: GPUDevice | null = null;
-  private shaderModule: GPUShaderModule | null = null;
-  private adapterName: string = 'Unknown';
-  private isReady: boolean = false;
-
-  public async initialize(): Promise<WebGPUExecutionStatus> {
-    try {
-      if (typeof navigator === 'undefined' || !('gpu' in navigator)) {
-        return {
-          supported: false,
-          initialized: false,
-          adapterName: 'None',
-          backend: 'WASM/SIMD Float32Array (Fallback)',
-        };
-      }
-
-      const adapter = await (navigator as any).gpu.requestAdapter({
-        powerPreference: 'high-performance',
-      });
-
-      if (!adapter) {
-        return {
-          supported: false,
-          initialized: false,
-          adapterName: 'No suitable GPU adapter',
-          backend: 'WASM/SIMD Float32Array (Fallback)',
-        };
-      }
-
-      this.adapterName = adapter.info?.description || adapter.name || 'WebGPU Compatible GPU';
-      this.device = await adapter.requestDevice();
-
-      if (this.device && wgslSource) {
-        this.shaderModule = this.device.createShaderModule({
-          code: wgslSource,
-        });
-        this.isReady = true;
-      }
-
-      return {
-        supported: true,
-        initialized: this.isReady,
-        adapterName: this.adapterName,
-        backend: 'WebGPU (Hardware Accelerated)',
-      };
-    } catch (err) {
-      console.warn('[WebGPUMoSRunner] WebGPU init notice (using CPU typed array fallback):', err);
-      return {
-        supported: false,
-        initialized: false,
-        adapterName: 'Fallback Device',
-        backend: 'WASM/SIMD Float32Array (Fallback)',
-      };
+export async function probeWebGPUHardware(): Promise<WebGPUProbeResult> {
+  try {
+    if (typeof navigator === 'undefined' || !('gpu' in navigator) || !(navigator as any).gpu) {
+      return { supported: false, adapterLabel: 'WebGPU indisponível', maxBufferSizeMiB: 0 };
     }
-  }
-
-  public get isHardwareAccelerated(): boolean {
-    return this.isReady && this.device !== null;
-  }
-
-  public get status(): WebGPUExecutionStatus {
-    return {
-      supported: typeof navigator !== 'undefined' && 'gpu' in navigator,
-      initialized: this.isReady,
-      adapterName: this.adapterName,
-      backend: this.isReady
-        ? 'WebGPU (Hardware Accelerated)'
-        : 'WASM/SIMD Float32Array (Fallback)',
-    };
+    const adapter = await (navigator as any).gpu.requestAdapter({
+      powerPreference: 'high-performance',
+    });
+    if (!adapter) {
+      return { supported: false, adapterLabel: 'Sem adaptador GPU', maxBufferSizeMiB: 0 };
+    }
+    let label = 'WebGPU GPU';
+    const info = adapter.info || (adapter.requestAdapterInfo ? await adapter.requestAdapterInfo() : null);
+    if (info) {
+      const parts = [info.vendor, info.architecture, info.description].filter(Boolean);
+      if (parts.length > 0) label = parts.join(' · ');
+    }
+    const maxBuf = adapter.limits?.maxBufferSize
+      ? Math.round(adapter.limits.maxBufferSize / (1024 * 1024))
+      : 256;
+    return { supported: true, adapterLabel: label, maxBufferSizeMiB: maxBuf };
+  } catch {
+    return { supported: false, adapterLabel: 'Fallback CPU S1', maxBufferSizeMiB: 0 };
   }
 }
-
-export const webgpuBridge = new WebGPUMoSRunner();

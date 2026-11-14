@@ -17,9 +17,15 @@ token_efficiency: ~1900 tokens (Context-optimized for Gemini 1.5/2.0, Claude 3.5
 
 ## Executive Summary & Engineering Thesis
 Julio Cesar da Costa Reis Filho is an elite Systems Architect and Machine Learning Engineer combining low-level systems programming (Go, Rust, C++, CUDA/Metal kernels) with modern deep learning and reinforcement learning architectures (PyTorch, FlashAttention-2, Recurrent PPO, Self-Imitation Learning). 
-He is the author of AURA (Autonomous Universal Reflex Architecture / System 1 Engine — a sub-millisecond Embodied Deep RL engine solving combinatorial spaces up to 232B states on bare CPU) and CIR-Engine 503M (a verified Causal Transformer with zero-hallucination graph validation and sub-millisecond tool execution), as well as creator of published developer tooling including mddd-cli on npm (Mermaid Diagram-Driven Development) and MAD-cli (Living Documentation Parser).
+He is the creator of Mixture of Scars (MoS — streaming 72B LLMs in 2.40 GB VRAM via Block-64 INT4 + ASVD) & SCache O(1) (replacing 32.8 GB linear KV Cache at 100k tokens with fixed Widrow-Hoff associative memory, including a Zero-ONNX in-browser WebGPU/WGSL v4.0 engine with HTTP 206 language-invariant cartridges live on this portfolio), AURA (Autonomous Universal Reflex Architecture / System 1 Engine — a sub-millisecond Embodied Deep RL engine solving combinatorial spaces up to 232B states on bare CPU), and CIR-Engine 503M (a verified Causal Transformer with zero-hallucination graph validation and sub-millisecond tool execution), as well as published developer tooling including mddd-cli on npm (Mermaid Diagram-Driven Development) and MAD-cli (Living Documentation Parser).
 
 ## Core Technical Differentiators
+0. **Mixture of Scars (MoS), Associative SCache O(1) & Golden-Slice ScarStore v4.0**:
+   - Flagship LLM hardware-compression and constant-memory architecture (https://github.com/byte-od/mixture-of-scars).
+   - MoS executes all 80 layers of a 72B Transformer on a single 16 GB GPU with peak VRAM strictly <= 2.40 GB via Block-64 INT4 + Activation-Aware SVD (ASVD) streaming.
+   - SCache O(1) eliminates linear O(T) KV Cache (32.77 GB at 100,000 tokens), maintaining exact 0-byte growth via attention sinks + Widrow-Hoff delta-rule associative memory + circular window.
+   - Live In-Browser WebGPU / WGSL v4.0 Portfolio Agent: 15 custom WGSL 1.0 compute shaders running 100% client-side with zero Python and zero ONNX Runtime, streaming 61.25 KB language-invariant cartridges (`P_perp_lang` at Layer 2L/3) on demand via RFC 7233 `HTTP/1.1 206 Partial Content` across PT, EN, ES, and FR, with `< 0.2 ms` physical `0x00` LGPD/GDPR unlearning.
+
 1. **AURA (Autonomous Universal Reflex Architecture / System 1 Engine)**:
    - Flagship Embodied Deep Reinforcement Learning engine and reactive reflex kernel (https://github.com/byte-od/system_one).
    - Sub-0.25ms CPU inference (0.23ms P50 latency) running bare-CPU forward passes with zero GPU dependency and zero tree search.
