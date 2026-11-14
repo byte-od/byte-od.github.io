@@ -46,7 +46,8 @@ $$\widehat{W} = \Big(\text{FWHT}_{64}^{-1}\big(\alpha_b \cdot \text{LUT}_{256}[\
 | **Opção 1A:** `VQ4 + 2-Pass INT4-Scar` (`embed INT3`) | `943 MiB` (`0,921 GiB`) | `6,4x` | `1.7728` | `56,2%` | Piso físico: comprimir `embed_tokens` em `INT3` faz ES escorregar para PT no fim da geração. |
 | **Opção 1B:** **`VQ4 + 2-Pass INT4-Scar` (`embed INT4`)** | **`1.016 MiB` (`0,992 GiB`)** | **`5,9x`** | **`1.5561`** | **`59,3%`** (`PT 64,0%`) | **Fura `< 1,00 GiB` mantendo `PT`, `EN`, `ES` e `FR` 100% firmes no idioma do início ao fim!** |
 | **Config 2:** `VQ4-Scar` Híbrido (`FP16` Scars) | `1.176 MiB` (`1,149 GiB`) | `5,1x` | `1.4343` | `61,5%` | Menor que `NF3` com `> 2x` menor `KL` e fluência nos 4 idiomas. |
-| **Trilha 2.4 (Próxima):** `VQ4 + INT4-Scar + gate_proj INT4` | `~1.100 MiB` (`~1,08 GiB`) | `~5,5x` | *(alvo `~1,0`)* | *(alvo `~68%`)* | Reinveste os `~135 MiB` economizados pela cicatriz `INT4` blindando `gate_proj`. |
+| **Trilha 2.4-A (Lean):** `VQ4 + INT4-Scar + gate_proj INT4` | `1.150 MiB` (`1,123 GiB`) | `5,4x` | `1.4698` | `60,5%` (`PT 65,1%`) | Paridade física `Nativo <-> WebGPU` `cos = 1.000000`; exige `r=96` nas bordas `L34..35` (`up_proj`) contra colisão CJK. |
+| **Trilha 2.4-B (Triad):** `VQ4 + INT4-Scar + gate/o_proj INT4` | `1.190 MiB` (`1,163 GiB`) | `5,2x` | `1.5111` | `63,2%` (`PT 68,6%`) | Menor que `NF3` com salto de `Top-1` para `63,2%` (`FR/EN/ES` cristalinos; identificou sensibilidade CJK de `up_proj` em `L34..35`). |
 | **Config 3 (Roadmap #2):** **`MoS INT4 + ASVD Poliglota`** | **`1.631 MiB` (`1,593 GiB`)** | **`3,7x`** | **`0.6938`** | **`74,5%`** (`ES 80,4%`) | **Elimina 100% do vazamento `FR -> ZH`** e entrega rigor de livro-texto nos 4 idiomas. |
 
 ---
