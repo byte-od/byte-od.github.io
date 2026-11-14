@@ -48,11 +48,22 @@ Nos experimentos forenses (`scripts/forensic_2bit_noise_anatomy.py` e `scripts/t
 ### 2.3 Topologia de Hospedagem CDN (`GitHub Pages` + `Hugging Face Hub HTTP 206`)
 - Como o GitHub Pages impõe teto de `1 GB` por artefato de deploy:
   - O frontend React/Vite + Worker TypeScript + Shaders WGSL permanecem em `byte-od.github.io` (`< 5 MB`).
-  - Os *shards* `.bin` (`<= 44 MiB`) e o arquivo `capsules.scarstore` do `Qwen2.5-3B MoS` (ou da variante compacta de **Micro-Cicatrizes Vetoriais `vec4`** caso atinja paridade poliglota `< 1 GiB`) são servidos via repositório público no **Hugging Face Hub** (`CORS *` + suporte nativo a `HTTP 206 Partial Content`) com persistência local na `CacheStorage` do navegador (`'mos-webgpu-v4-assets-v1'`).
+  - Os *shards* `.bin` (`<= 44 MiB`) e o arquivo `capsules.scarstore` do `Qwen2.5-3B MoS` (`Config 3`: `1,593 GiB`, `KL médio = 0,6938`, `Top-1 = 74,5%`, `0%` de vazamento `FR -> ZH` verificado em `scripts/test_vector_scar_codebook_3b.py`) — ou da variante compacta de **Micro-Cicatrizes Vetoriais `vec4`** caso atinja paridade poliglota `< 1 GiB` — são servidos via repositório público no **Hugging Face Hub** (`CORS *` + suporte nativo a `HTTP 206 Partial Content`) com persistência local na `CacheStorage` do navegador (`'mos-webgpu-v4-assets-v1'`).
+
+### 2.4 Trilha Anotada: `VQ4-Scar` Unificado (`Nativo + WebGPU`) — `< 1,00 GiB` e `~1,10 GiB`
+> Ver documento arquitetural completo e Mapa das 8 Soluções em `docs/SCAR_NATIVE_ARCHITECTURE_AND_8_SOLUTIONS.md`.
+
+- **Escopo Unificado (`Nativo + WebGPU`):** O mecanismo `VQ4-Scar` opera em **todo o ecossistema** (`PyTorch / Metal MPS / CUDA` via `scar_cache/vq4_scar_mos.py` E `WebGPU / WGSL 1.0` via `vq4_equilibrate_fwht64` + `mos_fused_vq4_int4scar_gemv`), exigindo sempre testes duplos de paridade (`tests/test_vq4_scar_native_and_webgpu.py`).
+- **Resultados Verificados (`scripts/test_vector_scar_codebook_3b.py` & `scripts/test_sub1gb_vq4_compressed_scars_3b.py`):**
+  1. **Cura Residual em 2 Passos com Cicatrizes `INT4` (`3,76x` menores):** Na `L18` *held-out* (`637` tokens inéditos nos 4 idiomas), `VQ4 + INT4-ASVD (r=64, 2-Pass)` (`6,48 MiB`/matriz) **superou** a cicatriz `FP16` (`7,65 MiB`/matriz), baixando o erro de `15,59% -> 15,33%` (`gate_proj`) e `25,81% -> 25,45%` (`down_proj`) — chegando a `14,82%` e `24,68%` em `r=96` (`6,69 MiB`).
+  2. **Opção 1B (`0,992 GiB` / `1.015,98 MiB` — `< 1,00 GiB`!):** Com `embed_tokens` protegido em `INT4`, furou a barreira de `1,00 GiB` mantendo `PT` (`64,0%` Top-1), `ES` (`61,3%`), `FR` (`56,3%`) e `EN` (`55,6%`) 100% firmes no idioma correto do início ao fim (`KL médio = 1,5561`).
+  3. **Opção 1A (`942,87 MiB` / `0,921 GiB`):** Mostrou o piso físico — comprimir `embed_tokens` em `INT3` faz `ES` escorregar para `PT` nos tokens finais, provando que `embed_tokens` deve permanecer em `Block-64 INT4`.
+  4. **Evolução `~1,10 GiB` Anotada:** Reinvestir os `~135 MiB` poupados pelas cicatrizes `INT4` blindando `mlp.gate_proj` em `INT4` para eliminar deslizes lexicais finos mantendo `~1,08–1,12 GiB`.
 
 ---
 
-## 3. Checklist de Aceite Pré-Deploy (`Zero Shortcuts`)
+## 3. Checklist de Aceite Pré-Deploy (`Zero Shortcuts` — Nativo & WebGPU)
+- [ ] **Paridade Dupla `Nativo <-> WebGPU`:** `cosine_similarity > 0.99999` entre `VQ4ScarLinear` (PyTorch CPU/MPS/CUDA) e `mos_fused_vq4_int4scar_gemv` (WGSL 1.0 físico).
 - [ ] **Auditoria Poliglota (`PT / EN / ES / FR`):** `52/52` consultas de cartucho + perguntas abertas de física, matemática e programação respondidas **100% no idioma do usuário**, com **zero vazamento de Chinês ou Inglês** em sequências longas (`>= 200` tokens).
 - [ ] **Invariância Fora do Cone:** `10/10` controles gerais com `0` cartuchos disparados e desvio de logits `0.0000000000`.
 - [ ] **Auditoria Física WebGPU / WGSL:** Verificação em GPU real (`wgpu` + navegador) atestando `SCache O(1)` com `Δ +0 B` ao longo de 5+ turnos consecutivos e guarda anti-repetição de 6-gramas ativa.

@@ -1253,3 +1253,164 @@ fn logits_top2_reduce_stage2(@builtin(local_invocation_id) lid: vec3<u32>) {
         rw_u32_a[3] = bitcast<u32>(wg_r_sexp[0]);
     }
 }
+
+// ============================================================================
+// 16 & 17. Unified VQ4-Scar Kernels (4D Vector-Scar LUT256 + 2-Pass INT4-ASVD)
+//          Bit-exact WebGPU counterpart to `scar_cache/vq4_scar_mos.py`
+// ============================================================================
+
+fn vq4_rademacher_sign(idx: u32) -> f32 {
+    var h: u32 = idx * 2654435761u;
+    h = ((h >> 16u) ^ h) * 0x45D9F3Bu;
+    return select(-1.0, 1.0, (h & 1u) == 0u);
+}
+
+// ----------------------------------------------------------------------------
+// 16. Channel Equilibration + Orthonormal Block-64 Rademacher-Hadamard (FWHT-64)
+//     Computes once per input vector `x [in_dim]`:
+//       x_rot = FWHT_64( (x / d_fp16) * rademacher_sign )
+//     By symmetry/orthonormality of H_64, <H_64^-1(w_rot)/d, x> == <w_rot, x_rot>,
+//     eliminating ALL Hadamard ops from the O(N*K) matrix-vector inner loop!
+//     params: p0=in_dim (multiple of 64), p1=d_eq_u32_off
+//     ro_u32_a: shard containing FP16 `d_eq` [in_dim]
+//     ro_f32_a: raw input vector `x` [in_dim]
+//     rw_f32_a: equilibrated + rotated vector `x_rot` [in_dim]
+//     dispatch: (in_dim >> 6u, 1u, 1u)
+// ----------------------------------------------------------------------------
+var<workgroup> wg_fwht64: array<f32, 64>;
+
+@compute @workgroup_size(64, 1, 1)
+fn vq4_equilibrate_fwht64(
+    @builtin(workgroup_id) wgid: vec3<u32>,
+    @builtin(local_invocation_id) lid: vec3<u32>,
+) {
+    let lane = lid.x;
+    let col = wgid.x * 64u + lane;
+    let d_u32_off = params.p1;
+    let d_val = unpack_f16_lane(ro_u32_a[d_u32_off + (col >> 1u)], col);
+    wg_fwht64[lane] = (ro_f32_a[col] / d_val) * vq4_rademacher_sign(col);
+    workgroupBarrier();
+
+    for (var h = 1u; h < 64u; h <<= 1u) {
+        let is_odd = (lane & h) != 0u;
+        let partner = lane ^ h;
+        let a = wg_fwht64[select(lane, partner, is_odd)];
+        let b = wg_fwht64[select(partner, lane, is_odd)];
+        workgroupBarrier();
+        wg_fwht64[lane] = select(a + b, a - b, is_odd);
+        workgroupBarrier();
+    }
+
+    rw_f32_a[col] = wg_fwht64[lane] * 0.125;
+}
+
+// ----------------------------------------------------------------------------
+// 17. Fused VQ4 Micro-Scar LUT256 (`2.25 bpw`) + Compressed INT4 B_scar GEMV
+//     Loads the per-matrix `256 x vec4<f16>` codebook into 4 KB of fast shared
+//     memory (`wg_vq_lut`, with `wg_vq_lut[0] == vec4(0.0)`), decodes 16 weights
+//     (4 byte-indices) per coalesced `u32` read, and fuses the compressed INT4
+//     `B_scar [out_dim, rank]` dot `u = A_scar @ x_raw` + optional FP16 bias!
+//     params:
+//       p0 = out_dim
+//       p1 = in_dim (multiple of 64)
+//       p2 = rank (0, or multiple of 8)
+//       p3 = vq_codes_u32_off   ([out_dim, in_dim / 16] u32 words)
+//       p4 = vq_scales_u32_off  (FP16 block-64 scales)
+//       p5 = lut256_u32_off     (512 u32 words = 256 x 4 FP16)
+//       p6 = bscar_u32_off      (packed INT4 [out_dim, rank/8] followed by FP16 row scales [out_dim])
+//       p7 = (has_bias << 31u) | bias_u32_off
+//     ro_u32_a: layer shard
+//     ro_f32_a: rotated input `x_rot` [in_dim] (from `vq4_equilibrate_fwht64`)
+//     ro_f32_b: compressed-scar latent `u = A_scar @ x_raw` [rank]
+//     rw_f32_a: output `y` [out_dim]
+//     dispatch: ((out_dim + 7u) >> 3u, 1u, 1u)
+// ----------------------------------------------------------------------------
+var<workgroup> wg_vq_lut: array<vec4<f32>, 256>;
+var<workgroup> wg_vq_gemv: array<f32, 256>;
+
+@compute @workgroup_size(256, 1, 1)
+fn mos_fused_vq4_int4scar_gemv(
+    @builtin(workgroup_id) wgid: vec3<u32>,
+    @builtin(local_invocation_id) lid: vec3<u32>,
+) {
+    let tid = lid.x;
+    let lut_base = params.p5 + (tid << 1u);
+    let p01 = unpack2x16float(ro_u32_a[lut_base]);
+    let p23 = unpack2x16float(ro_u32_a[lut_base + 1u]);
+    wg_vq_lut[tid] = vec4<f32>(p01.x, p01.y, p23.x, p23.y);
+    workgroupBarrier();
+
+    let sub_row = tid >> 5u;
+    let lane = tid & 31u;
+    let row = wgid.x * 8u + sub_row;
+
+    let out_dim = params.p0;
+    let in_dim = params.p1;
+    let rank = params.p2;
+    let vq_words_per_row = in_dim >> 4u;
+    let blocks_per_row = in_dim >> 6u;
+
+    var acc: f32 = 0.0;
+    if (row < out_dim) {
+        let code_row_base = params.p3 + row * vq_words_per_row;
+        let s_row_base = row * blocks_per_row;
+        for (var w_idx = lane; w_idx < vq_words_per_row; w_idx += 32u) {
+            let word = ro_u32_a[code_row_base + w_idx];
+            let blk_idx = s_row_base + (w_idx >> 2u);
+            let scale = unpack_f16_lane(ro_u32_a[params.p4 + (blk_idx >> 1u)], blk_idx);
+            let c0 = w_idx << 4u;
+
+            let v0 = wg_vq_lut[(word >>  0u) & 0xFFu];
+            let v1 = wg_vq_lut[(word >>  8u) & 0xFFu];
+            let v2 = wg_vq_lut[(word >> 16u) & 0xFFu];
+            let v3 = wg_vq_lut[(word >> 24u) & 0xFFu];
+
+            let dot16 =
+                  v0.x * ro_f32_a[c0 +  0u] + v0.y * ro_f32_a[c0 +  1u] + v0.z * ro_f32_a[c0 +  2u] + v0.w * ro_f32_a[c0 +  3u]
+                + v1.x * ro_f32_a[c0 +  4u] + v1.y * ro_f32_a[c0 +  5u] + v1.z * ro_f32_a[c0 +  6u] + v1.w * ro_f32_a[c0 +  7u]
+                + v2.x * ro_f32_a[c0 +  8u] + v2.y * ro_f32_a[c0 +  9u] + v2.z * ro_f32_a[c0 + 10u] + v2.w * ro_f32_a[c0 + 11u]
+                + v3.x * ro_f32_a[c0 + 12u] + v3.y * ro_f32_a[c0 + 13u] + v3.z * ro_f32_a[c0 + 14u] + v3.w * ro_f32_a[c0 + 15u];
+            acc += dot16 * scale;
+        }
+
+        if (rank > 0u) {
+            let b_words_per_row = rank >> 3u;
+            let b_row_base = params.p6 + row * b_words_per_row;
+            let b_scales_off = params.p6 + out_dim * b_words_per_row;
+            let b_scale = unpack_f16_lane(ro_u32_a[b_scales_off + (row >> 1u)], row);
+            var b_acc: f32 = 0.0;
+            for (var bw = lane; bw < b_words_per_row; bw += 32u) {
+                let bword = ro_u32_a[b_row_base + bw];
+                let r0 = bw << 3u;
+                b_acc += (f32((bword >>  0u) & 0xFu) - 8.0) * ro_f32_b[r0 + 0u]
+                       + (f32((bword >>  4u) & 0xFu) - 8.0) * ro_f32_b[r0 + 1u]
+                       + (f32((bword >>  8u) & 0xFu) - 8.0) * ro_f32_b[r0 + 2u]
+                       + (f32((bword >> 12u) & 0xFu) - 8.0) * ro_f32_b[r0 + 3u]
+                       + (f32((bword >> 16u) & 0xFu) - 8.0) * ro_f32_b[r0 + 4u]
+                       + (f32((bword >> 20u) & 0xFu) - 8.0) * ro_f32_b[r0 + 5u]
+                       + (f32((bword >> 24u) & 0xFu) - 8.0) * ro_f32_b[r0 + 6u]
+                       + (f32((bword >> 28u) & 0xFu) - 8.0) * ro_f32_b[r0 + 7u];
+            }
+            acc += b_acc * b_scale;
+        }
+    }
+
+    wg_vq_gemv[tid] = acc;
+    workgroupBarrier();
+
+    for (var s = 16u; s > 0u; s >>= 1u) {
+        if (lane < s) {
+            wg_vq_gemv[tid] += wg_vq_gemv[tid + s];
+        }
+        workgroupBarrier();
+    }
+
+    if (lane == 0u && row < out_dim) {
+        var val = wg_vq_gemv[sub_row * 32u];
+        if ((params.p7 >> 31u) != 0u) {
+            let bias_off = params.p7 & 0x7FFFFFFFu;
+            val += unpack_f16_lane(ro_u32_a[bias_off + (row >> 1u)], row);
+        }
+        rw_f32_a[row] = val;
+    }
+}
