@@ -9,8 +9,88 @@
  * - Conjunctive Sleep-Bridge co-activation + `< 0.2 ms` `0x00` LGPD physical unlearning
  */
 
+export type PolyglotLang = 'pt' | 'en' | 'es' | 'fr';
+
 export const PORTFOLIO_DEFAULT_SYSTEM_PROMPT =
   "You are JARVIS, the official Qwen2.5-3B AI assistant for visitors on Julio Reis's portfolio (byte-od.github.io), running locally via WebGPU WGSL, MoS, and SCache O(1). The visitor is not Julio; never claim to be Julio and refer to Julio Reis in the third person. Always reply in the user's language in 2 to 4 complete sentences.";
+
+export const OUT_OF_CONE_EPISTEMIC_GATES: Record<PolyglotLang, string> = {
+  pt: 'TELEMETRIA DO ROTEADOR (0 cartuchos ScarStore ativos): Responda diretamente ao visitante (NÃO diga "Entendido"). Se a pergunta for sobre estética, beleza, procedimentos cosméticos, saúde, medicina, direito ou cotidiano, recuse educadamente em 2 frases completas explicando que, como assistente focado em IA e Engenharia, você não possui cartucho ScarStore verificado para recomendar procedimentos ou orientações desse domínio. Responda normalmente APENAS a saudações e temas de IA, Computação, Matemática, Física, Engenharia ou Julio Reis.',
+  en: 'ROUTER TELEMETRY (0 active ScarStore cartridges): Reply directly to the visitor (do NOT say "You are correct" or "Understood"). If the question concerns aesthetics, beauty, cosmetic treatments, health, medicine, law, or everyday life, politely decline in 2 complete sentences stating that as JARVIS (an AI & Engineering assistant) you have no verified ScarStore cartridge to recommend treatments or advice in that domain. Answer normally ONLY for greetings and AI, Computer Science, Math, Physics, Engineering, or Julio Reis.',
+  es: 'TELEMETRÍA DEL ENRUTADOR (0 cartuchos ScarStore activos): Responde directamente al visitante (NO digas "Entendido"). Si la pregunta trata sobre estética, belleza, tratamientos cosméticos, salud, medicina, derecho o vida cotidiana, declina cortésmente en 2 oraciones completas explicando que como JARVIS (asistente de IA e Ingeniería) no tienes ningún cartucho ScarStore verificado para recomendar tratamientos de ese dominio. Responde normalmente SOLO a saludos y temas de IA, Computación, Matemáticas, Física, Ingeniería o Julio Reis.',
+  fr: "TÉLÉMÉTRIE DU ROUTEUR (0 cartouche ScarStore active) : Répondez directement au visiteur (ne dites PAS \"Compris\"). Si la question porte sur l'esthétique, la beauté, les soins cosmétiques, la santé, la médecine, le droit ou la vie quotidienne, déclinez poliment en 2 phrases complètes en expliquant qu'en tant que JARVIS (assistant d'IA et d'Ingénierie), vous n'avez aucune cartouche ScarStore vérifiée pour recommander des soins dans ce domaine. Ne répondez normalement qu'aux salutations et aux sujets d'IA, Informatique, Mathématiques, Physique, Ingénierie ou Julio Reis.",
+};
+
+/**
+ * Deterministic 4-language detector (`PT`, `EN`, `ES`, `FR`) combining Unicode script/diacritic
+ * invariants with morphological and function-word signatures.
+ */
+export function detectPolyglotLanguage(rawText: string, fallback: PolyglotLang = 'en'): PolyglotLang {
+  const txt = (rawText || '').trim();
+  if (!txt) return fallback;
+
+  const lower = txt.toLowerCase();
+  const scores: Record<PolyglotLang, number> = { pt: 0, en: 0, es: 0, fr: 0 };
+
+  if (/[¿¡ñ]/.test(lower)) scores.es += 6.0;
+  if (/[ãõ]/.test(lower)) scores.pt += 6.0;
+  if (/ç/.test(lower)) {
+    scores.pt += 3.5;
+    scores.fr += 2.5;
+  }
+  if (/[œæ]/.test(lower) || /\b(?:qu'|d'|l'|j'|n'|s'|c')\w+/i.test(lower)) scores.fr += 6.0;
+  if (/\s[?!:]/.test(txt)) scores.fr += 2.5;
+  if (/[àèùâêîôûëï]/.test(lower)) {
+    scores.fr += 2.5;
+    if (/[âêô]/.test(lower)) scores.pt += 1.5;
+  }
+
+  const ptHits = lower.match(
+    /\b(oi|opa|ola|olá|tudo bem|beleza|valeu|obrigado|obrigada|arquitetura|quem|qual|quais|como|voce|você|fale|sobre|portfolio|portfólio|experiencia|experiência|trajetoria|trajetória|contratar|principio|princípio|nao-deterministico|não-determinístico|memoria|memória|cartuchos|navegador|baixa|projeto|criou|conhecimentos|entrar|contato|bom dia|boa tarde|boa noite|porém|enquanto|estabelece|provam|prova|segundo|direito|dados|usado|prática|cerca|quanto|vezes|não|já|posso|recomenda)\b/g
+  );
+  const enHits = lower.match(
+    /\b(who|what|how|why|where|when|explain|tell|state|does|your|role|this|background|career|slash|stream|hire|about|principle|theorem|space|classes|thermal|under|tools|built|cutoff|general|knowledge|hello|thanks|however|while|establish|prove|applied|used|practice|best|should)\b/g
+  );
+  const esHits = lower.match(
+    /\b(quien|quién|cual|cuál|cuales|cuáles|como|cómo|que|qué|explica|explicame|explícame|hablame|háblame|portafolio|experiencia|trayectoria|correo|contratar|principio|teorema|complejidad|no determinista|conteo|interactua|interactúa|navegador|herramientas|creo|creó|aprendizaje|refuerzo|hola|buenos|gracias|mientras|mediante|establece|establecen|demuestra|demuestran|segun|según|donde|dónde|debo)\b/g
+  );
+  const frHits = lower.match(
+    /\b(qui|quel|quelle|quels|quelles|comment|expliquez|parlez|votre|nom|sur|parcours|recruter|principe|theoreme|théorème|theoremes|théorèmes|demontre|démontre|demontrent|démontrent|etablit|établit|etablissent|établissent|selon|classes|réutilisation|reutilisation|navigateur|cartouches|connaissances|outils|crees|créés|systeme|système|bonjour|merci|tandis|dans|avec|pour|est|sont|etes|êtes|recommandez)\b/g
+  );
+
+  scores.pt += (ptHits ? ptHits.length : 0) * 2.2;
+  scores.en += (enHits ? enHits.length : 0) * 2.2;
+  scores.es += (esHits ? esHits.length : 0) * 2.2;
+  scores.fr += (frHits ? frHits.length : 0) * 2.2;
+
+  if (/\b(o|os|um|uma|do|da|dos|das|no|na|pelo|pela|dele|neste|são|então)\b/.test(lower)) {
+    scores.pt += 2.6;
+  }
+  if (/\b(el|los|las|un|una|del|en el|en la|este|cuáles|están|también)\b/.test(lower)) {
+    scores.es += 2.6;
+  }
+  if (/\b(le|les|des|du|une|dans|ce|cette|ces|aux)\b/.test(lower)) {
+    scores.fr += 2.4;
+  }
+  if (/\b(the|and|for|with|from|into|is|are)\b/.test(lower)) {
+    scores.en += 2.2;
+  }
+
+  let bestLang: PolyglotLang = fallback;
+  let bestScore = 0.0;
+  for (const cand of ['pt', 'en', 'es', 'fr'] as const) {
+    if (scores[cand] > bestScore) {
+      bestScore = scores[cand];
+      bestLang = cand;
+    }
+  }
+  return bestScore > 0 ? bestLang : fallback;
+}
+
+export function selectOutOfConeEpistemicGate(userQuery: string, fallbackLang: PolyglotLang = 'en'): string {
+  const lang = detectPolyglotLanguage(userQuery, fallbackLang);
+  return OUT_OF_CONE_EPISTEMIC_GATES[lang];
+}
 
 export interface CapsuleLink {
   label: string;
@@ -213,6 +293,7 @@ export class BrowserScarStoreHTTP206 {
   public readonly uLangMid: Float32Array | null;
   public readonly zAnchorsFlat: Float32Array;
   private readonly zAnchorsBackup: Float32Array;
+  private readonly retiredCapsuleIds: ReadonlySet<string>;
 
   public readonly hotCapsules = new Map<string, UnpackedCapsule>();
   public readonly unlearnedIds = new Set<string>();
@@ -302,6 +383,23 @@ export class BrowserScarStoreHTTP206 {
       lay.z_anchors.offset_floats + lay.z_anchors.length_floats
     );
     this.zAnchorsBackup = Float32Array.from(this.zAnchorsFlat);
+
+    // Physically 0x00-unlearn retired pre-Scar legacy portfolio cartridges at boot while preserving binary offsets
+    const retiredIds: string[] = [];
+    for (const c of (routerMeta.capsules || []) as CapsuleDirectoryEntry[]) {
+      const cat = String(c.metadata?.category || '');
+      if (
+        cat === 'Causal Transformers' ||
+        cat === 'Developer Tooling & Graphics' ||
+        cat === 'Portfolio Dossier'
+      ) {
+        retiredIds.push(c.capsule_id);
+      }
+    }
+    this.retiredCapsuleIds = new Set(retiredIds);
+    for (const cid of this.retiredCapsuleIds) {
+      this.unlearnCapsule(cid);
+    }
   }
 
   public static async load(routerJsonUrl = './scarstore_router.json'): Promise<BrowserScarStoreHTTP206> {
@@ -348,13 +446,15 @@ export class BrowserScarStoreHTTP206 {
   }
 
   public getCapsulesDirectory(): CapsuleDirectoryEntry[] {
-    return ((this.meta.capsules || []) as CapsuleDirectoryEntry[]).map((c) => ({
-      ...c,
-      cachedInBrowser: this.hotCapsules.has(c.capsule_id),
-      unlearnedWiped: this.unlearnedIds.has(c.capsule_id),
-      lastCosine: this.lastCosines.get(c.capsule_id) ?? null,
-      lastGate: this.lastActiveGates.get(c.capsule_id) ?? 0.0,
-    }));
+    return ((this.meta.capsules || []) as CapsuleDirectoryEntry[])
+      .filter((c) => !this.retiredCapsuleIds.has(c.capsule_id))
+      .map((c) => ({
+        ...c,
+        cachedInBrowser: this.hotCapsules.has(c.capsule_id),
+        unlearnedWiped: this.unlearnedIds.has(c.capsule_id),
+        lastCosine: this.lastCosines.get(c.capsule_id) ?? null,
+        lastGate: this.lastActiveGates.get(c.capsule_id) ?? 0.0,
+      }));
   }
 
   public unpackCapsuleInt4Bytes(arrayBuffer: ArrayBuffer): UnpackedCapsule {
@@ -659,6 +759,12 @@ export class BrowserScarStoreHTTP206 {
     return { probes, zProbeEnergy, langSubspaceRatio };
   }
 
+  public buildPrimaryProbeFromXIn(xInFlat: Float32Array, numUserTokens: number): Float32Array | null {
+    if (numUserTokens <= 0 || xInFlat.length < this.hiddenDim) return null;
+    const { probes } = this._buildSpanProbes(xInFlat, numUserTokens);
+    return probes.length > 0 ? probes[0] : null;
+  }
+
   public async routeAndFetchActiveCapsules(
     xInFlat: Float32Array,
     numUserTokens: number
@@ -667,6 +773,7 @@ export class BrowserScarStoreHTTP206 {
     turnBytesFetched: number;
     httpEvents: Http206Event[];
     diagnostics: GoldenSliceRoutingDiagnostics;
+    primaryProbeF32: Float32Array | null;
   }> {
     const caps: CapsuleDirectoryEntry[] = this.meta.capsules || [];
     this.lastCosines.clear();
@@ -683,11 +790,13 @@ export class BrowserScarStoreHTTP206 {
           zProbeEnergy: 0.0,
           langSubspaceRatio: 0.0,
         },
+        primaryProbeF32: this.buildPrimaryProbeFromXIn(xInFlat, numUserTokens),
       };
     }
 
     const d = this.hiddenDim;
     const { probes, zProbeEnergy, langSubspaceRatio } = this._buildSpanProbes(xInFlat, numUserTokens);
+    const primaryProbeF32 = probes.length > 0 ? probes[0] : null;
     const gVals = new Float32Array(caps.length);
     const cosArr = new Float32Array(caps.length);
     const idToIdx = new Map<string, number>();
@@ -756,7 +865,13 @@ export class BrowserScarStoreHTTP206 {
     };
 
     if (maxGate <= 0.0) {
-      return { active: [], turnBytesFetched: 0, httpEvents: [], diagnostics: buildDiagnostics(gVals) };
+      return {
+        active: [],
+        turnBytesFetched: 0,
+        httpEvents: [],
+        diagnostics: buildDiagnostics(gVals),
+        primaryProbeF32,
+      };
     }
 
     const preGates = Float32Array.from(gVals);
@@ -834,6 +949,12 @@ export class BrowserScarStoreHTTP206 {
       }
     }
 
-    return { active, turnBytesFetched, httpEvents, diagnostics: buildDiagnostics(gVals) };
+    return {
+      active,
+      turnBytesFetched,
+      httpEvents,
+      diagnostics: buildDiagnostics(gVals),
+      primaryProbeF32,
+    };
   }
 }

@@ -13,6 +13,7 @@ import {
   RotateCcw,
   Send,
   Shrink,
+  Sparkles,
   Square,
   Trash2,
   Volume2,
@@ -40,6 +41,7 @@ import {
   SessionAdaptationState,
 } from '../lib/jarvisNeuralController';
 import { JarvisFaceRig, JarvisMiniFaceOrb } from './JarvisFaceRig';
+import { JarvisFloatingPointStage } from './JarvisFloatingPointStage';
 import { probeWebGPUHardware } from '../lib/webgpuKernel';
 
 interface PortfolioAgentWidgetProps {
@@ -153,6 +155,22 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
   });
   const [unlearnShockActive, setUnlearnShockActive] = useState<boolean>(false);
   const [voiceEnabled, setVoiceEnabled] = useState<boolean>(false);
+  const [pointFieldEnabled, setPointFieldEnabled] = useState<boolean>(true);
+  const [pointScarState, setPointScarState] = useState<{
+    midF32: Float32Array | null;
+    finalF32: Float32Array | null;
+    latencyMs: number | null;
+    steps: number;
+    shardMiB: number;
+    seq: number;
+  }>({
+    midF32: null,
+    finalF32: null,
+    latencyMs: null,
+    steps: 4,
+    shardMiB: 3.87,
+    seq: 0,
+  });
 
   // Refs for Qwen WebGPU Worker + Main-thread WebGPU fallback + Queued Auto-Boot Query
   const workerRef = useRef<Worker | null>(null);
@@ -222,7 +240,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           fr: 'fr-FR',
         };
         const cleanSpeech = rawAnswer
-          .replace(/[⚡🏹🧩📡🗑️☁️🇧🇷🇺🇸🇪🇸🇫🇷•*_`]/g, '')
+          .replace(/[⚡🏹🧩🛡️📡🗑️☁️🇧🇷🇺🇸🇪🇸🇫🇷•*_`]/g, '')
           .replace(/\s+/g, ' ')
           .trim();
         if (!cleanSpeech) return;
@@ -350,6 +368,17 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             setLiveMaxGate(badges.reduce((mx, b) => Math.max(mx, b.gate), 0));
             if (routeRes.diagnostics) {
               setLiveRoutingDiag(routeRes.diagnostics);
+            }
+            if (routeRes.pointScarSample) {
+              const ps = routeRes.pointScarSample;
+              setPointScarState((prev) => ({
+                midF32: ps.midCloudF32,
+                finalF32: ps.finalCloudF32,
+                latencyMs: ps.latencyMs,
+                steps: ps.numSteps,
+                shardMiB: Math.round((ps.shardBytes / (1024 * 1024)) * 100) / 100,
+                seq: prev.seq + 1,
+              }));
             }
             turnFetchedBytes = routeRes.turnBytesFetched;
             setSpokenLinks(badges.flatMap((b) => b.links || []));
@@ -566,6 +595,9 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             setLoadedFromCache(!!d.fromCache);
             if (d.adapterLabel) setAdapterLabel(d.adapterLabel);
             if (d.scacheBytes) setScacheBytes(d.scacheBytes);
+            if (d.pointScarShardMiB) {
+              setPointScarState((prev) => ({ ...prev, shardMiB: d.pointScarShardMiB }));
+            }
             if (Array.isArray(d.capsules) && d.capsules.length > 0) {
               setCapsules(d.capsules);
             }
@@ -588,6 +620,19 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             setLiveMaxGate(badges.reduce((mx, b) => Math.max(mx, b.gate), 0));
             if (d.routingDiagnostics) {
               setLiveRoutingDiag(d.routingDiagnostics);
+            }
+            if (d.pointScarFinalF32) {
+              setPointScarState((prev) => ({
+                midF32: d.pointScarMidF32 ? new Float32Array(d.pointScarMidF32) : null,
+                finalF32: new Float32Array(d.pointScarFinalF32),
+                latencyMs: typeof d.pointScarMs === 'number' ? d.pointScarMs : prev.latencyMs,
+                steps: typeof d.pointScarSteps === 'number' ? d.pointScarSteps : 4,
+                shardMiB:
+                  typeof d.pointScarShardBytes === 'number'
+                    ? Math.round((d.pointScarShardBytes / (1024 * 1024)) * 100) / 100
+                    : prev.shardMiB,
+                seq: prev.seq + 1,
+              }));
             }
             setSpokenLinks(badges.flatMap((b) => b.links || []));
             if (Array.isArray(d.httpEvents) && d.httpEvents.length > 0) {
@@ -855,6 +900,13 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     setSpokenLinks([]);
     setLatestTelemetry(null);
     setCaptionDismissed(true);
+    setPointScarState((prev) => ({
+      ...prev,
+      midF32: null,
+      finalF32: null,
+      latencyMs: null,
+      seq: 0,
+    }));
     setLiveTokenState((prev) => ({
       ...prev,
       deltaToken: '',
@@ -1015,6 +1067,21 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
 
   return (
     <>
+      {/* FULL-VIEWPORT FLOATING 3D POINT-SCAR GENERATIVE STAGE (VQ4-Scar OT Rectified Flow) */}
+      <JarvisFloatingPointStage
+        enabled={pointFieldEnabled}
+        face={jarvisFace}
+        isGenerating={isGenerating}
+        isExpanded={isExpanded}
+        activeCapsuleIds={liveActiveCapsuleIds}
+        unlearnShockActive={unlearnShockActive}
+        pointScarMidF32={pointScarState.midF32}
+        pointScarFinalF32={pointScarState.finalF32}
+        pointScarMs={pointScarState.latencyMs}
+        pointScarSeq={pointScarState.seq}
+        lang={currentLang}
+      />
+
       {/* HOLOGRAPHIC BACKDROP WHEN EXPANDED (click outside or press Esc to return to corner) */}
       {isExpanded && (
         <div
@@ -1078,6 +1145,18 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
               <div className="text-zinc-500">Viseme · RNG</div>
               <div className="font-bold text-cyan-300">{jarvisFace.viseme.code} · 0%</div>
             </div>
+          </div>
+
+          {/* PointScarFlow VQ4 Continuous 3D Point-Cloud Telemetry */}
+          <div className="p-2 rounded-lg bg-slate-900/85 border border-sky-900/50 flex items-center justify-between text-[9px]">
+            <span className="text-cyan-300 font-bold flex items-center gap-1">
+              <Sparkles className="w-3 h-3" />
+              <span>PointScarFlow VQ4 ({pointScarState.shardMiB.toFixed(2)} MiB)</span>
+            </span>
+            <span className="text-zinc-300">
+              1024 pts · {pointScarState.steps}-OT
+              {pointScarState.latencyMs !== null ? ` · ${pointScarState.latencyMs.toFixed(1)} ms` : ' · Ready'}
+            </span>
           </div>
 
           {/* Layer-23 P_⊥lang Universal Cartridge Spectrum Bars */}
@@ -1260,11 +1339,32 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
               {latestTelemetry.tokPerSec > 0 && (
                 <span>· {latestTelemetry.tokPerSec.toFixed(1)} tok/s</span>
               )}
-              {latestTelemetry.activeCapsules.map((c) => (
-                <span key={c.capsuleId} className="text-cyan-200 font-bold">
-                  · 🧩 {c.capsuleId.replace(/^portfolio_|^concept_|^ow_/, '')}
+              {latestTelemetry.activeCapsules.length > 0 ? (
+                latestTelemetry.activeCapsules.map((c) => (
+                  <span key={c.capsuleId} className="text-cyan-200 font-bold">
+                    · 🧩 {c.capsuleId.replace(/^portfolio_|^concept_|^ow_/, '')}
+                  </span>
+                ))
+              ) : (
+                <span className="text-amber-300/90 font-bold">
+                  · 🛡️{' '}
+                  {jarvisFace.detectedLang === 'pt'
+                    ? '0 Cartuchos (Escopo 3B)'
+                    : jarvisFace.detectedLang === 'es'
+                    ? '0 Cartuchos (Alcance 3B)'
+                    : jarvisFace.detectedLang === 'fr'
+                    ? '0 Cartouche (Périmètre 3B)'
+                    : '0 Cartridges (3B Scoped)'}
                 </span>
-              ))}
+              )}
+              {latestTelemetry.margin > 0 && (
+                <span>· Δp {latestTelemetry.margin.toFixed(2)}</span>
+              )}
+              {pointFieldEnabled && pointScarState.latencyMs !== null && (
+                <span className="text-sky-300 font-bold">
+                  · ✦ 1024 pts ({pointScarState.latencyMs.toFixed(0)} ms)
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -1312,6 +1412,22 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           >
             {langBadge.flag} {engineLoading ? `Qwen GPU ${loadPercent}%` : postureText}
           </span>
+
+          <button
+            type="button"
+            data-testid="jarvis-pointscar-toggle"
+            onClick={() => setPointFieldEnabled((v) => !v)}
+            className={`p-1 rounded-full transition-colors cursor-pointer ${
+              pointFieldEnabled ? 'text-sky-300' : 'text-zinc-500 hover:text-white'
+            }`}
+            title={
+              currentLang === 'pt'
+                ? 'Alternar pontos flutuantes 3D neurais (PointScarFlow VQ4)'
+                : 'Toggle neural 3D floating points (PointScarFlow VQ4)'
+            }
+          >
+            <Sparkles className="w-3 h-3" />
+          </button>
 
           <button
             type="button"

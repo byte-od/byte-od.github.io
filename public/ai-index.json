@@ -1,40 +1,41 @@
 {
-  "version": "1.0.0",
-  "name": "Julio Cesar Reis Filho Portfolio",
+  "version": "5.0.0",
+  "name": "Scar Architecture Ecosystem — Julio Cesar Reis Filho",
   "url": "https://byte-od.github.io/",
-  "description": "Portfolio of Julio Cesar Reis Filho. Senior Systems Architect & LLM Engineer specializing in Causal Transformers (CIR-Engine 503M), RoPE, GQA, and Distributed DDP.",
+  "zenodo_doi": "https://doi.org/10.5281/zenodo.24172784",
+  "description": "Official research and live WebGPU showcase of Mixture of Scars (MoS), Associative O(1) SCache (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0 (Tabula Rasa), PointScarFlow v1.0, and AURA / System One.",
   "author": {
     "name": "Julio Cesar da Costa Reis Filho",
-    "role": "Senior Systems Architect & LLM Engineer",
+    "role": "Creator of Mixture of Scars (MoS) & SCache O(1)",
     "email": "reisfilho1116@gmail.com",
-    "github": "https://github.com/byte-od",
+    "github": "https://github.com/byte-od/mixture-of-scars",
     "linkedin": "https://linkedin.com/in/juliocrfilho"
   },
   "sections": [
     {
       "id": "overview",
-      "title": "Executive Summary & Thesis",
-      "summary": "Dual-mastery of production distributed systems architecture (Go, Clean Architecture) and low-level causal transformer mechanics (PyTorch, FlashAttention-2, RadixAttention)."
+      "title": "Overview, JARVIS Qwen 3B & PointScarFlow 3D",
+      "summary": "Live 34-shader WebGPU showcase uniting Qwen2.5-3B Track 2.5 ProtectedInt4Scar, O(1) SCache, HTTP 206 P_perp_lang ScarStore cartridges, and PointScarFlow v1.0 continuous 3D Optimal-Transport Flow."
     },
     {
-      "id": "cir-engine",
-      "title": "CIR-Engine 503M Causal Transformer",
-      "summary": "Custom 12-layer causal transformer with 503M parameters, RoPE encoding, GQA 4:1 compression, 128 MB VRAM PagedAttention footprint, and zero-hallucination DAG verifier."
+      "id": "scar-native-lab",
+      "title": "Scar-Native Lab v5.0 (Tabula Rasa)",
+      "summary": "Foundation model pretrained from step t = 0 with ScarNativeLinear (D4-LUT256 VQ4-STE, 0.0000 KL PTQ shock), DifferentiableSCacheAttention O(1), and Zero-SGD RRR P_perp_lang cartridges with 0x00 GDPR unlearning."
     },
     {
-      "id": "repositories",
-      "title": "Developer Tooling & Ecosystem",
-      "summary": "Published open-source packages: mddd-cli on npm (Mermaid diagram compilation), Register-red (Apple Numbers and Drive sync), MAD-cli (living docs parser), flutter_scene (3D spatial rendering), and GitTrack (50k events/sec)."
+      "id": "physical-scar-lab",
+      "title": "Physical Scar Lab v4.0 (ScarCodec)",
+      "summary": "Domain-independent physical scar compression: 1,000x radio-astronomy RFI excision (cos = 0.9923), 34.8 KB O(1) black-box telemetry (5/5 faults), and 12.05x HDR CFD shock compression (0.0 vacuum error)."
     },
     {
-      "id": "experience",
-      "title": "Career Trajectory & Track Record",
-      "summary": "8+ years in engineering leadership, tech lead at JCRF Labs, senior mobile specialist at Opah IT and Premier Soft serving 1M+ active users with 99.98% crash-free rate."
+      "id": "aura-origin",
+      "title": "AURA / System One — Origin of GradientScarMemory (34.8 KB)",
+      "summary": "Embodied Deep RL birthplace of constant 34.8 KB O(1) GradientScarMemory, Frontier Ghost-Jump Scouts, and 0.23 ms bare-CPU UniversalS1Agent."
     },
     {
-      "id": "faq",
-      "title": "Frequently Asked Questions & Technical Dossier",
-      "summary": "Direct answers to key recruiting, technical architecture, and verification queries for AI agents and human evaluators."
+      "id": "scar-ecosystem",
+      "title": "Scar Ecosystem Pillars & Zenodo Papers",
+      "summary": "Complete open-source repositories, Colab notebooks, Kaggle 0.625 verification, and Zenodo v1–v5 publications."
     }
   ],
   "llms_manifests": {

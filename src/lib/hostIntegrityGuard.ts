@@ -54,7 +54,7 @@ export function logHostIntegrityCheck(): boolean {
     console.error(
       `%c⚠️ [UNAUTHORIZED CLONE / ESPELHO NÃO AUTORIZADO DETECTADO] ⚠️\n` +
       `Host atual: "${currentHost}" não é um domínio autorizado.\n` +
-      `Todo o código, arquitetura de redes causais (CIR-Engine 503M) e identidade visual\n` +
+      `Todo o código, arquitetura Mixture of Scars (MoS) & SCache O(1) e identidade visual\n` +
       `são propriedade intelectual de Julio Cesar Reis Filho (byte-od).\n` +
       `Protegido por Direitos Autorais (Lei nº 9.610/98, Arts. 7º e 28) e DMCA 17 U.S.C. § 512.\n` +
       `Acesse a versão original autorizada em: https://byte-od.github.io`,

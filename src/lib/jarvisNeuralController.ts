@@ -11,9 +11,13 @@
  *   MUST produce bit-identical `JarvisFaceState` outputs (`0.00000000` variance).
  */
 
-import type { GoldenSliceRoutingDiagnostics } from './scarstoreHttp206Browser';
+import {
+  detectPolyglotLanguage,
+  type GoldenSliceRoutingDiagnostics,
+  type PolyglotLang,
+} from './scarstoreHttp206Browser';
 
-export type PolyglotLang = 'pt' | 'en' | 'es' | 'fr';
+export { detectPolyglotLanguage, type PolyglotLang };
 
 export type JarvisNeuralSource =
   | 'qwen_wgsl_20_active'
@@ -30,6 +34,7 @@ export type JarvisPosture =
   | 'KINETIC_FOCUS'
   | 'DEEP_SCIENCE_SYNTHESIS'
   | 'EMPATHIC_RAPPORT'
+  | 'OUT_OF_CONE_GUARD'
   | 'EPISTEMIC_ALERT_SHOCK';
 
 export type VisemeCode =
@@ -184,6 +189,12 @@ export const POSTURE_LABELS: Record<JarvisPosture, Record<PolyglotLang, string>>
     es: 'Sintonía Dialógica · Qwen Políglota',
     fr: 'Syntonie Dialogique · Qwen Polyglotte',
   },
+  OUT_OF_CONE_GUARD: {
+    pt: 'Tronco 3B · 0 Cartuchos (Escopo)',
+    en: '3B Trunk · 0 Cartridges (Scoped)',
+    es: 'Tronco 3B · 0 Cartuchos (Alcance)',
+    fr: 'Tronc 3B · 0 Cartouche (Périmètre)',
+  },
   EPISTEMIC_ALERT_SHOCK: {
     pt: 'Análise Cautelosa · Alta Entropia',
     en: 'Cautious Analysis · High Entropy',
@@ -203,87 +214,15 @@ const CAPSULE_CATEGORY_MAP: Record<string, string> = {
   portfolio_agent_identity: 'Agent Identity',
   portfolio_agent_capabilities: 'Agent Identity',
   portfolio_jarvis_architecture: 'Flagship AI Architecture',
-  portfolio_julio_bio_career: 'Portfolio Dossier',
   portfolio_mos_scache_72b: 'Flagship AI Architecture',
   portfolio_browser_webgpu_wgsl: 'Edge & Browser GPU',
   portfolio_aura_system_one: 'Embodied Deep RL',
   portfolio_tricompass_scouts: 'Proprietary Perception',
-  portfolio_cir_engine_503m: 'Causal Transformers',
-  portfolio_devtools_fullstack: 'Developer Tooling & Graphics',
   portfolio_contact_hire: 'Contact & Hiring',
   concept_landauer_principle: 'Physics of Information',
   concept_immerman_szelepcsenyi: 'Computational Complexity',
   bridge_landauer_immerman: 'Cross-Domain Sleep Synthesis',
 };
-
-/**
- * Deterministic 4-language detector (`PT`, `EN`, `ES`, `FR`) combining Unicode script/diacritic
- * invariants with morphological and function-word signatures.
- */
-export function detectPolyglotLanguage(rawText: string, fallback: PolyglotLang = 'en'): PolyglotLang {
-  const txt = (rawText || '').trim();
-  if (!txt) return fallback;
-
-  const lower = txt.toLowerCase();
-  const scores: Record<PolyglotLang, number> = { pt: 0, en: 0, es: 0, fr: 0 };
-
-  // 1. High-specificity orthographic / punctuation invariants
-  if (/[¿¡ñ]/.test(lower)) scores.es += 6.0;
-  if (/[ãõ]/.test(lower)) scores.pt += 6.0;
-  if (/ç/.test(lower)) {
-    scores.pt += 3.5;
-    scores.fr += 2.5;
-  }
-  if (/[œæ]/.test(lower) || /\b(?:qu'|d'|l'|j'|n'|s'|c')\w+/i.test(lower)) scores.fr += 6.0;
-  if (/\s[?!:]/.test(txt)) scores.fr += 2.5;
-  if (/[àèùâêîôûëï]/.test(lower)) {
-    scores.fr += 2.5;
-    if (/[âêô]/.test(lower)) scores.pt += 1.5;
-  }
-
-  // 2. Lexical & morphological markers
-  const ptHits = lower.match(
-    /\b(oi|opa|ola|olá|tudo bem|beleza|valeu|obrigado|obrigada|arquitetura|quem|qual|quais|como|voce|você|fale|sobre|portfolio|portfólio|experiencia|experiência|trajetoria|trajetória|contratar|principio|princípio|nao-deterministico|não-determinístico|memoria|memória|cartuchos|navegador|baixa|projeto|criou|conhecimentos|entrar|contato|bom dia|boa tarde|boa noite|porém|enquanto|estabelece|provam|prova|segundo|direito|dados|usado|prática|cerca)\b/g
-  );
-  const enHits = lower.match(
-    /\b(who|what|how|why|where|when|explain|tell|state|does|your|role|this|background|career|slash|stream|hire|about|principle|theorem|space|classes|thermal|under|tools|built|cutoff|general|knowledge|hello|thanks|however|while|establish|prove|applied|used|practice)\b/g
-  );
-  const esHits = lower.match(
-    /\b(quien|quién|cual|cuál|cuales|cuáles|como|cómo|que|qué|explica|explicame|explícame|hablame|háblame|portafolio|experiencia|trayectoria|correo|contratar|principio|teorema|complejidad|no determinista|conteo|interactua|interactúa|navegador|herramientas|creo|creó|aprendizaje|refuerzo|hola|buenos|gracias|mientras|mediante|establece|establecen|demuestra|demuestran|segun|según|donde|dónde)\b/g
-  );
-  const frHits = lower.match(
-    /\b(qui|quel|quelle|quels|quelles|comment|expliquez|parlez|votre|nom|sur|parcours|recruter|principe|theoreme|théorème|theoremes|théorèmes|demontre|démontre|demontrent|démontrent|etablit|établit|etablissent|établissent|selon|classes|réutilisation|reutilisation|navigateur|cartouches|connaissances|outils|crees|créés|systeme|système|bonjour|merci|tandis|dans|avec|pour|est|sont|etes|êtes)\b/g
-  );
-
-  scores.pt += (ptHits ? ptHits.length : 0) * 2.2;
-  scores.en += (enHits ? enHits.length : 0) * 2.2;
-  scores.es += (esHits ? esHits.length : 0) * 2.2;
-  scores.fr += (frHits ? frHits.length : 0) * 2.2;
-
-  // Function-word disambiguators between PT, ES, FR, and EN
-  if (/\b(o|os|um|uma|do|da|dos|das|no|na|pelo|pela|dele|neste|são|então)\b/.test(lower)) {
-    scores.pt += 2.6;
-  }
-  if (/\b(el|los|las|un|una|del|en el|en la|este|cuáles|están|también)\b/.test(lower)) {
-    scores.es += 2.6;
-  }
-  if (/\b(le|les|des|du|une|dans|ce|cette|ces|aux)\b/.test(lower)) {
-    scores.fr += 2.4;
-  }
-  if (/\b(the|and|for|with|from|into|is|are)\b/.test(lower)) {
-    scores.en += 2.2;
-  }
-
-  let bestLang: PolyglotLang = fallback;
-  let bestScore = 0.0;
-  for (const cand of ['pt', 'en', 'es', 'fr'] as const) {
-    if (scores[cand] > bestScore) {
-      bestScore = scores[cand];
-      bestLang = cand;
-    }
-  }
-  return bestScore > 0 ? bestLang : fallback;
-}
 
 const VISEME_TABLE: Record<VisemeCode, Omit<VisemeKinematics, 'code' | 'phonemeHint'>> = {
   SIL: {
@@ -488,10 +427,12 @@ export function computeJarvisFaceState(input: JarvisNeuralInput): JarvisFaceStat
         best = item;
       }
     }
-    if (best && best.cosine > 0.20) {
-      dominantCapsuleId = dominantCapsuleId ?? best.capsuleId;
-      dominantCosine = best.cosine;
-      dominantCategory = best.category || CAPSULE_CATEGORY_MAP[best.capsuleId] || 'General';
+    if (best && best.gate > 0.0 && input.activeCapsuleIds.length > 0) {
+      const targetId = dominantCapsuleId ?? best.capsuleId;
+      dominantCapsuleId = targetId;
+      const matched = diag.anchorCosines.find((a) => a.capsuleId === targetId) ?? best;
+      dominantCosine = matched.cosine;
+      dominantCategory = matched.category || CAPSULE_CATEGORY_MAP[targetId] || 'General';
     }
   }
 
@@ -500,7 +441,7 @@ export function computeJarvisFaceState(input: JarvisNeuralInput): JarvisFaceStat
   const rawMargin = input.margin > 0 ? clamp(input.margin, 0.0, 1.0) : clamp(rawConf * 0.88, 0.05, 0.96);
   const uncertainty = round4(clamp(1.0 - rawConf, 0.0, 0.99));
 
-  // Determine Cognitive Posture deterministically from Qwen's state & Layer-15 capsule activation
+  // Determine Cognitive Posture deterministically from Qwen's state & Layer-23 capsule activation
   let posture: JarvisPosture = 'SENTINEL_IDLE';
 
   if (input.unlearnShockActive || (input.isGenerating && rawMargin <= 0.12)) {
@@ -509,6 +450,8 @@ export function computeJarvisFaceState(input: JarvisNeuralInput): JarvisFaceStat
     posture = 'GPU_BOOT_SYNC';
   } else if (isTypingLive) {
     posture = 'ATTENTIVE_LISTENING';
+  } else if (hasGpuDiagnostics && input.activeCapsuleIds.length === 0) {
+    posture = 'OUT_OF_CONE_GUARD';
   } else if (
     dominantCapsuleId === 'concept_landauer_principle' ||
     dominantCapsuleId === 'concept_immerman_szelepcsenyi' ||
@@ -540,9 +483,9 @@ export function computeJarvisFaceState(input: JarvisNeuralInput): JarvisFaceStat
   } else if (
     dominantCapsuleId === 'portfolio_mos_scache_72b' ||
     dominantCapsuleId === 'portfolio_browser_webgpu_wgsl' ||
-    dominantCapsuleId === 'portfolio_cir_engine_503m' ||
-    dominantCapsuleId === 'portfolio_devtools_fullstack' ||
     dominantCategory.includes('Architecture') ||
+    dominantCategory.includes('Transformers') ||
+    dominantCategory.includes('Developer') ||
     dominantCategory.includes('Distributed') ||
     dominantCategory.includes('Cryptography') ||
     dominantCategory.includes('Compilers')
@@ -551,8 +494,8 @@ export function computeJarvisFaceState(input: JarvisNeuralInput): JarvisFaceStat
   } else if (
     dominantCapsuleId === 'portfolio_agent_identity' ||
     dominantCapsuleId === 'portfolio_agent_capabilities' ||
-    dominantCapsuleId === 'portfolio_julio_bio_career' ||
     dominantCapsuleId === 'portfolio_contact_hire' ||
+    dominantCategory.includes('Portfolio Dossier') ||
     input.session.turnCount > 0
   ) {
     posture = 'EMPATHIC_RAPPORT';
@@ -641,6 +584,15 @@ export function computeJarvisFaceState(input: JarvisNeuralInput): JarvisFaceStat
     headRoll = 0.08;
     primaryHex = '#67e8f9';
     secondaryHex = '#38bdf8';
+  } else if (posture === 'OUT_OF_CONE_GUARD') {
+    browLeftLift = 0.08;
+    browRightLift = -0.14;
+    cheekWarmthLift = 0.22;
+    gazeX = 0.0;
+    gazeY = -0.04;
+    headRoll = -0.06;
+    primaryHex = '#38bdf8';
+    secondaryHex = '#fbbf24';
   } else if (posture === 'EPISTEMIC_ALERT_SHOCK') {
     browLeftLift = -0.38;
     browRightLift = -0.38;

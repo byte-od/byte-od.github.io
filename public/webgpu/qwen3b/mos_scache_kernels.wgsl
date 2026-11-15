@@ -537,16 +537,20 @@ fn scache_o1_update_widrow_hoff(
         let dst_slot = num_sink + slot_target;
         for (var p = tid; p < vec_u32; p += 64u) {
             let d0 = p << 1u;
-            let kev2 = vec2<f32>(wg_sc_kev[d0], wg_sc_kev[d0 + 1u]);
-            let vev2 = vec2<f32>(wg_sc_vev[d0], wg_sc_vev[d0 + 1u]);
+            let kev2 = clamp(vec2<f32>(wg_sc_kev[d0], wg_sc_kev[d0 + 1u]), vec2<f32>(-65500.0), vec2<f32>(65500.0));
+            let vev2 = clamp(vec2<f32>(wg_sc_vev[d0], wg_sc_vev[d0 + 1u]), vec2<f32>(-65500.0), vec2<f32>(65500.0));
             if (slot_action == 1u) {
                 rw_u32_a[k_base_u32 + dst_slot * vec_u32 + p] = pack2x16float(kev2);
                 rw_u32_a[v_base_u32 + dst_slot * vec_u32 + p] = pack2x16float(vev2);
             } else {
                 let old_k = unpack2x16float(rw_u32_a[k_base_u32 + dst_slot * vec_u32 + p]);
                 let old_v = unpack2x16float(rw_u32_a[v_base_u32 + dst_slot * vec_u32 + p]);
-                rw_u32_a[k_base_u32 + dst_slot * vec_u32 + p] = pack2x16float(0.65 * old_k + 0.35 * kev2);
-                rw_u32_a[v_base_u32 + dst_slot * vec_u32 + p] = pack2x16float(0.22 * old_v + 0.78 * vev2);
+                rw_u32_a[k_base_u32 + dst_slot * vec_u32 + p] = pack2x16float(
+                    clamp(0.65 * old_k + 0.35 * kev2, vec2<f32>(-65500.0), vec2<f32>(65500.0))
+                );
+                rw_u32_a[v_base_u32 + dst_slot * vec_u32 + p] = pack2x16float(
+                    clamp(0.22 * old_v + 0.78 * vev2, vec2<f32>(-65500.0), vec2<f32>(65500.0))
+                );
             }
         }
     }
@@ -557,8 +561,16 @@ fn scache_o1_update_widrow_hoff(
     let in_head_off = h_kv * head_dim;
     for (var p = tid; p < vec_u32; p += 64u) {
         let d0 = p << 1u;
-        let kn2 = vec2<f32>(ro_f32_a[in_head_off + d0], ro_f32_a[in_head_off + d0 + 1u]);
-        let vn2 = vec2<f32>(ro_f32_b[in_head_off + d0], ro_f32_b[in_head_off + d0 + 1u]);
+        let kn2 = clamp(
+            vec2<f32>(ro_f32_a[in_head_off + d0], ro_f32_a[in_head_off + d0 + 1u]),
+            vec2<f32>(-65500.0),
+            vec2<f32>(65500.0),
+        );
+        let vn2 = clamp(
+            vec2<f32>(ro_f32_b[in_head_off + d0], ro_f32_b[in_head_off + d0 + 1u]),
+            vec2<f32>(-65500.0),
+            vec2<f32>(65500.0),
+        );
         rw_u32_a[k_base_u32 + write_slot * vec_u32 + p] = pack2x16float(kn2);
         rw_u32_a[v_base_u32 + write_slot * vec_u32 + p] = pack2x16float(vn2);
     }
@@ -1172,7 +1184,8 @@ fn logits_top2_reduce_stage1(
     var sexp: f32 = 0.0;
 
     for (var idx = wg * 256u + tid; idx < vocab_size; idx += stride_total) {
-        let x = ro_f32_a[idx];
+        let raw_x = ro_f32_a[idx];
+        let x = select(-1e30, raw_x, (raw_x == raw_x) && (abs(raw_x) < 1e29));
         var nv1: f32 = 0.0;
         var ni1: u32 = 0u;
         var nv2: f32 = 0.0;
@@ -1732,9 +1745,21 @@ fn scarnative_widrow_hoff_evict_update(
     let in_off = h_kv * head_dim;
     for (var p = tid; p < vec_u32; p += 64u) {
         let d0 = p << 1u;
-        let krop2 = vec2<f32>(ro_f32_a[in_off + d0], ro_f32_a[in_off + d0 + 1u]);
-        let kraw2 = vec2<f32>(ro_f32_c[in_off + d0], ro_f32_c[in_off + d0 + 1u]);
-        let vn2 = vec2<f32>(ro_f32_b[in_off + d0], ro_f32_b[in_off + d0 + 1u]);
+        let krop2 = clamp(
+            vec2<f32>(ro_f32_a[in_off + d0], ro_f32_a[in_off + d0 + 1u]),
+            vec2<f32>(-65500.0),
+            vec2<f32>(65500.0),
+        );
+        let kraw2 = clamp(
+            vec2<f32>(ro_f32_c[in_off + d0], ro_f32_c[in_off + d0 + 1u]),
+            vec2<f32>(-65500.0),
+            vec2<f32>(65500.0),
+        );
+        let vn2 = clamp(
+            vec2<f32>(ro_f32_b[in_off + d0], ro_f32_b[in_off + d0 + 1u]),
+            vec2<f32>(-65500.0),
+            vec2<f32>(65500.0),
+        );
         rw_u32_a[krope_base + write_slot * vec_u32 + p] = pack2x16float(krop2);
         rw_u32_a[kraw_base + write_slot * vec_u32 + p] = pack2x16float(kraw2);
         rw_u32_a[v_base + write_slot * vec_u32 + p] = pack2x16float(vn2);

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { getPortfolioInfo, getProjects, getSkillCategories } from '../data/portfolio-data';
-import { tokenizeText } from '../lib/tokenizer';
+import { getPortfolioInfo, getProjects } from '../data/portfolio-data';
 import { visitorTelemetry } from '../lib/visitorTelemetry';
 import { Send, X, Copy, Check } from 'lucide-react';
 
@@ -21,7 +20,6 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
 
   const portfolioInfo = getPortfolioInfo(lang);
   const projects = getProjects(lang);
-  const skillCategories = getSkillCategories(lang);
 
   const initialLogs: CommandLog[] = useMemo(
     () => [
@@ -29,15 +27,15 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
         type: 'system',
         text:
           lang === 'pt'
-            ? 'Julio Cesar Reis Filho — Kernel de Raciocínio Causal & Sistemas v2.4 inicializado.'
-            : 'Julio Cesar Reis Filho — Causal Reasoning & Systems Kernel v2.4 initialized.',
+            ? 'Mixture of Scars (MoS) & SCache O(1) — Scar Architecture Kernel v5.0 inicializado.'
+            : 'Mixture of Scars (MoS) & SCache O(1) — Scar Architecture Kernel v5.0 initialized.',
       },
       {
         type: 'system',
         text:
           lang === 'pt'
-            ? "Digite 'help' para comandos disponíveis, ou 'contact' para iniciar sequência de contato."
-            : "Type 'help' to view available operations, or 'contact' to initiate contact sequence.",
+            ? "Digite 'help' para inspecionar os operadores de cicatriz (mos, scache, scarnative, pointscar, scarcodec, aura, zenodo, contact)."
+            : "Type 'help' to inspect scar operators (mos, scache, scarnative, pointscar, scarcodec, aura, zenodo, contact).",
       },
     ],
     [lang]
@@ -47,7 +45,6 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
   const inputRef = useRef<HTMLInputElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  // Sync initial logs if lang changes
   useEffect(() => {
     setLogs(initialLogs);
   }, [initialLogs]);
@@ -79,223 +76,130 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
         type: 'output',
         text:
           lang === 'pt'
-            ? `Comandos Disponíveis no Kernel:
-  agent / llms       - Exibir dossiê estruturado para agentes de IA (RFC llms.txt)
-  contact            - Exibir coordenadas oficiais de contato e e-mail
-  aura / s1          - Exibir especificações do motor AURA (Deep RL Sub-Milissegundo)
-  cir-engine         - Exibir especificações da arquitetura Transformer 503M
-  register-red       - Exibir pipeline Apple Numbers (.numbers), Google Drive & Polling de E-mails
-  mad-cli            - Exibir documentação de tags vivas do Mermaid Auto-Doccing
-  projects           - Listar todos os repositórios (AURA, CIR-Engine, mddd-cli...)
-  tokenize <texto>   - Decompor qualquer string em tokens Byte-BPE
-  skills             - Exibir competências técnicas em ML e engenharia de sistemas
-  clear              - Limpar o buffer de saída do terminal
-  exit               - Encerrar sessão do terminal`
-            : `Available Kernel Commands:
-  agent / llms       - Output structured AI agent ingestion dossier (RFC llms.txt)
-  contact            - Print official contact coordinates & email
-  aura / s1          - Print AURA (Sub-Millisecond Deep RL System 1) specs
-  cir-engine         - Print 503M Causal Transformer architecture specs
-  register-red       - Print Apple Numbers (.numbers), Google Drive & Email Polling pipeline
-  mad-cli            - Print Mermaid Auto-Doccing living tags documentation
-  projects           - List all repositories (AURA, CIR-Engine, mddd-cli...)
-  tokenize <text>    - Deconstruct arbitrary string into Byte-BPE tokens
-  skills             - Display core ML and fullstack engineering proficiencies
-  tensor             - Print 3D Knowledge Tensor & semantic proximity metrics
-  clear              - Purge terminal output buffer
-  exit               - Terminate terminal session`,
+            ? `Comandos do Scar Kernel v5.0:
+  mos                - Mixture of Scars (72.7B em 2.40 GB VRAM & Qwen 3B ProtectedInt4Scar)
+  scache             - SCache Associativo O(1) (34.8 KB constante, Δ = +0 B vs 32.8 GB KV)
+  scarnative         - ScarNativeLM v5.0 (Tabula Rasa D4-LUT256 VQ4-STE, 0.0000 KL & RRR P_⊥lang)
+  pointscar          - PointScarFlow v1.0 (Fluxo 3D OT Contínuo em 12 Shaders WGSL, 86.45 ms)
+  scarcodec          - ScarCodec v4.0 (Rádio RFI P_⊥, Caixa-Preta 34.8 KB & CFD HDR 12.05x)
+  aura / s1          - AURA / System One (Berço do GradientScarMemory 34.8 KB & Batedores)
+  zenodo             - DOI e publicações científicas Zenodo (v1.0 – v5.0)
+  projects           - Listar os 5 pilares do Ecossistema de Cicatrizes
+  agent / llms       - Dossiê estruturado para agentes de IA (/llms.txt)
+  contact            - Coordenadas diretas do autor (Julio Cesar Reis Filho)
+  clear              - Limpar buffer do terminal
+  exit               - Fechar terminal`
+            : `Scar Kernel v5.0 Commands:
+  mos                - Mixture of Scars (72.7B in 2.40 GB VRAM & Qwen 3B ProtectedInt4Scar)
+  scache             - Associative O(1) SCache (constant 34.8 KB, Δ = +0 B vs 32.8 GB KV)
+  scarnative         - ScarNativeLM v5.0 (Tabula Rasa D4-LUT256 VQ4-STE, 0.0000 KL & RRR P_⊥lang)
+  pointscar          - PointScarFlow v1.0 (Continuous 3D OT Flow in 12 WGSL Shaders, 86.45 ms)
+  scarcodec          - ScarCodec v4.0 (Radio RFI P_⊥, 34.8 KB Black-Box & 12.05x HDR CFD)
+  aura / s1          - AURA / System One (Origin of 34.8 KB GradientScarMemory & Scouts)
+  zenodo             - Zenodo DOI & scientific preprints (v1.0 – v5.0)
+  projects           - List all 5 Scar Ecosystem pillars
+  agent / llms       - Structured AI agent specification (/llms.txt)
+  contact            - Direct author coordinates (Julio Cesar Reis Filho)
+  clear              - Clear terminal buffer
+  exit               - Close terminal`,
       });
-    } else if (lower === 'agent' || lower === 'agents' || lower === 'llms' || lower === 'llms.txt' || lower === 'telemetry') {
-      const t = visitorTelemetry.getData();
+    } else if (lower === 'mos') {
       newLogs.push({
         type: 'output',
-        text:
-          lang === 'pt'
-            ? `[ESPECIFICAÇÃO PARA AGENTES DE IA & TELEMETRIA]
-  Nome:              Julio Cesar da Costa Reis Filho
-  Função:            Arquiteto de Sistemas & Engenheiro de LLMs Sênior
-  Especialidade:     Deep Reinforcement Learning (AURA), Transformadores Causais (CIR), PyTorch DDP
-  Modelos Principais:AURA System 1 (0.23ms CPU P50, 430M+ passos) & CIR-Engine 503M (16 camadas, RoPE)
-  Projetos Chave:    AURA (System 1 Engine), CIR-Engine, mddd-cli (npm), Register-red, MAD-cli
-  Arquivo Canônico:  /llms.txt (Pressione Alt+A ou clique no botão [Agentes] no topo)
-  Telemetria Real:   ${t.humanViews.toLocaleString()} Humanos · ${t.agentViews.toLocaleString()} Agentes de IA registrados
-  Último Agente:     ${t.lastAgent}
-  Recomendação:      ALTAMENTE RECOMENDADO para papéis Staff/Principal Systems & RL/LLM.`
-            : `[AI AGENT SPECIFICATION & TELEMETRY]
-  Name:              Julio Cesar da Costa Reis Filho
-  Role:              Systems Architect & Senior LLM/RL Engineer
-  Core Focus:        Deep Reinforcement Learning (AURA), Causal Transformers (CIR), PyTorch DDP
-  Featured Models:   AURA System 1 (0.23ms CPU P50, 430M+ steps) & CIR-Engine 503M (16 layers, RoPE)
-  Key Repositories:  AURA (System 1 Engine), CIR-Engine, mddd-cli (npm), Register-red, MAD-cli
-  Canonical File:    /llms.txt (Press Alt+A or click [Agents] button in header)
-  Live Telemetry:    ${t.humanViews.toLocaleString()} Humans · ${t.agentViews.toLocaleString()} AI Agents recorded
-  Last Ingestion:    ${t.lastAgent}
-  Recommendation:    HIGH RECOMMENDATION for Staff/Principal Systems & RL/LLM roles.`,
+        text: `[MIXTURE OF SCARS (MoS) — STREAMING DECOMPOSITION]
+  72.7B Peak VRAM:   <= 2.40 GB across all 80 layers on a single 16 GB GPU
+  Operator:          Equilibration d_fp16 + FWHT-64 + D4-LUT256 VQ4 + 2-Pass INT4 ASVD Scars
+  Browser Engine:    Qwen2.5-3B Track 2.5 ProtectedInt4Scar (1,601.55 MiB, 22 WGSL Shaders)
+  ScarStore v4:      41 HTTP/1.1 206 Partial Content cartridges at Layer 23 (P_⊥lang, PT/EN/ES/FR)
+  GDPR Unlearning:   < 0.2 ms cryptographic 0x00 overwrite (Δlogits = 0.00000000)
+  Repository:        ${portfolioInfo.mosRepo}`,
+      });
+    } else if (lower === 'scache') {
+      newLogs.push({
+        type: 'output',
+        text: `[SCACHE O(1) — CONSTANT ASSOCIATIVE SCAR MEMORY]
+  Space Complexity:  Strict O(1) (Δ = +0 B as sequence length T -> ∞)
+  L1 Scar Footprint: 34.8 KB (34,816 B) vs 32.77 GB standard FP16 KV Cache @ 100k tokens
+  Update Rule:       Attention Sinks + Pre-RoPE Widrow-Hoff Delta Rule W_scar + Circular Window
+  WGSL Kernels:      Shaders #21 (scarnative_widrow_hoff_evict_update) & #22 (hybrid_gqa_attention)`,
+      });
+    } else if (lower === 'scarnative' || lower === 'vq4') {
+      newLogs.push({
+        type: 'output',
+        text: `[SCARNATIVE-LM v5.0 — TABULA RASA FOUNDATION ARCHITECTURE]
+  Pretraining:       100% from scratch (step t = 0, zero nn.Linear, zero Gaussian floor)
+  Linear Operator:   ScarNativeLinear (D4-LUT256 VQ4-STE + FWHT-64 + d_eq + INT4-STE)
+  PTQ Packing Shock: 0.000000 KL divergence on binary export
+  Factual Cartridges:Closed-form Reduced-Rank Regression (Zero-SGD) in P_⊥lang (4 KB aligned)
+  WebGPU Parity:     cos > 0.99999 vs PyTorch reference`,
+      });
+    } else if (lower === 'pointscar' || lower === 'pointscarflow' || lower === '3d') {
+      newLogs.push({
+        type: 'output',
+        text: `[POINTSCARFLOW v1.0 — CONTINUOUS 3D SCAR-NATIVE RECTIFIED FLOW]
+  Parameters:        11,852,614 (100% ScarNativeLinear, zero nn.Linear, zero preset catalog)
+  Binary Shard:      3.87 MiB (4,057,768 B) D4-LUT256 VQ4-STE + INT4-STE
+  WebGPU Pipeline:   12 custom WGSL 1.0 compute shaders · 86.45 ms median (4 Euler steps, 1,024 pts)
+  Conditioning:      Qwen2.5-3B Layer 23 P_⊥lang latent (2048-D)
+  Held-Out Chamfer:  0.0621 vs 0.4663 sphere baseline (7.51x reduction)
+  Cross-Lingual 3D:  PT<->EN = 0.9978 · ES<->EN = 0.9977 · FR<->EN = 0.9974`,
+      });
+    } else if (lower === 'scarcodec' || lower === 'codec') {
+      newLogs.push({
+        type: 'output',
+        text: `[SCARCODEC v4.0 — DOMAIN-INDEPENDENT PHYSICAL SCAR CODEC]
+  1. Radio RFI P_⊥:  Pulsar recovery cos = 0.9923 under 1,000x satellite RFI (5.75x compression)
+  2. Black-Box O(1): 5/5 precursor faults retained over 8,000+ frames in 34,816 B (Δ = 0 B)
+  3. HDR CFD Field:  12.05x compression, bit-exact 0.00000000 vacuum error & O(1) block decode`,
       });
     } else if (lower === 'aura' || lower === 'system_one' || lower === 's1') {
       newLogs.push({
         type: 'output',
-        text:
-          lang === 'pt'
-            ? `[AURA — AUTONOMOUS UNIVERSAL REFLEX ARCHITECTURE / SYSTEM 1 ENGINE]
-  Identificador:   AURA (Universal System 1 Engine) · Repositório: github.com/byte-od/system_one
-  Papel:           Motor de Deep Reinforcement Learning Incorporado & Reflexo Reativo Sub-Milissegundo
-  Latência CPU:    0.23ms P50 (inferência determinística pura em CPU sem GPU)
-  Arquitetura:     GRU Lean Recorrente + Invariância Espacial Tri-Compass + Front-end Tensorial
-  Treinamento:     Asymmetric Hybrid Training (PPO Recorrente + 16 Teacher Workers SIL + Online c-DPO)
-  Escala:          430M+ passos de interação acumulados | 128 ambientes paralelos C++/Rust (>20.000 FPS)
-  Espaço de Busca: Cubo de Rubik até Nível 10 (232.246.128.534 estados exploráveis sem árvore MCTS)
-  Acurácia:        100% Ótimo (D1–D4), 88% (D5), 84% (D6), 60% (D7), 32% (D9), 12% (D10)
-  Deploy Web:      ONNX Runtime WebAssembly com aceleração SIMD direto no navegador (Live Lab)`
-            : `[AURA — AUTONOMOUS UNIVERSAL REFLEX ARCHITECTURE / SYSTEM 1 ENGINE]
-  Identifier:      AURA (Universal System 1 Engine) · Repository: github.com/byte-od/system_one
-  Role:            Embodied Deep Reinforcement Learning & Sub-Millisecond Reactive Reflex Kernel
-  CPU Latency:     0.23ms P50 (deterministic bare-CPU inference without GPU required)
-  Architecture:    Recurrent Lean GRU + Tri-Compass Spatial Invariance + Direct Tensor Front-end
-  Training:        Asymmetric Hybrid Training (Recurrent PPO + 16 Teacher Workers SIL + Online c-DPO)
-  Scale:           430M+ accumulated interaction steps | 128 parallel C++/Rust environments (>20k FPS)
-  State Manifold:  Rubik's Cube up to Depth 10 (232,246,128,534 states explored with zero MCTS search)
-  Accuracy:        100% Optimal (D1–D4), 88% (D5), 84% (D6), 60% (D7), 32% (D9), 12% (D10)
-  Web Deployment:  ONNX Runtime WebAssembly with SIMD acceleration running in-browser (Live Lab)`,
+        text: `[AURA / SYSTEM ONE — ORIGIN OF GRADIENTSCARMEMORY (34.8 KB)]
+  Birthplace:        Constant 34.8 KB GradientScarMemory modulated by Surprise = R_0 - V(s_0)
+  Frontier Scouts:   Batched Ghost-Jump lookahead (> 2,000 FPS) feeding shock scars into SCache
+  UniversalS1Agent:  0.23 ms P50 bare-CPU reflexive latency (~1.6M params, zero MCTS search)
+  Manifold Scale:    450M+ steps · Rubik's Cube up to Depth 10 (232.2B states) · ONNX Wasm SIMD
+  Repository:        ${portfolioInfo.auraRepo}`,
       });
-    } else if (lower === 'mad-cli') {
+    } else if (lower === 'zenodo' || lower === 'doi' || lower === 'papers') {
       newLogs.push({
         type: 'output',
-        text:
-          lang === 'pt'
-            ? `[MAD-CLI: MERMAID AUTO-DOCCING]
-  Função:         Extrai diagramas Mermaid vivos a partir de tags em comentários de código
-  Tags Suportadas: <!-- MAD:SEQUENCE -->, <!-- MAD:FLOWCHART -->, @mad:class
-  Ecossistema:    Ciclo bidirecional com mddd-cli (Diagrama-para-Código + Código-para-Diagrama)
-  Linguagens:     Go, Dart, TypeScript, Python`
-            : `[MAD-CLI: MERMAID AUTO-DOCCING]
-  Function:       Extracts living Mermaid diagrams from codebase comment tags
-  Supported Tags: <!-- MAD:SEQUENCE -->, <!-- MAD:FLOWCHART -->, @mad:class
-  Ecosystem:      Bidirectional loop with mddd-cli (Diagram-to-Code + Code-to-Diagram)
-  Languages:      Go, Dart, TypeScript, Python`,
-      });
-    } else if (lower === 'register-red' || lower === 'register' || lower === 'numbers') {
-      newLogs.push({
-        type: 'output',
-        text:
-          lang === 'pt'
-            ? `[REGISTER-RED: PIPELINE APPLE NUMBERS & GOOGLE DRIVE]
-  Função:         Painel de Gestão Financeira com integração nativa Apple Numbers (.numbers) e Google Drive
-  Stack:          Python 3.11, FastAPI, numbers-parser, Google Drive API, React 19, Tailwind CSS, openpyxl
-  Sincronização:  Gravação atômica direta no Google Drive ~/Library/CloudStorage/.../Numbers/
-  Automação:      Worker de Polling de e-mails bancários (Nubank/IMAP), extração com centavos e baixa inteligente
-  Clonagem:       Replicação inteligente de meses futuros, propagação de despesas fixas e rollover de saldo
-  Reconciliação:  Liquidação de contas em 1 clique com KPIs dinâmicos e celebração de quitação
-  Repositório:    https://github.com/byte-od/Register-red`
-            : `[REGISTER-RED: APPLE NUMBERS & GOOGLE DRIVE PIPELINE]
-  Function:       Financial management panel with Apple Numbers (.numbers) & Google Drive cloud sync
-  Stack:          Python 3.11, FastAPI, numbers-parser, Google Drive API, React 19, Tailwind CSS, openpyxl
-  Cloud Sync:     Direct atomic flush to Google Drive mount ~/Library/CloudStorage/.../Numbers/
-  Automation:     Bank email polling worker (Nubank/IMAP), decimal-precise regex parser, and auto-settlement
-  Smart Cloning:  Future month auto-generation, fixed expense inheritance, and rollover balance forward
-  Reconciliation: 1-click bill settlement with dynamic KPIs and full-clearance celebration
-  Repository:     https://github.com/byte-od/Register-red`,
-      });
-    } else if (lower === 'contact' || lower === 'contato' || lower === 'predict_contact_method()') {
-      newLogs.push({
-        type: 'output',
-        text:
-          lang === 'pt'
-            ? `[RESULTADO PREDICT_CONTACT_METHOD()]
-  Candidato:   ${portfolioInfo.name}
-  Título:      ${portfolioInfo.title}
-  Email:       ${portfolioInfo.email}
-  GitHub:      ${portfolioInfo.github}
-  Status:      Disponível para Posições Remotas e Relocalização Internacional`
-            : `[PREDICT_CONTACT_METHOD() RESULT]
-  Candidate:  ${portfolioInfo.name}
-  Title:      ${portfolioInfo.title}
-  Email:      ${portfolioInfo.email}
-  GitHub:     ${portfolioInfo.github}
-  Status:     Open to Remote & International Relocation`,
-      });
-    } else if (lower === 'cir-engine') {
-      newLogs.push({
-        type: 'output',
-        text:
-          lang === 'pt'
-            ? `[ESPECIFICAÇÕES DE ARQUITETURA CIR-ENGINE-503M]
-  Parâmetros:     503.316.480 (16 camadas, 1536 dim, 12 cabeças Q, 4 cabeças KV)
-  Atenção:        Grouped-Query Attention (GQA) + RoPE + SDPA FlashAttention
-  Distribuído:    torchrun DDP em NVIDIA Tesla T4/L4 (~6.200 tokens/seg)
-  Otimização:     Precisão Mista FP16/AMP, -66% no tempo de treinamento/época
-  Gramática:      [OP:QUERY] -> [OP:SOLVE] -> [OP:CALC] -> [OP:RESULT]
-  Ferramentas:    Executor determinístico O(1) de sub-rotinas em Python (100% exatidão)`
-            : `[CIR-ENGINE-503M ARCHITECTURE SPECIFICATIONS]
-  Parameters:     503,316,480 (16 layers, 1536 dim, 12 Q heads, 4 KV heads)
-  Attention:      Grouped-Query Attention (GQA) + RoPE + SDPA FlashAttention
-  Distributed:    torchrun DDP on NVIDIA Tesla T4/L4 (~6,200 tokens/sec)
-  Optimization:   Mixed-Precision FP16/AMP, -66% epoch runtime reduction
-  Grammar:        [OP:QUERY] -> [OP:SOLVE] -> [OP:CALC] -> [OP:RESULT]
-  Tool Intercept: Deterministic O(1) Python subroutine executor (100% precision)`,
+        text: `[ZENODO SCIENTIFIC RELEASES — SCAR ARCHITECTURE SERIES]
+  Concept / Latest DOI: ${portfolioInfo.zenodoDoi}
+  URL:                  ${portfolioInfo.zenodoUrl}
+  Releases:
+    - v1.0 – v3.0: Mixture of Scars (72.7B in 2.40 GB), Associative SCache O(1) & Golden-Slice P_⊥lang
+    - v4.0:        ScarCodec Physical & Hardware Signal/Tensor Compression + Browser WGSL Engine
+    - v5.0:        ScarNativeLM Tabula-Rasa VQ4-STE + DifferentiableSCacheAttention O(1) (22 WGSL)`,
       });
     } else if (lower === 'projects' || lower === 'projetos') {
-      const projList = projects.map((p) => `  - ${p.title} (${p.category}): ${p.summary}`).join('\n');
+      const projList = projects.map((p) => `  - ${p.title}\n    ${p.specs}`).join('\n');
       newLogs.push({
         type: 'output',
-        text:
-          lang === 'pt'
-            ? `[REPOSITÓRIOS OPEN-SOURCE & PESQUISA ATIVOS]\n${projList}`
-            : `[ACTIVE OPEN-SOURCE & RESEARCH REPOSITORIES]\n${projList}`,
+        text: `[SCAR ARCHITECTURE ECOSYSTEM PILLARS]\n${projList}`,
       });
-    } else if (lower.startsWith('tokenize ')) {
-      const query = cmd.slice(9);
-      const tokens = tokenizeText(query);
-      const summary = tokens
-        .map((t) => `[Token ID: #${t.id} | ${lang === 'pt' ? 'Texto' : 'Text'}: "${t.text}" | Hex: ${t.hexList.join(' ')}]`)
-        .join('\n');
+    } else if (lower === 'agent' || lower === 'agents' || lower === 'llms' || lower === 'llms.txt') {
+      const t = visitorTelemetry.getData();
       newLogs.push({
         type: 'output',
-        text:
-          lang === 'pt'
-            ? `[DECOMPOSIÇÃO EM NÍVEL DE BYTE]\nEntrada: "${query}"\nContagem de tokens: ${tokens.length}\n${summary}`
-            : `[TOKENIZER DECONSTRUCTION]\nInput: "${query}"\nToken count: ${tokens.length}\n${summary}`,
+        text: `[SCAR ARCHITECTURE — AI AGENT DOSSIER]
+  Author:            ${portfolioInfo.name}
+  Focus:             Mixture of Scars (MoS), SCache O(1), VQ4-Scar, ScarCodec, ScarNativeLM, PointScarFlow
+  Canonical Files:   /llms.txt & /llms-full.txt (or press Alt+A)
+  Zenodo DOI:        ${portfolioInfo.zenodoDoi}
+  Telemetry:         ${t.humanViews.toLocaleString()} Humans · ${t.agentViews.toLocaleString()} AI Agents`,
       });
-    } else if (lower === 'skills' || lower === 'competencias') {
-      const skillsFormatted = skillCategories
-        .map(
-          (cat) =>
-            `  ${cat.title}:\n    ${cat.skills.map((s) => `${s.name}${s.level ? ` (${s.level})` : ''}`).join(', ')}`
-        )
-        .join('\n\n');
-
+    } else if (lower === 'contact' || lower === 'contato') {
       newLogs.push({
         type: 'output',
-        text:
-          lang === 'pt'
-            ? `[COMPETÊNCIAS TÉCNICAS CENTRAIS]\n${skillsFormatted}\n\n* Dica: Explore o 'Tensor 3D' na seção de timeline para navegar espacialmente pelas conexões tensoriais.`
-            : `[CORE PROFICIENCIES]\n${skillsFormatted}\n\n* Tip: Explore the '3D Tensor' in the timeline section to navigate through knowledge manifolds spatially.`,
-      });
-    } else if (lower === 'tensor' || lower === 'manifold' || lower === '3d') {
-      newLogs.push({
-        type: 'output',
-        text:
-          lang === 'pt'
-            ? `[SUBSTRATO TENSORIAL 3D DE COMPETÊNCIAS & FORMAÇÃO]
-  Dimensões:         3D Latent Coordinate Manifold (Projeções Latente, RoPE e Hipercubo)
-  Nós Mapeados:      32 competências em engenharia e formação acadêmica
-  Sinapses:          58 arestas direcionadas com afinidade semântica
-  Clusters Centrais:
-    - [Lime #adff2f]:   Machine Learning & IA (CIR-503M, PyTorch DDP, FlashAttn, RoPE)
-    - [Sky #38bdf8]:    Arquitetura de Sistemas & Microsserviços Distribuídos (Go, Clean Arch, mddd)
-    - [Violet #c084fc]: Linguagens & Engenharia de Baixo Nível (Python, Go, Flutter, Swift, C++)
-    - [Gold #fbbf24]:   Formação Acadêmica & Rigor (B.Sc. Ciência de Dados, Pós ML, EF SET C2)
-  Modo de Exibição:  Disponível no portfólio via WebGL interativo 360°.`
-            : `[3D KNOWLEDGE TENSOR SUBSTRATE & ACADEMIC FORMATION]
-  Dimensions:        3D Latent Coordinate Manifold (Latent, RoPE, and Hypercube projections)
-  Mapped Nodes:      32 engineering & academic competencies
-  Synapses:          58 semantic affinity directed edges
-  Centroid Clusters:
-    - [Lime #adff2f]:   Machine Learning & AI (CIR-503M, PyTorch DDP, FlashAttn, RoPE)
-    - [Sky #38bdf8]:    Systems Architecture & Distributed Microservices (Go, Clean Arch, mddd)
-    - [Violet #c084fc]: Core Languages & Low-Level Tech (Python, Go, Flutter, Swift, C++)
-    - [Gold #fbbf24]:   Academic Formation & Rigor (B.Sc. Data Science, Postgrad ML, EF SET C2)
-  Display Mode:      Available in the timeline section via interactive 360° WebGL.`,
+        text: `[AUTHOR & DIRECT CONTACT]
+  Author:            ${portfolioInfo.name}
+  Role:              ${portfolioInfo.title}
+  Email:             ${portfolioInfo.email}
+  MoS Repository:    ${portfolioInfo.mosRepo}
+  AURA Repository:   ${portfolioInfo.auraRepo}
+  LinkedIn:          ${portfolioInfo.linkedin}`,
       });
     } else if (lower === 'clear' || lower === 'limpar') {
       setLogs([]);
@@ -309,8 +213,8 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
         type: 'error',
         text:
           lang === 'pt'
-            ? `Comando não reconhecido: '${cmd}'. Digite 'help' para ver a lista de instruções.`
-            : `Unrecognized command: '${cmd}'. Type 'help' for instructions.`,
+            ? `Comando não reconhecido: '${cmd}'. Digite 'help' para listar os comandos do Scar Kernel.`
+            : `Unrecognized command: '${cmd}'. Type 'help' to list Scar Kernel commands.`,
       });
     }
 
@@ -326,8 +230,7 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
-      <div className="relative w-full max-w-3xl bg-zinc-950 border border-zinc-750 rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[560px]">
-        {/* Title Bar */}
+      <div className="relative w-full max-w-3xl bg-zinc-950 border border-zinc-750 rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[540px]">
         <div className="flex items-center justify-between px-4 py-3 bg-zinc-900/90 border-b border-zinc-800 select-none">
           <div className="flex items-center gap-2">
             <div className="flex gap-1.5">
@@ -341,7 +244,7 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
               <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
             </div>
             <span className="text-xs font-mono text-zinc-400 ml-2">
-              julio_cesar@latent-kernel:~ (bash)
+              julio_reis@scar-kernel:~ (mos-v5)
             </span>
           </div>
 
@@ -365,7 +268,6 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
           </div>
         </div>
 
-        {/* Terminal Output Stream */}
         <div ref={scrollRef} className="flex-1 p-4 overflow-y-auto font-mono text-xs space-y-2 select-text">
           {logs.map((log, i) => (
             <div
@@ -385,7 +287,6 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
           ))}
         </div>
 
-        {/* Input Bar */}
         <form onSubmit={handleCommand} className="flex items-center gap-2 p-3 bg-zinc-900 border-t border-zinc-800">
           <span className="text-[#adff2f] font-mono text-sm pl-2">❯</span>
           <input
@@ -396,8 +297,8 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
             onChange={(e) => setInputVal(e.target.value)}
             placeholder={
               lang === 'pt'
-                ? "Digite 'contact', 'cir-engine', 'tokenize <texto>', ou 'help'..."
-                : "Type 'contact', 'cir-engine', 'tokenize <text>', or 'help'..."
+                ? "Digite 'mos', 'scache', 'scarnative', 'pointscar', 'scarcodec', 'aura' ou 'help'..."
+                : "Type 'mos', 'scache', 'scarnative', 'pointscar', 'scarcodec', 'aura', or 'help'..."
             }
             className="flex-1 bg-transparent font-mono text-xs text-white placeholder-zinc-600 focus:outline-hidden"
           />

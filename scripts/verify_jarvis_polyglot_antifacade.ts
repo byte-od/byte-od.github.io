@@ -18,7 +18,14 @@ import {
 } from '../src/lib/jarvisNeuralController';
 import { buildCjkVocabBitmaskU32, hasCjkScript } from '../src/lib/scriptSubspaceGate';
 import { QwenBPETokenizer } from '../src/lib/qwenBpeTokenizer';
-import type { GoldenSliceRoutingDiagnostics } from '../src/lib/scarstoreHttp206Browser';
+import {
+  BrowserScarStoreHTTP206,
+  extractUserContentBounds,
+  OUT_OF_CONE_EPISTEMIC_GATES,
+  PORTFOLIO_DEFAULT_SYSTEM_PROMPT,
+  selectOutOfConeEpistemicGate,
+  type GoldenSliceRoutingDiagnostics,
+} from '../src/lib/scarstoreHttp206Browser';
 import {
   buildCfdHdrShockFieldProof,
   runBlackBoxSCacheProof,
@@ -64,6 +71,8 @@ async function main() {
     'src/lib/jarvisNeuralController.ts',
     'src/components/JarvisFaceRig.tsx',
     'src/components/PortfolioAgentWidget.tsx',
+    'src/components/JarvisFloatingPointStage.tsx',
+    'src/lib/pointScarFlowEngine.ts',
     'src/lib/mosWebgpuEngine.ts',
     'src/lib/llmWorker.ts',
     'src/lib/scarstoreHttp206Browser.ts',
@@ -739,11 +748,314 @@ async function main() {
   snExec.restoreCartridge('ent_orion');
 
   console.log(
-    `[PASS 9/9] Pure Scar-Native Engine v5.0 (${(snManifest.shard_bytes / (1024 * 1024)).toFixed(2)} MiB Tabula-Rasa Shard · SCache ${snPkRes.scacheBytesFinal} B Δ=0 B · PT/EN/ES/FR Zero-SGD RRR · 0x00 GDPR Δlogits=0)`
+    `[PASS 9/10] Pure Scar-Native Engine v5.0 (${(snManifest.shard_bytes / (1024 * 1024)).toFixed(2)} MiB Tabula-Rasa Shard · SCache ${snPkRes.scacheBytesFinal} B Δ=0 B · PT/EN/ES/FR Zero-SGD RRR · 0x00 GDPR Δlogits=0)`
+  );
+
+  // ---------------------------------------------------------------------------
+  // TEST 10: Out-of-Cone Epistemic Guard (`0 Cartridges`), Causal Split & Zero-Cheat Audit
+  // ---------------------------------------------------------------------------
+  const bannedDomainCheatRegex = /\b(?:cabelo|progressiva|descolorid|bleach|keratin|alisament|shampoo)\b/i;
+  for (const lg of ['pt', 'en', 'es', 'fr'] as const) {
+    const gateStr = OUT_OF_CONE_EPISTEMIC_GATES[lg];
+    assert(gateStr && gateStr.length >= 120, `Missing epistemic gate string for ${lg}`);
+    assert(
+      !bannedDomainCheatRegex.test(gateStr),
+      `Forbidden domain-specific cheat word found in OUT_OF_CONE_EPISTEMIC_GATES[${lg}]!`
+    );
+  }
+  for (const rel of ['src/lib/scarstoreHttp206Browser.ts', 'src/lib/mosWebgpuEngine.ts']) {
+    const srcRaw = fs.readFileSync(path.join(PORTFOLIO_ROOT, rel), 'utf-8');
+    assert(!bannedDomainCheatRegex.test(srcRaw), `Forbidden domain cheat word found in ${rel}!`);
+  }
+
+  assert(
+    selectOutOfConeEpistemicGate(
+      'Para um cabelo já liso e descolorido, qual progressiva química você recomenda?'
+    ) === OUT_OF_CONE_EPISTEMIC_GATES.pt,
+    'Failed to select PT epistemic gate for PT cosmetic query'
+  );
+  assert(
+    selectOutOfConeEpistemicGate(
+      'What chemical straightening treatment should I use on bleached straight hair?'
+    ) === OUT_OF_CONE_EPISTEMIC_GATES.en,
+    'Failed to select EN epistemic gate for EN cosmetic query'
+  );
+  assert(
+    selectOutOfConeEpistemicGate('¿Qué medicamento debo tomar para el dolor de garganta?') ===
+      OUT_OF_CONE_EPISTEMIC_GATES.es,
+    'Failed to select ES epistemic gate for ES medical query'
+  );
+  assert(
+    selectOutOfConeEpistemicGate('Quel soin cosmétique recommandez-vous pour des cheveux décolorés ?') ===
+      OUT_OF_CONE_EPISTEMIC_GATES.fr,
+    'Failed to select FR epistemic gate for FR cosmetic query'
+  );
+
+  // Verify sub-threshold cosines (`gate = 0`, `activeCapsuleIds = []`) NEVER masquerade as active cartridges!
+  const outOfConeDiag: GoldenSliceRoutingDiagnostics = {
+    anchorCosines: [
+      {
+        capsuleId: 'portfolio_mos_scache_72b',
+        category: 'Flagship AI Architecture',
+        cosine: 0.248,
+        tau: 0.34,
+        gate: 0.0,
+      },
+      {
+        capsuleId: 'concept_landauer_principle',
+        category: 'Physics of Information',
+        cosine: 0.219,
+        tau: 0.36,
+        gate: 0.0,
+      },
+    ],
+    routingEntropy: 0.962,
+    maxAnchorCosine: 0.248,
+    zProbeEnergy: 16.8,
+    langSubspaceRatio: 0.19,
+  };
+  const outOfConeFace = computeJarvisFaceState({
+    hasWebGPU: true,
+    engineReady: true,
+    engineLoading: false,
+    isGenerating: false,
+    liveInputText: '',
+    lastUserQuery: 'Para um cabelo já liso e descolorido, qual progressiva química é indicada?',
+    currentAgentText:
+      'Como assistente de IA e Engenharia deste portfólio, não recomendo procedimentos cosméticos ou químicos capilares, pois não há cartucho ScarStore verificado para esse domínio.',
+    deltaToken: '',
+    generatedTokens: 32,
+    tokPerSec: 11.4,
+    confidence: 0.91,
+    margin: 0.84,
+    horizonScale: 0.0,
+    scacheBytes: 15345792,
+    scacheDeltaBytes: 0,
+    activeCapsuleIds: [],
+    maxActiveGate: 0,
+    routingDiagnostics: outOfConeDiag,
+    session: baseSession,
+  });
+  assert(
+    outOfConeFace.dominantCapsuleId === null,
+    `Expected dominantCapsuleId === null when 0 cartridges fire, got ${outOfConeFace.dominantCapsuleId}`
+  );
+  assert(
+    outOfConeFace.posture === 'OUT_OF_CONE_GUARD' &&
+      outOfConeFace.postureLabel.pt.includes('0 Cartuchos') &&
+      outOfConeFace.postureLabel.en.includes('0 Cartridges'),
+    `Expected OUT_OF_CONE_GUARD posture when 0 cartridges fire, got ${outOfConeFace.posture} (${outOfConeFace.postureLabel.pt})`
+  );
+
+  // Verify causal split alignment at `qEndProbe` on `QwenBPETokenizer`
+  const probeChatIds = bpeTok.applyChatTemplate(
+    [
+      { role: 'system', content: PORTFOLIO_DEFAULT_SYSTEM_PROMPT },
+      { role: 'user', content: 'Para um cabelo já liso e descolorido, qual progressiva química você recomenda?' },
+    ],
+    true
+  );
+  const userPrefixIds = bpeTok.encode('<|im_start|>user\n');
+  const userSuffixIds = bpeTok.encode('<|im_end|>\n<|im_start|>assistant\n');
+  const bounds = extractUserContentBounds(probeChatIds, userPrefixIds, userSuffixIds);
+  assert(
+    bounds.qStart > 20 && bounds.qEnd > bounds.qStart && probeChatIds.length - bounds.qEnd === userSuffixIds.length,
+    `Unexpected causal split bounds: qStart=${bounds.qStart}, qEnd=${bounds.qEnd}, total=${probeChatIds.length}`
+  );
+  const tailNormal = probeChatIds.slice(bounds.qEnd);
+  assert(
+    JSON.stringify(tailNormal) === JSON.stringify(userSuffixIds),
+    `Expected cleanprobeIds.slice(qEnd) to match exact <|im_end|>\\n<|im_start|>assistant\\n suffix!`
+  );
+  assert(
+    engineCode.includes('runFullLayersOnLastToken') && engineCode.includes('out_of_cone_guarded'),
+    'Missing causal split runFullLayersOnLastToken or out_of_cone_guarded in mosWebgpuEngine.ts!'
+  );
+  console.log(
+    '[PASS 10/11] Out-of-Cone Epistemic Guard (PT/EN/ES/FR Zero-Cheat Gate · OUT_OF_CONE_GUARD Posture · Bit-Exact Causal Split)'
+  );
+
+  // ---------------------------------------------------------------------------
+  // TEST 11: PointScarFlow v1.0 Continuous 3D Generator (`Zero Catalog`, `12 WGSL Shaders` & `3.87 MiB VQ4-Scar Bundle`)
+  // ---------------------------------------------------------------------------
+  const bannedCatalogIdsRegex =
+    /\b(?:dna_helix|ringed_planet|rocket_spacecraft|lorenz_attractor|mobius_klein_ribbon|rubiks_tensor_cube|entropy_funnel_blackhole)\b/;
+  for (const rel of ['src/lib/pointScarFlowEngine.ts', 'src/components/JarvisFloatingPointStage.tsx']) {
+    const clean = stripComments(fs.readFileSync(path.join(PORTFOLIO_ROOT, rel), 'utf-8'));
+    assert(
+      !bannedCatalogIdsRegex.test(clean),
+      `Forbidden hardcoded 3D shape catalog identifier found in ${rel}!`
+    );
+  }
+
+  const psfWgslSrc = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/lib/shaders/point_scar_flow.wgsl'), 'utf-8');
+  const psfWgslPub = fs.readFileSync(
+    path.join(PORTFOLIO_ROOT, 'public/webgpu/pointscar_v1/point_scar_flow.wgsl'),
+    'utf-8'
+  );
+  const psfWgslCanon = fs.readFileSync(
+    '/Users/juliocesarreisfilho/Projects/scar-cache/scar_native/point_scar_flow.wgsl',
+    'utf-8'
+  );
+  assert(psfWgslSrc === psfWgslPub, 'src/lib/shaders/point_scar_flow.wgsl != public/webgpu/pointscar_v1/point_scar_flow.wgsl');
+  assert(psfWgslSrc === psfWgslCanon, 'portfolio point_scar_flow.wgsl != canonical scar-cache point_scar_flow.wgsl');
+
+  const psfEntrypoints = [...psfWgslSrc.matchAll(/@compute\s+@workgroup_size\([^)]+\)\s*fn\s+([a-zA-Z0-9_]+)/g)].map(
+    (m) => m[1]
+  );
+  const expectedPsfEntrypoints = [
+    'psf_build_point_features_f32',
+    'psf_time_embed_64_f32',
+    'psf_vq4_batched_equilibrate_fwht64',
+    'psf_batched_int4_ascar_gemm',
+    'psf_batched_vq4_int4scar_gemm',
+    'psf_rmsnorm_adaln_f32',
+    'psf_part_from_point_attn_hd32',
+    'psf_point_from_part_attn_hd32',
+    'psf_add_silu_f32',
+    'psf_swiglu_mul_f32',
+    'psf_gated_residual_add_f32',
+    'psf_euler_step_cfg_f32',
+  ];
+  assert(
+    JSON.stringify(psfEntrypoints) === JSON.stringify(expectedPsfEntrypoints),
+    `Expected 12 PointScarFlow WGSL entrypoints, got: ${psfEntrypoints.join(', ')}`
+  );
+
+  const psfDir = path.join(PORTFOLIO_ROOT, 'public/webgpu/pointscar_v1');
+  const psfManifestPath = path.join(psfDir, 'pointscar_manifest.json');
+  const psfEvalPath = path.join(psfDir, 'eval_report.json');
+  assert(fs.existsSync(psfManifestPath), 'Missing public/webgpu/pointscar_v1/pointscar_manifest.json!');
+  assert(fs.existsSync(psfEvalPath), 'Missing public/webgpu/pointscar_v1/eval_report.json!');
+
+  const psfManifest = JSON.parse(fs.readFileSync(psfManifestPath, 'utf-8'));
+  const psfEval = JSON.parse(fs.readFileSync(psfEvalPath, 'utf-8'));
+  const psfShardPath = path.join(psfDir, psfManifest.shard_file);
+  assert(fs.existsSync(psfShardPath), `Missing PointScarFlow binary shard: ${psfShardPath}`);
+  const psfShardStat = fs.statSync(psfShardPath);
+  assert(
+    psfManifest.architecture === 'ScarNative_VQ4_OT_RectifiedFlow' &&
+      psfManifest.config.num_points === 1024 &&
+      psfManifest.config.cond_in_dim === 2048 &&
+      psfManifest.config.head_dim === 32 &&
+      psfShardStat.size === psfManifest.shard_bytes,
+    `Invalid PointScarFlow manifest or shard size mismatch (${psfShardStat.size} vs ${psfManifest.shard_bytes})!`
+  );
+  assert(
+    Number(psfEval.ptq_max_abs_shock) < 2e-3 &&
+      Number(psfEval.held_out_chamfer_l2_4step_1pass) < Number(psfEval.held_out_chamfer_l2_sphere_baseline) * 0.75,
+    `PointScarFlow eval_report failed quality/zero-shock assertions: ${JSON.stringify(psfEval)}`
+  );
+  for (const xlKey of ['pt_en', 'es_en', 'fr_en'] as const) {
+    assert(
+      Number(psfEval.cross_lingual_3d_shape_cosine?.[xlKey]) > 0.80,
+      `Expected cross_lingual_3d_shape_cosine.${xlKey} > 0.80, got ${psfEval.cross_lingual_3d_shape_cosine?.[xlKey]}`
+    );
+  }
+
+  const stageRaw = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/components/JarvisFloatingPointStage.tsx'), 'utf-8');
+  const workerRaw = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/lib/llmWorker.ts'), 'utf-8');
+  assert(
+    stageRaw.includes('data-testid="jarvis-floating-point-stage"') &&
+      widgetCode.includes('jarvis-pointscar-toggle') &&
+      engineCode.includes('BrowserPointScarFlowEngine') &&
+      engineCode.includes('pointScarSample') &&
+      workerRaw.includes('pointScarFinalF32'),
+    'Missing PointScarFlow full-viewport stage or WebGPU worker wiring!'
+  );
+  console.log(
+    `[PASS 11/12] PointScarFlow v1.0 ScarNative 3D Generator (12 WGSL Shaders · ${(psfShardStat.size / (1024 * 1024)).toFixed(2)} MiB VQ4-Scar Shard · Chamfer=${psfEval.held_out_chamfer_l2_4step_1pass} · Zero Catalog)`
+  );
+
+  // ---------------------------------------------------------------------------
+  // TEST 12: Scar-Only Portfolio Purity & 0x00 Legacy Capsule Retirement Audit
+  // ---------------------------------------------------------------------------
+  const removedLegacyFiles = [
+    'src/components/CirEngineArchitecture.tsx',
+    'src/components/RopePhaseCanvas.tsx',
+    'src/components/TokenizerPlayground.tsx',
+    'src/components/FloatingTokenMonitor.tsx',
+    'src/components/TokenInteractiveText.tsx',
+    'src/components/AmbientTensorCanvas.tsx',
+    'src/components/InteractiveToolDemos.tsx',
+    'src/components/ExperienceTimeline.tsx',
+    'src/components/KnowledgeTensor3D.tsx',
+    'src/lib/tokenizer.ts',
+  ];
+  for (const rel of removedLegacyFiles) {
+    assert(
+      !fs.existsSync(path.join(PORTFOLIO_ROOT, rel)),
+      `Removed non-Scar legacy file resurrected on disk: ${rel}`
+    );
+  }
+
+  const bannedLegacyPortfolioRegex =
+    /\b(?:cir-engine|cir-jev|mddd-cli|mad-cli|register-red|gittrack|flutter_scene|opah it|premier soft|503m)\b/i;
+
+  const collectTextFiles = (dirAbs: string): string[] => {
+    const out: string[] = [];
+    for (const ent of fs.readdirSync(dirAbs, { withFileTypes: true })) {
+      const full = path.join(dirAbs, ent.name);
+      if (ent.isDirectory()) {
+        out.push(...collectTextFiles(full));
+      } else if (/\.(?:ts|tsx|css|wgsl)$/.test(ent.name)) {
+        out.push(full);
+      }
+    }
+    return out;
+  };
+
+  const auditedPurityPaths = [
+    ...collectTextFiles(path.join(PORTFOLIO_ROOT, 'src')),
+    path.join(PORTFOLIO_ROOT, 'index.html'),
+    path.join(PORTFOLIO_ROOT, 'public/llms.txt'),
+    path.join(PORTFOLIO_ROOT, 'public/llms-full.txt'),
+    path.join(PORTFOLIO_ROOT, 'public/ai-index.json'),
+    path.join(PORTFOLIO_ROOT, 'public/schema.json'),
+    path.join(PORTFOLIO_ROOT, 'public/og-image.svg'),
+  ];
+  for (const absPath of auditedPurityPaths) {
+    const txt = fs.readFileSync(absPath, 'utf-8');
+    const hit = txt.match(bannedLegacyPortfolioRegex);
+    assert(
+      !hit,
+      `Forbidden non-Scar legacy project/career string "${hit?.[0]}" found in ${path.relative(PORTFOLIO_ROOT, absPath)}!`
+    );
+  }
+
+  const routerBinNode = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'public/webgpu/qwen3b/scarstore_router.bin'));
+  const routerBinBuf = routerBinNode.buffer.slice(
+    routerBinNode.byteOffset,
+    routerBinNode.byteOffset + routerBinNode.byteLength
+  );
+  const liveRouter = new BrowserScarStoreHTTP206(routerJson, routerBinBuf, './public/webgpu/qwen3b');
+  const visibleCapsules = liveRouter.getCapsulesDirectory();
+  for (const retiredId of ['portfolio_cir_engine_503m', 'portfolio_devtools_fullstack', 'portfolio_julio_bio_career']) {
+    assert(liveRouter.unlearnedIds.has(retiredId), `Expected ${retiredId} to be 0x00-unlearned at boot!`);
+    assert(
+      !visibleCapsules.some((c) => c.capsule_id === retiredId),
+      `Expected ${retiredId} to be excluded from visible ScarStore directory!`
+    );
+  }
+  for (const scarId of [
+    'portfolio_mos_scache_72b',
+    'portfolio_jarvis_architecture',
+    'portfolio_browser_webgpu_wgsl',
+    'portfolio_aura_system_one',
+    'portfolio_tricompass_scouts',
+    'portfolio_contact_hire',
+  ]) {
+    assert(
+      visibleCapsules.some((c) => c.capsule_id === scarId && !c.unlearnedWiped),
+      `Expected core Scar Ecosystem cartridge ${scarId} to remain active!`
+    );
+  }
+  console.log(
+    `[PASS 12/12] Scar-Only Portfolio Purity (${auditedPurityPaths.length} files clean · 10 legacy modules purged · ${visibleCapsules.length} active ScarStore cartridges)`
   );
 
   console.log('\n================================================================================');
-  console.log('ALL 9/9 UNIFIED QWEN JARVIS + PHYSICAL SCAR LAB v4.0 + SCAR-NATIVE v5.0 SUITES PASSED!');
+  console.log('ALL 12/12 SCAR ARCHITECTURE ECOSYSTEM + JARVIS + POINTSCARFLOW v1.0 SUITES PASSED!');
   console.log('================================================================================');
 }
 

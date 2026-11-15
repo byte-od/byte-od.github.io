@@ -26,7 +26,12 @@ import {
   computeHorizonScale,
   extractUserContentBounds,
   findSubsequenceLastEnd,
+  selectOutOfConeEpistemicGate,
 } from './scarstoreHttp206Browser';
+import {
+  BrowserPointScarFlowEngine,
+  PointScarSampleResult,
+} from './pointScarFlowEngine';
 
 const MAX_ROUTING_USER_TOKENS = 192;
 // 4 tokens per GPUCommandBuffer (~280 ms on 36-layer 3B) prevents macOS Metal / Dawn 5s GPU watchdog timeouts
@@ -104,6 +109,10 @@ export interface EngineGenerationResult {
   httpEvents: Http206Event[];
   meanConfidenceP1: number;
   meanMarginP1P2: number;
+  epistemicMode?: 'scar_grounded' | 'out_of_cone_guarded' | 'base_trunk';
+  pointScarMs?: number;
+  pointScarSteps?: number;
+  pointScarShardBytes?: number;
 }
 
 import { buildCjkVocabBitmaskU32, hasCjkScript } from './scriptSubspaceGate';
@@ -298,6 +307,7 @@ export class BrowserMoSWebGPUEngine {
   public readonly scarRankFinal: number;
   public readonly seedHorizon: number;
   public readonly seedFadeSteps: number;
+  public readonly pointScarFlow: BrowserPointScarFlowEngine | null;
 
   private scarCalibBuf: any;
   private scarRank = 60;
@@ -328,6 +338,7 @@ export class BrowserMoSWebGPUEngine {
     wgslSource: string;
     tokenizer: QwenBPETokenizer;
     scarStore: BrowserScarStoreHTTP206 | null;
+    pointScarFlow?: BrowserPointScarFlowEngine | null;
     shardBuffers: any[];
     loadedFromCache: boolean;
   }) {
@@ -352,6 +363,7 @@ export class BrowserMoSWebGPUEngine {
     this.manifest = opts.manifest;
     this.tokenizer = opts.tokenizer;
     this.scarStore = opts.scarStore;
+    this.pointScarFlow = opts.pointScarFlow ?? null;
     this.shardBuffers = opts.shardBuffers;
     this.loadedFromCache = opts.loadedFromCache;
 
@@ -549,7 +561,12 @@ export class BrowserMoSWebGPUEngine {
       );
     }
 
-    report('compile', 95, 'Compilando 20 pipelines WGSL e alocando SCache O(1) constante...', loadedBytes, totalBytes, allCached);
+    const pointScarBaseUrl = cleanBase.endsWith('/qwen3b')
+      ? `${cleanBase.slice(0, -'/qwen3b'.length)}/pointscar_v1`
+      : '/webgpu/pointscar_v1';
+    const pointScarFlow = await BrowserPointScarFlowEngine.createOnDevice(device, pointScarBaseUrl);
+
+    report('compile', 95, 'Compilando 20+12 pipelines WGSL e alocando SCache O(1) constante...', loadedBytes, totalBytes, allCached);
     const engine = new BrowserMoSWebGPUEngine({
       device,
       adapterLabel,
@@ -557,6 +574,7 @@ export class BrowserMoSWebGPUEngine {
       wgslSource,
       tokenizer,
       scarStore,
+      pointScarFlow,
       shardBuffers,
       loadedFromCache: allCached,
     });
@@ -589,6 +607,7 @@ export class BrowserMoSWebGPUEngine {
 
   public destroy(): void {
     try {
+      this.pointScarFlow?.destroy();
       for (const b of this.shardBuffers) b?.destroy?.();
       this.scacheKvBuf?.destroy?.();
       this.scacheWScarBuf?.destroy?.();
@@ -1413,9 +1432,11 @@ export class BrowserMoSWebGPUEngine {
     captureXIn: boolean,
     qEnd: number | null = null,
     signal: AbortSignal | null = null,
-    onPrefillProgress?: (done: number, total: number) => void
+    onPrefillProgress?: (done: number, total: number) => void,
+    runFullLayersOnLastToken = false
   ): Promise<void> {
     const lp = tokenIds.length;
+    if (lp === 0) return;
     const effQEnd = qEnd === null ? lp : Math.min(lp, Math.max(qStart + 1, qEnd));
     const splitIdx = this.isGoldenSliceV4 ? this.midLayerIdx : this.numLayers - 2;
 
@@ -1436,7 +1457,7 @@ export class BrowserMoSWebGPUEngine {
         const relPos = batchStart + i;
         enc.copyBufferToBuffer(this.prefillStepsBuf, i * 16, this.stepStateBuf, 0, 16);
 
-        if (relPos < lp - 1) {
+        if (relPos < lp - 1 || runFullLayersOnLastToken) {
           if (captureXIn && relPos >= qStart && relPos < effQEnd) {
             const cpassPre = enc.beginComputePass();
             this._recordOps(cpassPre, this.embedOps);
@@ -1539,6 +1560,7 @@ export class BrowserMoSWebGPUEngine {
     options: {
       maxNewTokens?: number;
       enableScarStore?: boolean;
+      enableEpistemicGuard?: boolean;
       resetCache?: boolean;
       systemPrompt?: string | null;
       onPrefillProgress?: (done: number, total: number) => void;
@@ -1548,6 +1570,8 @@ export class BrowserMoSWebGPUEngine {
         turnBytesFetched: number;
         httpEvents: Http206Event[];
         diagnostics?: GoldenSliceRoutingDiagnostics;
+        pointScarSample?: PointScarSampleResult | null;
+        epistemicMode?: 'scar_grounded' | 'out_of_cone_guarded' | 'base_trunk';
       }) => void;
       signal?: AbortSignal | null;
     } = {}
@@ -1555,6 +1579,7 @@ export class BrowserMoSWebGPUEngine {
     const {
       maxNewTokens = 148,
       enableScarStore = true,
+      enableEpistemicGuard,
       resetCache = false,
       systemPrompt = null,
       onPrefillProgress,
@@ -1612,8 +1637,11 @@ export class BrowserMoSWebGPUEngine {
       basePos === 0
         ? cleanProbeIds
         : this.tokenizer.encode(`<|im_start|>user\n${userQuery}<|im_end|>\n<|im_start|>assistant\n`);
-    const lp = promptIds.length;
+    let effectiveLp = promptIds.length;
     const scacheBytesInitial = this.scacheGpuBytes;
+    const useEpistemicGuard =
+      enableEpistemicGuard ?? Boolean(enableScarStore && this.scarStore && systemPrompt === null);
+    let epistemicMode: 'scar_grounded' | 'out_of_cone_guarded' | 'base_trunk' = 'base_trunk';
 
     // Save pre-turn SCache snapshot on Turn 2+ so mid-prefill AbortError restores exact conversational state
     if (basePos > 0) {
@@ -1643,10 +1671,12 @@ export class BrowserMoSWebGPUEngine {
       turnBytesFetched: number;
       httpEvents: Http206Event[];
       diagnostics?: GoldenSliceRoutingDiagnostics;
+      primaryProbeF32?: Float32Array | null;
     } = {
       active: [],
       turnBytesFetched: 0,
       httpEvents: [],
+      primaryProbeF32: null,
     };
 
     const canUseSysSnap = this._matchesSysSnapPrefix(cleanProbeIds) && qStartProbe >= this._sysSnapTokenIds.length;
@@ -1654,29 +1684,39 @@ export class BrowserMoSWebGPUEngine {
 
     try {
       if (basePos === 0) {
-        if (canUseSysSnap) {
-          this._restoreSysSnapToActiveSCache();
-          await this._submitPrefillSequence(
-            promptIds.slice(sysPrefixLen),
-            sysPrefixLen,
-            qStartProbe - sysPrefixLen,
-            Boolean(enableScarStore && this.scarStore),
-            qEndProbe - sysPrefixLen,
-            signal,
-            onPrefillProgress
-          );
-        } else {
-          await this._submitPrefillSequence(
-            promptIds,
-            0,
-            qStartProbe,
-            Boolean(enableScarStore && this.scarStore),
-            qEndProbe,
-            signal,
-            onPrefillProgress
-          );
-        }
-        if (enableScarStore && this.scarStore) {
+        const canSplitAtQueryEnd =
+          Boolean(enableScarStore && this.scarStore && this.isGoldenSliceV4) &&
+          qEndProbe > qStartProbe &&
+          qEndProbe < cleanProbeIds.length;
+
+        if (canSplitAtQueryEnd && this.scarStore) {
+          if (canUseSysSnap) {
+            this._restoreSysSnapToActiveSCache();
+            await this._submitPrefillSequence(
+              cleanProbeIds.slice(sysPrefixLen, qEndProbe),
+              sysPrefixLen,
+              qStartProbe - sysPrefixLen,
+              true,
+              qEndProbe - sysPrefixLen,
+              signal,
+              onPrefillProgress
+                ? (done) => onPrefillProgress(Math.min(lpProbe, sysPrefixLen + done), lpProbe)
+                : undefined,
+              true
+            );
+          } else {
+            await this._submitPrefillSequence(
+              cleanProbeIds.slice(0, qEndProbe),
+              0,
+              qStartProbe,
+              true,
+              qEndProbe,
+              signal,
+              onPrefillProgress ? (done) => onPrefillProgress(Math.min(lpProbe, done), lpProbe) : undefined,
+              true
+            );
+          }
+
           const readBytes = luProbe * this.hiddenDim * 4;
           const xinRaw = await this._mapReadSafe(this.prefillXInReadBuf, readBytes);
           if (signal?.aborted) throw createAbortError();
@@ -1684,16 +1724,77 @@ export class BrowserMoSWebGPUEngine {
           routeResult = await this.scarStore.routeAndFetchActiveCapsules(xinF32, luProbe);
           if (signal?.aborted) throw createAbortError();
           this._setActiveCapsulesGpu(routeResult.active, 1.0);
+
+          let tailIds: number[];
+          if (routeResult.active.length > 0 || !useEpistemicGuard) {
+            epistemicMode = routeResult.active.length > 0 ? 'scar_grounded' : 'base_trunk';
+            tailIds = cleanProbeIds.slice(qEndProbe);
+          } else {
+            epistemicMode = 'out_of_cone_guarded';
+            const gateTxt = selectOutOfConeEpistemicGate(userQuery);
+            tailIds = this.tokenizer.encode(
+              `<|im_end|>\n<|im_start|>system\n${gateTxt}<|im_end|>\n<|im_start|>assistant\n`
+            );
+          }
+          effectiveLp = qEndProbe + tailIds.length;
+          await this._submitPrefillSequence(
+            tailIds,
+            qEndProbe,
+            0,
+            false,
+            null,
+            signal,
+            onPrefillProgress ? (done) => onPrefillProgress(qEndProbe + done, effectiveLp) : undefined,
+            false
+          );
         } else {
-          if (this.scarStore) this.scarStore.lastActiveGates.clear();
-          this._setActiveCapsulesGpu([]);
-        }
-      } else {
-        if (enableScarStore && this.scarStore) {
           if (canUseSysSnap) {
             this._restoreSysSnapToActiveSCache();
             await this._submitPrefillSequence(
-              cleanProbeIds.slice(sysPrefixLen),
+              promptIds.slice(sysPrefixLen),
+              sysPrefixLen,
+              qStartProbe - sysPrefixLen,
+              Boolean(enableScarStore && this.scarStore),
+              qEndProbe - sysPrefixLen,
+              signal,
+              onPrefillProgress
+            );
+          } else {
+            await this._submitPrefillSequence(
+              promptIds,
+              0,
+              qStartProbe,
+              Boolean(enableScarStore && this.scarStore),
+              qEndProbe,
+              signal,
+              onPrefillProgress
+            );
+          }
+          if (enableScarStore && this.scarStore) {
+            const readBytes = luProbe * this.hiddenDim * 4;
+            const xinRaw = await this._mapReadSafe(this.prefillXInReadBuf, readBytes);
+            if (signal?.aborted) throw createAbortError();
+            const xinF32 = new Float32Array(xinRaw);
+            routeResult = await this.scarStore.routeAndFetchActiveCapsules(xinF32, luProbe);
+            if (signal?.aborted) throw createAbortError();
+            this._setActiveCapsulesGpu(routeResult.active, 1.0);
+            epistemicMode = routeResult.active.length > 0 ? 'scar_grounded' : 'base_trunk';
+          } else {
+            if (this.scarStore) this.scarStore.lastActiveGates.clear();
+            this._setActiveCapsulesGpu([]);
+            epistemicMode = 'base_trunk';
+          }
+        }
+      } else {
+        if (enableScarStore && this.scarStore) {
+          const probeEnd =
+            this.isGoldenSliceV4 && qEndProbe > qStartProbe && qEndProbe < cleanProbeIds.length
+              ? qEndProbe
+              : cleanProbeIds.length;
+          if (canUseSysSnap) {
+            this._restoreSysSnapToActiveSCache();
+            await this._submitPrefillSequence(
+              cleanProbeIds.slice(sysPrefixLen, probeEnd),
               sysPrefixLen,
               qStartProbe - sysPrefixLen,
               true,
@@ -1704,7 +1805,7 @@ export class BrowserMoSWebGPUEngine {
             this.device.queue.writeBuffer(this.scacheKvBuf, 0, this._zeroKvBytes);
             this.device.queue.writeBuffer(this.scacheWScarBuf, 0, this._zeroWScarBytes);
             this.device.queue.writeBuffer(this.scacheSalienceBuf, 0, this._zeroSalBytes);
-            await this._submitPrefillSequence(cleanProbeIds, 0, qStartProbe, true, qEndProbe, signal);
+            await this._submitPrefillSequence(cleanProbeIds.slice(0, probeEnd), 0, qStartProbe, true, qEndProbe, signal);
           }
 
           const encRestore = this.device.createCommandEncoder();
@@ -1724,15 +1825,44 @@ export class BrowserMoSWebGPUEngine {
           if (this.scarStore) this.scarStore.lastActiveGates.clear();
           this._setActiveCapsulesGpu([]);
         }
-        await this._submitPrefillSequence(promptIds, basePos, 0, false, null, signal, onPrefillProgress);
+
+        let turnPromptIds = promptIds;
+        if (enableScarStore && this.scarStore && routeResult.active.length === 0 && useEpistemicGuard) {
+          epistemicMode = 'out_of_cone_guarded';
+          const gateTxt = selectOutOfConeEpistemicGate(userQuery);
+          turnPromptIds = this.tokenizer.encode(
+            `<|im_start|>user\n${userQuery}<|im_end|>\n<|im_start|>system\n${gateTxt}<|im_end|>\n<|im_start|>assistant\n`
+          );
+        } else {
+          epistemicMode =
+            enableScarStore && this.scarStore && routeResult.active.length > 0 ? 'scar_grounded' : 'base_trunk';
+        }
+        effectiveLp = turnPromptIds.length;
+        await this._submitPrefillSequence(turnPromptIds, basePos, 0, false, null, signal, onPrefillProgress);
       }
     } catch (prefillErr) {
       restorePreTurnSCache();
       throw prefillErr;
     }
 
+    let pointScarSample: PointScarSampleResult | null = null;
+    if (this.pointScarFlow && routeResult.primaryProbeF32 && !signal?.aborted) {
+      try {
+        pointScarSample = await this.pointScarFlow.sampleEuler(routeResult.primaryProbeF32);
+      } catch (psfErr) {
+        console.warn('[PointScarFlow] GPU 3D sample warning:', psfErr);
+      }
+    }
+
     if (onRouting) {
-      onRouting(routeResult);
+      onRouting({
+        active: routeResult.active,
+        turnBytesFetched: routeResult.turnBytesFetched,
+        httpEvents: routeResult.httpEvents,
+        diagnostics: routeResult.diagnostics,
+        pointScarSample,
+        epistemicMode,
+      });
     }
 
     const splitIdx = this.isGoldenSliceV4 ? this.midLayerIdx : this.numLayers - 2;
@@ -1791,7 +1921,7 @@ export class BrowserMoSWebGPUEngine {
     }
 
     const tDec0 = performance.now();
-    let curPos = basePos + lp;
+    let curPos = basePos + effectiveLp;
     let decStepIdx = 0;
     const singleStepArr = new Uint32Array(4);
 
@@ -1942,7 +2072,7 @@ export class BrowserMoSWebGPUEngine {
     return {
       answer: (lastDecoded || this.tokenizer.decode(generatedIds, true)).trim(),
       generatedTokenIds: generatedIds,
-      prefillTokens: lp,
+      prefillTokens: effectiveLp,
       sessionTokens: this.sessionPos,
       turnIndex: this.turnCount,
       generatedTokens: generatedIds.length,
@@ -1968,6 +2098,10 @@ export class BrowserMoSWebGPUEngine {
       httpEvents: routeResult.httpEvents,
       meanConfidenceP1: Math.round(meanConf * 10000) / 10000,
       meanMarginP1P2: Math.round(meanMargin * 10000) / 10000,
+      epistemicMode,
+      pointScarMs: pointScarSample?.latencyMs,
+      pointScarSteps: pointScarSample?.numSteps,
+      pointScarShardBytes: pointScarSample?.shardBytes,
     };
   }
 }

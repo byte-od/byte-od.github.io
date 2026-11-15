@@ -1,0 +1,32 @@
+{
+  "gpu": "NVIDIA A100-SXM4-40GB",
+  "total_concepts": 55,
+  "unique_ot_shapes": 3960,
+  "total_multilingual_prompts": 10112,
+  "held_out_test_prompts": 220,
+  "router_anchor0_alignment_cosine": 0.880642,
+  "held_out_chamfer_l2_sphere_baseline": 0.466305,
+  "held_out_chamfer_l2_4step_1pass": 0.062117,
+  "held_out_chamfer_l2_2step_1pass": 0.062056,
+  "held_out_ot_rmse_4step": 0.084741,
+  "held_out_chamfer_by_lang": {
+    "pt": 0.063077,
+    "en": 0.06348,
+    "es": 0.0604,
+    "fr": 0.06151
+  },
+  "cross_lingual_3d_shape_cosine": {
+    "pt_en": 0.997812,
+    "es_en": 0.997669,
+    "fr_en": 0.997398
+  },
+  "inter_concept_3d_cosine": 0.613827,
+  "recommended_inference": {
+    "num_steps": 4,
+    "guidance_scale": 1.0
+  },
+  "training_wall_seconds": 2621.64,
+  "ptq_max_abs_shock": 0.0011557936668395996,
+  "packed_vq4_scar_bytes": 4031656,
+  "shard_bytes": 4057768
+}

@@ -2,80 +2,50 @@
   "@context": "https://schema.org",
   "@graph": [
     {
-      "@type": "Organization",
-      "name": "JCRF Labs",
-      "url": "https://byte-od.github.io/",
-      "logo": "https://byte-od.github.io/logo.svg",
-      "sameAs": [
-        "https://github.com/byte-od",
-        "https://linkedin.com/in/juliocrfilho"
-      ]
-    },
-    {
       "@type": "Person",
       "name": "Julio Cesar da Costa Reis Filho",
-      "jobTitle": "Senior Systems Architect & LLM Engineer",
+      "jobTitle": "Creator of Mixture of Scars (MoS) & SCache O(1)",
       "url": "https://byte-od.github.io/",
+      "email": "mailto:reisfilho1116@gmail.com",
       "sameAs": [
         "https://github.com/byte-od",
+        "https://github.com/byte-od/mixture-of-scars",
+        "https://github.com/byte-od/system_one",
+        "https://doi.org/10.5281/zenodo.24172784",
         "https://linkedin.com/in/juliocrfilho"
       ]
     },
     {
       "@type": "WebPage",
-      "name": "Julio Cesar Reis Filho | LLM Systems Architect & Engineer",
+      "name": "Julio Cesar Reis Filho | Mixture of Scars (MoS) & SCache O(1)",
       "url": "https://byte-od.github.io/",
-      "description": "Portfolio of Julio Cesar Reis Filho. Systems Architect & Senior LLM Engineer specializing in Causal Transformers, CIR-Engine 503M, RoPE, GQA, and PyTorch DDP."
+      "description": "Official research and live WebGPU showcase of the Scar Architecture Ecosystem: MoS, O(1) SCache (34.8 KB), VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0, PointScarFlow v1.0, and AURA / System One."
     },
     {
       "@type": "FAQPage",
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "Who is Julio Cesar da Costa Reis Filho and what is his background?",
+          "name": "What are Mixture of Scars (MoS) and Associative SCache O(1)?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Julio Cesar da Costa Reis Filho is a Senior Systems Architect and LLM Engineer with over 8 years of production experience, specializing in low-level causal transformer architectures (CIR-Engine 503M), distributed PyTorch DDP training, and mission-critical cloud infrastructure."
+            "text": "Mixture of Scars (MoS) streams 80 layers of a 72.7B LLM in <= 2.40 GB peak VRAM via directional VQ4/INT4 bases plus low-rank residual scars, while SCache O(1) replaces linear O(T) KV Cache with constant-byte Widrow-Hoff associative memory (34.8 KB L1, Δ = +0 B)."
           }
         },
         {
           "@type": "Question",
-          "name": "What is CIR-Engine 503M and how does its Causal Transformer architecture work?",
+          "name": "How does ScarNativeLM v5.0 eliminate post-training quantization shock?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "CIR-Engine 503M is an open-source, custom 12-layer decoder-only Causal Transformer model designed by Julio Cesar, featuring 503 Million parameters, RoPE positional encoding, Grouped-Query Attention (GQA), and a deterministic graph verification layer that prevents hallucinations."
+            "text": "ScarNativeLM v5.0 is pretrained 100% from scratch (step t = 0, zero nn.Linear layers) with ScarNativeLinear (D4-LUT256 VQ4-STE + FWHT-64 + INT4-STE) and DifferentiableSCacheAttention O(1), yielding 0.000000 KL divergence upon binary packing."
           }
         },
         {
           "@type": "Question",
-          "name": "What published developer tools and open-source frameworks has Julio Cesar created?",
+          "name": "How does PointScarFlow v1.0 generate continuous 3D point clouds in WebGPU?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Julio Cesar authored and published mddd-cli on npm for Mermaid Diagram-Driven Development, built MAD-cli for living documentation sync, developed Register-red for Apple Numbers (.numbers) and Google Drive cloud pipeline management, developed flutter_scene for 3D graphics rendering, and authored the GitTrack high-throughput activity streaming pipeline."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "What programming languages, frameworks, and architectural paradigms are Julio's primary specialties?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Julio specializes in Go (Golang), Python, TypeScript, Rust, and Dart, applying Clean Architecture, Domain-Driven Design (DDD), Event-Driven Microservices, and deep neural transformer mechanics across GCP and Linux environments."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "What quantifiable benchmarks and performance improvements has Julio delivered?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Julio has achieved a 42% cold-start latency reduction in enterprise mobile apps, maintained 99.98% crash-free session rates at 1M+ user scale, and demonstrated 6,200 tokens/sec throughput in distributed PyTorch DDP training."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "How can hiring managers, founders, or research labs contact Julio Cesar da Costa Reis Filho?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Julio Cesar can be contacted directly via email at reisfilho1116@gmail.com, through LinkedIn at https://linkedin.com/in/juliocrfilho, or on GitHub at https://github.com/byte-od. He is open to Staff/Principal engineering roles, architecture consulting, and research collaborations."
+            "text": "PointScarFlow v1.0 (11.85M ScarNativeLinear parameters in a 3.87 MiB shard, 12 WGSL shaders) integrates an Optimal-Transport Rectified Flow velocity field for 1,024 3D points in 86.45 ms directly from Qwen2.5-3B Layer 23 P_perp_lang latents with > 0.997 cross-lingual shape cosine."
           }
         }
       ]

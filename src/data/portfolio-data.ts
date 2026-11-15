@@ -2,754 +2,307 @@ export interface ProjectData {
   id: string;
   title: string;
   badge: string;
-  category: 'ml_ai' | 'developer_tooling' | 'mobile_graphics';
-  specs?: string;
+  category: 'foundation_llm' | 'spatial_physical' | 'embodied_origin';
+  featured?: boolean;
   summary: string;
   details: string[];
   techStack: string[];
   githubUrl?: string;
-  packageUrl?: string;
   colabUrl?: string;
-  featured?: boolean;
-  interactiveType?: 'transformer_sim' | 'mermaid_demo' | 'graphics_demo' | 'git_telemetry';
+  paperUrl?: string;
+  labAnchor?: string;
+  specs?: string;
   metrics?: { label: string; value: string }[];
 }
 
-export interface ExperienceData {
-  company: string;
-  role: string;
-  period: string;
-  location: string;
-  type: string;
-  highlights: string[];
-  technologies: string[];
-}
-
-export interface SkillCategory {
+export interface PortfolioInfo {
+  name: string;
   title: string;
-  skills: { name: string; level?: string; highlight?: boolean }[];
+  subtitle: string;
+  email: string;
+  location: string;
+  github: string;
+  mosRepo: string;
+  auraRepo: string;
+  zenodoDoi: string;
+  zenodoUrl: string;
+  linkedin: string;
 }
 
-export const PORTFOLIO_INFO = {
+export const PORTFOLIO_INFO_EN: PortfolioInfo = {
   name: 'Julio Cesar da Costa Reis Filho',
-  handle: 'byte-od',
-  title: 'Senior Systems Architect & LLM Engineer',
-  location: 'Available Globally (Open to Remote & Relocation)',
+  title: 'Creator of the Scar Architecture Ecosystem (MoS & SCache O(1))',
+  subtitle:
+    'Independent AI Architecture Researcher & Principal Systems Engineer. Author of Mixture of Scars (MoS), Associative SCache O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0 (Tabula Rasa), PointScarFlow v1.0, and AURA / System One (GradientScarMemory).',
   email: 'reisfilho1116@gmail.com',
+  location: 'Global / Remote',
   github: 'https://github.com/byte-od',
+  mosRepo: 'https://github.com/byte-od/mixture-of-scars',
+  auraRepo: 'https://github.com/byte-od/system_one',
+  zenodoDoi: '10.5281/zenodo.24172784',
+  zenodoUrl: 'https://doi.org/10.5281/zenodo.24172784',
   linkedin: 'https://linkedin.com/in/juliocrfilho',
-  languages: [
-    { name: 'English', level: 'Proficient C2 (EF SET 75/100)' },
-    { name: 'Portuguese', level: 'Native' },
-    { name: 'Spanish', level: 'Intermediate' },
-  ],
-  bio: 'Systems Architect and Machine Learning Engineer with 8+ years of engineering experience spanning custom Causal Transformers (CIR-Engine 503M) trained from scratch, sub-millisecond Embodied Reinforcement Learning engines (AURA / System 1 Engine), distributed DDP clusters, autonomous tool-use orchestration, and high-concurrency microservices in Go, Next.js, and Flutter.',
 };
 
-export function getPortfolioInfo(lang: 'en' | 'pt' = 'en') {
-  if (lang === 'pt') {
-    return {
-      ...PORTFOLIO_INFO,
-      title: 'Arquiteto de Sistemas Sênior & Engenheiro de LLMs',
-      location: 'Disponível Globalmente (Aberto para Remoto & Relocalização)',
-      languages: [
-        { name: 'Inglês', level: 'Proficiente C2 (EF SET 75/100)' },
-        { name: 'Português', level: 'Nativo' },
-        { name: 'Espanhol', level: 'Intermediário' },
-      ],
-      bio: 'Arquiteto de Sistemas e Engenheiro de Machine Learning com 8+ anos de experiência cobrindo Transformers Causais proprietários (CIR-Engine 503M) treinados do zero, motores de Deep Reinforcement Learning sub-milissegundo (AURA / System 1 Engine), clusters distribuídos DDP em PyTorch, orquestração autônoma de ferramentas e microsserviços de alta concorrência em Go, Next.js e Flutter.',
-    };
-  }
-  return PORTFOLIO_INFO;
-}
+export const PORTFOLIO_INFO_PT: PortfolioInfo = {
+  name: 'Julio Cesar da Costa Reis Filho',
+  title: 'Criador do Ecossistema de Arquitetura de Cicatrizes (MoS & SCache O(1))',
+  subtitle:
+    'Pesquisador de Arquiteturas Neurais e Arquiteto Principal de Sistemas. Autor do Mixture of Scars (MoS), SCache Associativo O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0 (Tabula Rasa), PointScarFlow v1.0 e AURA / System One (GradientScarMemory).',
+  email: 'reisfilho1116@gmail.com',
+  location: 'Global / Remoto',
+  github: 'https://github.com/byte-od',
+  mosRepo: 'https://github.com/byte-od/mixture-of-scars',
+  auraRepo: 'https://github.com/byte-od/system_one',
+  zenodoDoi: '10.5281/zenodo.24172784',
+  zenodoUrl: 'https://doi.org/10.5281/zenodo.24172784',
+  linkedin: 'https://linkedin.com/in/juliocrfilho',
+};
 
-export const PROJECTS: ProjectData[] = [
+export const PROJECTS_EN: ProjectData[] = [
   {
-    id: 'mixture-of-scars',
-    title: 'Mixture of Scars (MoS) & SCache',
-    badge: '🔥 World-First 72B on 16GB GPU & O(1) KV-Cache',
+    id: 'scarnative-v5',
+    title: 'ScarNativeLM v5.0 — Pure Scar-Native Foundation Engine',
+    badge: '🌱 Tabula Rasa · Zenodo v5.0',
+    category: 'foundation_llm',
     featured: true,
-    category: 'ml_ai',
-    specs: '72B LLM (80 Layers) in 2.40 GB VRAM · O(1) SCache: 100k Tokens in 34 KB vs 32.8 GB KV Cache',
-    summary: 'Breakthrough dual LLM systems architecture solving both fundamental physical walls of foundation models: (1) Mixture of Scars (MoS) executes all 80 transformer layers of 72B parameter geometry on a consumer 16GB GPU with peak VRAM strictly capped under 2.40 GB via real-time INT4 hardware streaming dequantization; (2) Scar Cache (SCache) completely replaces the linearly exploding O(T) KV Cache with an O(1) multi-slot associative tensor memory strictly resident in 34.8 KB L1 Cache, verified under brutal 100,000-token continuous stress tests saving >99.999% VRAM.',
+    specs: 'Zero nn.Linear · D4-LUT256 VQ4-STE · 0.0000 KL PTQ · 22 WGSL Shaders',
+    summary:
+      'Foundation language architecture pretrained 100% from scratch (step t = 0, zero pretrained weights, zero dense nn.Linear layers) directly on the discrete scar manifold with DifferentiableSCacheAttention O(1) and Zero-SGD RRR P_⊥lang cartridges.',
     details: [
-      'Live Hardware Proof on 16GB GPU: Executed all 80 transformer layers of 72B parameter geometry (8,192 hidden dim, 29,568 MLP dim) in 70.31s with 2.40 GB peak VRAM on a single Nvidia L4/T4 GPU.',
-      '100,000-Token KV Cache Elimination: Replaced 32.77 GB of linearly exploding KV Cache with an exact 34.80 KB O(1) MultiSlotSCache resident in L1 Cache, achieving sub-5µs updates and >99.999% VRAM savings.',
-      'Hardware INT4 Streaming Dequantizer: Developed an on-the-fly SIMD/CUDA kernel unpacking INT4 weights to FP16 residual stream without GPU VRAM accumulation or host-device thrashing.',
-      'Continuous Needle-in-a-Haystack Retention: Validated factual memory retention using Widrow-Hoff Delta Rule updates across heterogeneous multi-scale temporal decay slots.',
-      'Real-World Competition Validation: Powering our 0.625 Leaderboard score in the Kaggle Name That LLM competition ($50k USD prize), recognizing 18 distinct frontier model signatures.',
-      '1-Click Interactive Reproducibility: Fully automated, open-source Google Colab live test notebook with zero dependencies running live on free cloud GPUs.'
+      'ScarNativeLinear replaces every dense matrix with Equilibration d_eq + FWHT-64 + D4-LUT256 VQ4-STE + INT4-STE low-rank scars, eliminating post-training quantization shock (0.000000 KL divergence upon binary packing).',
+      'End-to-end DifferentiableSCacheAttention trains directly over fixed Sinks + Circular Window + Pre-RoPE Widrow-Hoff Associative Matrix W_scar in strict O(1) memory (Δ = +0 B at any horizon T -> ∞).',
+      'LanguageNullspaceProjector (P_⊥lang) decouples mutable facts from the frozen trunk: 4 KB-aligned INT4 cartridges minted via closed-form Reduced-Rank Regression (0 SGD steps) in English fire seamlessly across PT, EN, ES, and FR.',
+      'Cryptographic 0x00 physical overwrite erases individual factual cartridges in < 0.2 ms with exact bit-zero trunk collateral damage (Δlogits = 0.00000000).',
+      'Exact numerical parity (cos > 0.99999) verified between PyTorch and 22 custom WebGPU WGSL 1.0 compute shaders.',
     ],
-    techStack: ['Python', 'PyTorch', 'CUDA', 'INT4 Streaming Dequantizer', 'Associative Memory', 'Delta Rule (Widrow-Hoff)', 'KV-Cache Replacement', 'Google Colab', 'Kaggle'],
+    techStack: ['ScarNativeLinear', 'VQ4-STE', 'SCache O(1)', 'WebGPU WGSL 1.0', 'PyTorch', 'P_⊥lang RRR'],
     githubUrl: 'https://github.com/byte-od/mixture-of-scars',
-    colabUrl: 'https://colab.research.google.com/github/byte-od/mixture-of-scars/blob/main/notebooks/Proof_70B_MoS_on_16GB_GPU.ipynb',
+    paperUrl: 'https://doi.org/10.5281/zenodo.24172784',
+    labAnchor: '#scar-native-lab',
     metrics: [
-      { label: 'Peak VRAM (72B)', value: '2.40 GB (80 Layers)' },
-      { label: 'KV Cache Reduction', value: '99.999% (34 KB)' },
-      { label: 'Tested Context', value: '100,000 Tokens' },
-      { label: 'Kaggle Benchmark', value: '0.625 Live Score' },
+      { label: 'PTQ Packing Shock', value: '0.000000 KL' },
+      { label: 'SCache Growth', value: 'Δ +0 B (O(1))' },
     ],
   },
   {
-    id: 'system_one',
-    title: 'AURA (Universal System 1 Engine)',
-    badge: 'Flagship Embodied Deep RL Engine',
-    category: 'ml_ai',
-    specs: 'Sub-0.25ms CPU Inference · Recurrent Lean GRU · Asymmetric Teacher SIL · 430M+ Steps',
-    summary: 'Autonomous Universal Reflex Architecture (AURA) — high-throughput Embodied Deep Reinforcement Learning engine and reactive reflex kernel (System 1) designed to solve highly deceptive combinatorial state spaces (Rubik\'s Cube up to Depth 10 across 232B states) with sub-millisecond deterministic CPU latency and zero tree search.',
+    id: 'mos-scache-72b',
+    title: 'Mixture of Scars (MoS) & Associative SCache O(1)',
+    badge: '⚡ 72.7B in 2.40 GB VRAM · Qwen 3B Live',
+    category: 'foundation_llm',
+    featured: true,
+    specs: '80 Layers in 2.40 GB · 34.8 KB L1 SCache · HTTP 206 ScarStore · Kaggle 0.625',
+    summary:
+      'Decouples frontier Transformer scale and sequence length from GPU VRAM via sequential VQ4/INT4 + ASVD scar streaming and O(1) Widrow-Hoff associative memory, powering both 72.7B single-GPU execution and the live Qwen2.5-3B JARVIS browser engine.',
     details: [
-      'Architected an ultra-lean recurrent policy (GRU Trunk, Tri-Compass spatial invariance, and tensor front-end) executing full policy+value forward passes in 0.23ms on bare CPU.',
-      'Engineered an Asymmetric Hybrid Training framework combining Recurrent PPO with 16 Teacher-Assisted Lookahead workers, distilling complex non-monotonic commutators into a 10,240-trajectory Self-Imitation Learning (SIL) buffer with Contrastive Online DPO (c-SIL).',
-      'Developed a multi-vectorized headless C++/Rust Gym environment achieving >20,000 steps/s throughput across 128 parallel environments, scaling training past 430M+ steps.',
-      'Achieved 100% solve rate on depths D1–D4 with mathematically optimal move paths (1.0–3.9 moves), 88% on D5, 84% on D6, 60% on D7, 32% on D9, and successfully unlocked Depth 10 (~232.2B state manifold).',
-      'Engineered zero-overhead ONNX Runtime export for real-time WebAssembly client-side browser execution with sub-millisecond tensor parity.'
+      'Executes all 80 layers of Qwen2.5-72B on a single 16 GB GPU with peak VRAM strictly <= 2.40 GB by streaming quantized base blocks + low-rank residual scars and freeing each group immediately.',
+      'Replaces 32.77 GB linear O(T) KV Cache at 100,000 tokens with constant O(1) SCache (Attention Sinks + Widrow-Hoff delta-rule associative matrix + circular window, Δ = +0 B).',
+      'Powers the live in-browser Qwen2.5-3B JARVIS assistant (1,601.55 MiB Track 2.5 ProtectedInt4Scar, 36 layers, zero Python/ONNX) with 41 HTTP/1.1 206 Partial Content cartridges routed at Layer 23 (P_⊥lang) across PT, EN, ES, and FR.',
+      'Includes an out-of-cone epistemic causal split guard when 0 ScarStore cartridges fire and deterministic CJK script-subspace masking.',
+      'Validated externally on the Kaggle Name That LLM benchmark (0.625 public score under strict <= 2.2 GB VRAM via Golden-Slice MoS + Tri-Compass).',
     ],
-    techStack: ['Python', 'PyTorch', 'Recurrent PPO', 'Self-Imitation Learning (SIL)', 'Online DPO', 'ONNX Runtime / WASM', 'Gymnasium / Vectorized Envs', 'C++ / Rust'],
+    techStack: ['MoS Streaming', 'SCache O(1)', 'ProtectedInt4Scar', 'HTTP 206 ScarStore', 'WebGPU WGSL', 'Tri-Compass'],
+    githubUrl: 'https://github.com/byte-od/mixture-of-scars',
+    colabUrl: 'https://colab.research.google.com/github/byte-od/mixture-of-scars/blob/main/notebooks/MoS_SCache_72B_Live_Test.ipynb',
+    paperUrl: 'https://doi.org/10.5281/zenodo.24172784',
+    metrics: [
+      { label: '72.7B Peak VRAM', value: '2.40 GB (80L)' },
+      { label: '100k Context Cache', value: '34.8 KB vs 32.8 GB' },
+    ],
+  },
+  {
+    id: 'pointscarflow-v1',
+    title: 'PointScarFlow v1.0 — Continuous 3D Scar-Native Rectified Flow',
+    badge: '✦ 3D OT Flow · 12 WGSL Shaders',
+    category: 'spatial_physical',
+    featured: true,
+    specs: '11.85M ScarNative Params · 3.87 MiB Shard · 1,024 Pts in 86.45 ms WebGPU',
+    summary:
+      'Continuous 3D point-cloud Optimal-Transport Rectified Flow generator built 100% with ScarNativeLinear (D4-LUT256 VQ4-STE, zero nn.Linear, zero preset catalog), conditioned directly on Qwen2.5-3B Layer 23 P_⊥lang latents across the full viewport.',
+    details: [
+      'Integrates an optimal-transport velocity field dx/dt = v_θ(x_t, t, z_⊥lang) from a continuous Fibonacci sphere (t = 0) into arbitrary 3D point manifolds (t = 1) in 4 guided Euler steps on WebGPU.',
+      '11.85M parameters packed into a 3.87 MiB binary shard (4,057,768 B) via D4-LUT256 VQ4-STE + INT4-STE with O(N·M) Dual Cross-Attention (N = 1,024 points <-> M = 32 induced geometric parts).',
+      'Executed 100% client-side by 12 custom WGSL 1.0 compute shaders with 86.45 ms median 4-step latency on Apple M2 WebGPU and cos > 0.99999 PyTorch-vs-WGSL parity.',
+      'Trained and self-distilled on NVIDIA A100 over 3,960 unique 3D OT manifolds and 10,112 multilingual prompts, achieving 7.51x held-out Chamfer-L2 reduction vs sphere baseline (0.0621 vs 0.4663).',
+      'Inherits language-invariant 3D synthesis automatically from P_⊥lang: PT<->EN = 0.9978, ES<->EN = 0.9977, FR<->EN = 0.9974 shape cosine.',
+    ],
+    techStack: ['PointScarFlow', 'OT Rectified Flow', '12 WGSL Shaders', 'VQ4-STE 3.87 MiB', 'Dual Cross-Attn O(NM)', 'P_⊥lang 3D'],
+    githubUrl: 'https://github.com/byte-od/mixture-of-scars',
+    metrics: [
+      { label: '4-Step WebGPU Latency', value: '86.45 ms (1,024 pts)' },
+      { label: 'Cross-Lingual 3D Cos', value: '0.9978 (PT/EN/ES/FR)' },
+    ],
+  },
+  {
+    id: 'scarcodec-v4',
+    title: 'ScarCodec v4.0 — Physical & Hardware Signal/Tensor Codec',
+    badge: '📡 Domain-Independent · Zenodo v4.0',
+    category: 'spatial_physical',
+    specs: 'Radio RFI P_⊥ · 34.8 KB Black-Box Telemetry · 12.05x HDR CFD Vacuum=0.0',
+    summary:
+      'Proves that the Scar Decomposition Operator S(X) = P_⊥(Q_VQ4(R · D^-1 X) + U · V^T) + W_scar is a universal mathematical compression and anomaly-retention primitive for physical sensors, radio interferometry, and scientific PDEs beyond NLP.',
+    details: [
+      'Radio-Interferometric RFI Excision: Null-space projector P_⊥ excises 1,000x non-stationary satellite bursts while recovering weak pulsar dispersion sweeps with cos = 0.9923 at 5.75x array compression (where 2-bit VLBI collapses to cos = 0.08).',
+      '34.8 KB O(1) Aerospace Black-Box Telemetry: Retains 5/5 transient precursor fault signatures across T = 8,000+ sensor frames with exact Δ = +0 B memory growth (cos = 0.9989), where equal-byte circular ring buffers retain 0/5.',
+      '12.05x High-Dynamic-Range CFD Shockwave Compression: Entry-0 exact null vector in LUT256 guarantees bit-exact 0.00000000 quiescent vacuum error while preserving Mach shock discontinuities with O(1) random block access.',
+    ],
+    techStack: ['ScarCodec v4.0', 'Nullspace P_⊥', 'LUT256 Exact Vacuum', '34.8 KB Black-Box', 'O(1) Block Decode'],
+    githubUrl: 'https://github.com/byte-od/mixture-of-scars',
+    paperUrl: 'https://doi.org/10.5281/zenodo.24172784',
+    labAnchor: '#physical-scar-lab',
+    metrics: [
+      { label: '1,000x RFI Recovery', value: 'cos = 0.9923 (5.75x)' },
+      { label: 'CFD HDR Compression', value: '12.05x (0.0 Vacuum)' },
+    ],
+  },
+  {
+    id: 'aura-system-one',
+    title: 'AURA / System One — Origin of GradientScarMemory (34.8 KB)',
+    badge: '🧬 Origin of SCache · Embodied Deep RL',
+    category: 'embodied_origin',
+    specs: '34.8 KB GradientScarMemory · Frontier Ghost-Jump Scouts · 0.23 ms CPU S1',
+    summary:
+      'The embodied Deep Reinforcement Learning engine where the constant 34.8 KB O(1) GradientScarMemory (SCache), surprise-gated exponential retention (Surprise = R_0 - V(s_0)), Frontier Ghost-Jump Scouts, and Tri-Compass invariant representation were born.',
+    details: [
+      'Birthplace of SCache O(1): GradientScarMemory replaces unbounded episodic history with a fixed 34.8 KB surprise-weighted associative scar buffer modulated by temporal prediction shock (R_0 - V(s_0)).',
+      'Frontier Ghost-Jump Scouts probe high-entropy state bifurcations ahead in time (> 2,000 FPS batched lookahead with strict curriculum isolation) and write shock scars directly into SCache.',
+      'UniversalS1Agent executes deterministic bare-CPU reflexive inference in 0.23 ms P50 latency (~1.6M parameters) with full epistemic telemetry (confidence, normalized entropy, margin p_1 - p_2).',
+      'Trained across 450M+ steps in 128 parallel C++/Rust environments, solving Rubik’s Cube scrambles up to Depth 10 (232.2B states) with zero MCTS tree search — running live in-browser via ONNX Wasm SIMD.',
+    ],
+    techStack: ['GradientScarMemory 34.8 KB', 'Frontier Scouts', 'Tri-Compass', 'UniversalS1Agent', 'Rust / PyTorch', 'ONNX Wasm SIMD'],
     githubUrl: 'https://github.com/byte-od/system_one',
+    labAnchor: '#aura-origin',
     metrics: [
-      { label: 'Latency', value: '0.23ms CPU P50' },
-      { label: 'Throughput', value: '>20,000 FPS' },
-      { label: 'Search Space', value: '232B States (D10)' },
-      { label: 'D1-D4 Accuracy', value: '100.0% Optimal' },
-    ],
-  },
-  {
-    id: 'cir-engine',
-    title: 'CIR-Engine & Cir-Jev',
-    badge: 'Core ML Architecture',
-    category: 'ml_ai',
-    specs: '503M Parameters · 16 Layers · 1536 Dim · 12 Heads (4 KV Heads)',
-    summary: 'Proprietary 503M-parameter causal autoregressive Transformer designed, trained, and benchmarked from scratch in PyTorch without pre-baked high-level wrappers.',
-    details: [
-      'Implemented modern attention and normalization techniques including Rotary Position Embeddings (RoPE), RMSNorm, and Scaled Dot-Product Attention (SDPA/FlashAttention).',
-      'Architected distributed training pipeline via torchrun & PyTorch DistributedDataParallel (DDP) across NVIDIA Tesla T4 and L4 clusters with mixed-precision (FP16/AMP).',
-      'Achieved throughput of ~6,200 tokens/s and cut epoch runtime by 66% (from 180 min to 61 min).',
-      'Formulated strict canonical communication grammar ([OP:QUERY], [OP:SOLVE], [OP:RESULT] [VAL: ...]) with 98–100% format compliance and zero anthropomorphic drift.',
-      'Autonomous runtime tool-use interceptor: generates structured subroutine calls ([OP:CALC]) triggering deterministic Python execution loop returning verified outputs in O(1) with 100% calculation accuracy.',
-      'SFT Prompt Loss Masking (labels = -100) preventing overfitting on reasoning templates.',
-      'Headless MLOps linking VS Code, Git, and Kaggle API to autonomously dispatch training jobs and evaluate local inference via Apple Silicon Metal Performance Shaders (MPS) at ~0.19s latency.'
-    ],
-    techStack: ['PyTorch', 'DistributedDataParallel (DDP)', 'CUDA', 'RoPE', 'FlashAttention', 'Kaggle API', 'Apple Metal (MPS)'],
-    githubUrl: 'https://github.com/byte-od/cir-jev',
-    interactiveType: 'transformer_sim',
-    metrics: [
-      { label: 'Parameters', value: '503M' },
-      { label: 'DDP Throughput', value: '~6,200 t/s' },
-      { label: 'Epoch Time Cut', value: '-66%' },
-      { label: 'Tool Accuracy', value: '100% O(1)' },
-    ],
-  },
-  {
-    id: 'mddd-cli',
-    title: 'mddd-cli (Spec-Driven Dev via Diagrams & Matrices)',
-    badge: 'Developer Tooling & NPM Package',
-    category: 'developer_tooling',
-    specs: 'Spec-Driven Development · Executable Diagrams & Decision Matrices · NPM Tool',
-    summary: 'Spec-Driven Development CLI framework that elevates architectural diagrams and formal decision matrices—instead of ambiguous pure text—as the executable specification to compile production Clean Architecture systems.',
-    details: [
-      'Pioneers Spec-Driven Development (SDD): replaces vague, drift-prone pure text specifications with formal diagram ASTs and deterministic decision truth tables.',
-      'Compiles visual domain topologies and decision matrices directly into Clean Architecture entities, use-cases, and HTTP/gRPC contracts with 100% branch verification.',
-      'Published on npm for global developer consumption; guarantees mathematical alignment between architecture specs and production code.'
-    ],
-    techStack: ['TypeScript', 'Node.js', 'Mermaid.js', 'AST Parsing', 'Decision Matrices', 'CLI', 'Clean Architecture'],
-    githubUrl: 'https://github.com/byte-od/mermaid-diagram-driven-development',
-    packageUrl: 'https://www.npmjs.com/package/mddd-cli',
-    interactiveType: 'mermaid_demo',
-    metrics: [
-      { label: 'Paradigm', value: 'Spec-Driven Dev' },
-      { label: 'Spec Input', value: 'Diagrams & Matrices' },
-      { label: 'Code Output', value: 'Clean Architecture' },
-    ],
-  },
-  {
-    id: 'mad-cli',
-    title: 'MAD-cli (Mermaid Auto-Doccing)',
-    badge: 'Living Documentation & Architecture CLI',
-    category: 'developer_tooling',
-    specs: 'Code-to-Mermaid Living Docs · MAD Tags Parser',
-    summary: 'CLI and automation tool that parses special MAD comment tags (<!-- MAD:... -->, @mad) across codebases and transforms them into living, auto-updating Mermaid architecture diagrams directly within repository Markdown documentation.',
-    details: [
-      'Engineered to eliminate documentation rot by extracting living Mermaid sequence, class, and architecture flowcharts directly from AST and comment tags in Go, Dart, TypeScript, and Python.',
-      'Scans and synchronizes <!-- MAD:SEQUENCE -->, <!-- MAD:FLOWCHART -->, and <!-- MAD:ARCHITECTURE --> blocks on every commit or CI pipeline run.',
-      'Forms a continuous bidirectional architecture loop with mddd-cli: mddd-cli compiles diagrams to code, while MAD-cli extracts living code reality back into verifiable diagrams.',
-      'Published open-source developer tooling for clean architectural visibility across distributed teams.'
-    ],
-    techStack: ['Go', 'TypeScript', 'AST Parsing', 'Mermaid.js', 'Living Documentation', 'Git Hooks', 'CLI'],
-    githubUrl: 'https://github.com/byte-od/mad',
-    metrics: [
-      { label: 'Syntax Engine', value: 'MAD Tags' },
-      { label: 'Sync Loop', value: 'Code-to-Diagram' },
-    ],
-  },
-
-  {
-    id: 'flutter-scene-fork',
-    title: 'flutter_scene (Fork & Animation Contributions)',
-    badge: 'Graphics & Scene Animations',
-    category: 'mobile_graphics',
-    specs: '3D Scene Graph · Scene Animations · Custom Shaders',
-    summary: 'Custom fork of Flutter’s 3D graphics engine (flutter_scene) with open-source contributions focused on scene animation pipelines, keyframe playback, low-latency framebuffers, and custom Metal/Vulkan shaders.',
-    details: [
-      'Contributed optimizations and enhancements to scene animation handling, playback interpolation, and 3D transform hierarchies.',
-      'Engineered custom shader pipelines and memory buffer optimizations for real-time 3D asset rendering.',
-      'Demonstrates deep fluency in low-level rendering (C++, shaders) seamlessly unified with high-level mobile applications (Dart/Flutter).'
-    ],
-    techStack: ['Dart', 'C++', 'Flutter Scene fork', 'Metal/Vulkan', 'GLSL/MSL Shaders', 'Scene Animations'],
-    githubUrl: 'https://github.com/byte-od/flutter_scene',
-    interactiveType: 'graphics_demo',
-    metrics: [
-      { label: 'Target', value: '60-120 FPS' },
-      { label: 'Focus', value: 'Scene Animations' },
-      { label: 'Substrate', value: 'Metal / Vulkan' },
-    ],
-  },
-  {
-    id: 'gittrack',
-    title: 'GitTrack',
-    badge: 'Granular Tracking & VIP AI Insights',
-    category: 'developer_tooling',
-    specs: 'Detailed Commit Tracking · Private Token Access · AI Insights (VIP)',
-    summary: 'Granular developer commit tracking platform with support for secure personal access tokens to index private repositories, featuring comprehensive AI-driven commit and architectural impact analysis on the VIP tier.',
-    details: [
-      'Delivers granular, commit-by-commit developer telemetry tracking code evolution and architectural progression in real time.',
-      'Supports secure Personal Access Token (PAT) injection to unlock and track private repositories with sensitive data masking.',
-      'VIP Plan: On-demand deep AI analysis evaluating commit quality, architectural consistency, and potential regressions.',
-      'Built in Go for low-latency git log streaming and local SQLite indexing.'
-    ],
-    techStack: ['Go', 'Git Plumbing APIs', 'Personal Access Tokens', 'AI Code Analysis', 'SQLite', 'CLI'],
-    interactiveType: 'git_telemetry',
-    metrics: [
-      { label: 'Tracking', value: 'Granular Commits' },
-      { label: 'Private Repos', value: 'Token Access' },
-      { label: 'AI Review', value: 'VIP Plan' },
-      { label: 'Engine', value: 'Golang Core' },
-    ],
-  },
-  {
-    id: 'register-red',
-    title: 'Register-red',
-    badge: 'Full-Stack Financial Architecture',
-    category: 'developer_tooling',
-    specs: 'Apple Numbers (.numbers) · Google Drive Sync · 24/7 Mac Email Polling Daemon · Real-Time Action Feed · FastAPI & React 19',
-    summary: 'Modern financial management and budget projection web panel with bi-directional Apple Numbers (.numbers) parsing, live Google Drive sync, 24/7 autonomous Mac email polling daemon (Gmail/Nubank), and a real-time HUD action feed with Gemini voice commands.',
-    details: [
-      'Native parsing, updating, and mutation of Apple Numbers (.numbers) files via Python (numbers-parser) and styled Excel (.xlsx) exports via openpyxl.',
-      'Autonomous 24/7 background email daemon on macOS: polls Gmail via IMAP SSL every 20 seconds, sanitizes HTML notifications (zero-width stripping \\u200c, \\ufeff), parses transaction values with decimal accuracy, and reconciles against open bills with variance tolerance.',
-      'Dynamic Real-Time Action Feed (HUD): displays recent transactions and system actions with multi-source tracking tags (Gmail 24h, Gemini AI, Manual), status indicators, and automatic 15-second polling synchronization.',
-      'Gemini AI conversational and voice control (Web Speech API) for natural language expense registration, bill payment, and synthesized Text-to-Speech (TTS) financial briefings.',
-      'Direct integration with Google Drive cloud storage for real-time synchronization, instant cloud saves, and automated directory indexing.',
-      'Intelligent multi-month budget cloning: auto-propagates recurring fixed obligations (rent, utilities, tuition, accounting), resets statuses, recalculates due dates, and carries forward positive rollover balances.',
-      'Interactive one-click payment reconciliation with dynamic KPI cards (Income, Outflows, Paid, Pending, Net Surplus) and festive celebration triggers.',
-      'Multi-device access: runs as a persistent server on macOS (port 8000), accessible locally via Wi-Fi (192.168.1.250) and remotely via secure Tailscale mesh VPN.'
-    ],
-    techStack: ['Python 3.11', 'FastAPI', 'numbers-parser', 'Google Drive API', 'IMAP / Gmail Daemon', 'Gemini AI', 'React 19', 'TypeScript', 'Tailwind CSS'],
-    githubUrl: 'https://github.com/byte-od/Register-red',
-    metrics: [
-      { label: 'Sync Pipeline', value: 'Google Drive' },
-      { label: 'Daemon 24h', value: 'Gmail Polling 20s' },
-      { label: 'HUD Feed', value: 'Tempo Real' },
-      { label: 'IA & Voz', value: 'Gemini Actions' },
-      { label: 'Formato', value: '.numbers Nativo' },
+      { label: 'GradientScarMemory', value: '34.8 KB Constant O(1)' },
+      { label: 'S1 Reflex Latency', value: '0.23 ms CPU P50' },
     ],
   },
 ];
+
+export const PROJECTS_PT: ProjectData[] = [
+  {
+    id: 'scarnative-v5',
+    title: 'ScarNativeLM v5.0 — Motor Fundacional Puro de Cicatrizes',
+    badge: '🌱 Tabula Rasa · Zenodo v5.0',
+    category: 'foundation_llm',
+    featured: true,
+    specs: 'Zero nn.Linear · D4-LUT256 VQ4-STE · 0.0000 KL PTQ · 22 Shaders WGSL',
+    summary:
+      'Arquitetura fundacional pré-treinada 100% do zero (passo t = 0, zero pesos pré-treinados, zero camadas densas nn.Linear) diretamente na variedade discreta de cicatrizes com DifferentiableSCacheAttention O(1) e cartuchos Zero-SGD RRR em P_⊥lang.',
+    details: [
+      'ScarNativeLinear substitui toda matriz densa por Equilibração d_eq + FWHT-64 + D4-LUT256 VQ4-STE + cicatrizes INT4-STE de posto baixo, eliminando o choque de quantização pós-treino (0.000000 KL ao empacotar em binário).',
+      'DifferentiableSCacheAttention treina ponta a ponta sobre Sinks + Janela Circular + Matriz Associativa Widrow-Hoff pré-RoPE W_scar em memória estritamente O(1) (Δ = +0 B em qualquer horizonte T -> ∞).',
+      'LanguageNullspaceProjector (P_⊥lang) desacopla fatos mutáveis do tronco congelado: cartuchos INT4 alinhados a 4 KB cunhados via Regressão de Posto Reduzido fechada (0 passos de SGD) em inglês disparam nativamente em PT, EN, ES e FR.',
+      'Sobrescrita física criptográfica 0x00 apaga cartuchos factuais individuais em < 0.2 ms com zero dano colateral ao tronco (Δlogits = 0.00000000).',
+      'Paridade numérica exata (cos > 0.99999) verificada entre PyTorch e 22 compute shaders WebGPU WGSL 1.0 customizados.',
+    ],
+    techStack: ['ScarNativeLinear', 'VQ4-STE', 'SCache O(1)', 'WebGPU WGSL 1.0', 'PyTorch', 'P_⊥lang RRR'],
+    githubUrl: 'https://github.com/byte-od/mixture-of-scars',
+    paperUrl: 'https://doi.org/10.5281/zenodo.24172784',
+    labAnchor: '#scar-native-lab',
+    metrics: [
+      { label: 'Choque PTQ no Empacotamento', value: '0.000000 KL' },
+      { label: 'Crescimento do SCache', value: 'Δ +0 B (O(1))' },
+    ],
+  },
+  {
+    id: 'mos-scache-72b',
+    title: 'Mixture of Scars (MoS) & SCache Associativo O(1)',
+    badge: '⚡ 72.7B em 2.40 GB VRAM · Qwen 3B Ao Vivo',
+    category: 'foundation_llm',
+    featured: true,
+    specs: '80 Camadas em 2.40 GB · SCache L1 34.8 KB · ScarStore HTTP 206 · Kaggle 0.625',
+    summary:
+      'Desacopla a escala de modelos de fronteira e o horizonte de contexto da VRAM via streaming sequencial de fatias VQ4/INT4 + ASVD e memória associativa Widrow-Hoff O(1), sustentando execução de 72.7B em GPU única e o motor Qwen2.5-3B JARVIS no navegador.',
+    details: [
+      'Executa todas as 80 camadas do Qwen2.5-72B em uma única GPU de 16 GB com pico estrito <= 2.40 GB de VRAM via streaming de blocos base quantizados + cicatrizes residuais de posto baixo e desalocação imediata.',
+      'Substitui 32.77 GB de KV Cache linear O(T) em 100.000 tokens por SCache O(1) constante (Attention Sinks + matriz associativa Widrow-Hoff + janela circular, Δ = +0 B).',
+      'Alimenta o assistente JARVIS Qwen2.5-3B ao vivo nesta página (1.601,55 MiB Track 2.5 ProtectedInt4Scar, 36 camadas, zero Python/ONNX) com 41 cartuchos HTTP/1.1 206 Partial Content roteados na Camada 23 (P_⊥lang) em PT, EN, ES e FR.',
+      'Inclui guarda epistêmica por split causal fora do cone quando 0 cartuchos ScarStore disparam e máscara determinística de subespaço CJK.',
+      'Validado externamente na competição Kaggle Name That LLM (score público 0.625 em <= 2.2 GB VRAM via Golden-Slice MoS + Tri-Compass).',
+    ],
+    techStack: ['MoS Streaming', 'SCache O(1)', 'ProtectedInt4Scar', 'HTTP 206 ScarStore', 'WebGPU WGSL', 'Tri-Compass'],
+    githubUrl: 'https://github.com/byte-od/mixture-of-scars',
+    colabUrl: 'https://colab.research.google.com/github/byte-od/mixture-of-scars/blob/main/notebooks/MoS_SCache_72B_Live_Test.ipynb',
+    paperUrl: 'https://doi.org/10.5281/zenodo.24172784',
+    metrics: [
+      { label: 'Pico VRAM em 72.7B', value: '2.40 GB (80L)' },
+      { label: 'Cache em 100k Tokens', value: '34.8 KB vs 32.8 GB' },
+    ],
+  },
+  {
+    id: 'pointscarflow-v1',
+    title: 'PointScarFlow v1.0 — Fluxo Retificado 3D Contínuo Scar-Native',
+    badge: '✦ Fluxo OT 3D · 12 Shaders WGSL',
+    category: 'spatial_physical',
+    featured: true,
+    specs: '11.85M Params ScarNative · Shard 3.87 MiB · 1.024 Pts em 86.45 ms WebGPU',
+    summary:
+      'Gerador contínuo de nuvens de pontos 3D via Optimal-Transport Rectified Flow construído 100% com ScarNativeLinear (D4-LUT256 VQ4-STE, zero nn.Linear, zero catálogo pré-definido), condicionado diretamente no latente P_⊥lang da Camada 23 do Qwen2.5-3B em tela cheia.',
+    details: [
+      'Integra um campo de velocidade de transporte ótimo dx/dt = v_θ(x_t, t, z_⊥lang) a partir de uma esfera contínua de Fibonacci (t = 0) até variedades geométricas 3D arbitrárias (t = 1) em 4 passos de Euler na WebGPU.',
+      '11.85M parâmetros empacotados em um shard binário de 3.87 MiB (4.057.768 B) via D4-LUT256 VQ4-STE + INT4-STE com Atenção Cruzada Dupla O(N·M) (N = 1.024 pontos <-> M = 32 partes geométricas induzidas).',
+      'Executado 100% no navegador por 12 compute shaders WGSL 1.0 customizados com latência mediana de 86.45 ms (4 passos) em Apple M2 WebGPU e paridade PyTorch-vs-WGSL cos > 0.99999.',
+      'Treinado e autodestilado em NVIDIA A100 sobre 3.960 variedades 3D OT e 10.112 prompts multilíngues, atingindo redução de 7.51x em Chamfer-L2 held-out contra a esfera base (0.0621 vs 0.4663).',
+      'Herda síntese 3D invariante a idioma automaticamente de P_⊥lang: cosseno geométrico 3D PT<->EN = 0.9978, ES<->EN = 0.9977, FR<->EN = 0.9974.',
+    ],
+    techStack: ['PointScarFlow', 'OT Rectified Flow', '12 Shaders WGSL', 'VQ4-STE 3.87 MiB', 'Dual Cross-Attn O(NM)', 'P_⊥lang 3D'],
+    githubUrl: 'https://github.com/byte-od/mixture-of-scars',
+    metrics: [
+      { label: 'Latência 4 Passos WebGPU', value: '86.45 ms (1.024 pts)' },
+      { label: 'Cosseno 3D Multilíngue', value: '0.9978 (PT/EN/ES/FR)' },
+    ],
+  },
+  {
+    id: 'scarcodec-v4',
+    title: 'ScarCodec v4.0 — Codec Físico & de Hardware por Cicatrizes',
+    badge: '📡 Independente de Domínio · Zenodo v4.0',
+    category: 'spatial_physical',
+    specs: 'Rádio RFI P_⊥ · Caixa-Preta 34.8 KB · CFD HDR 12.05x Vácuo=0.0',
+    summary:
+      'Demonstra que o Operador de Decomposição por Cicatrizes S(X) = P_⊥(Q_VQ4(R · D^-1 X) + U · V^T) + W_scar é uma primitiva matemática universal de compressão e retenção de anomalias para sensores físicos, radiointerferometria e EDPs científicas além de NLP.',
+    details: [
+      'Excisão de RFI em Radiointerferometria: O projetor de subespaço nulo P_⊥ anula rajadas não-estacionárias 1.000x mais intensas de satélites recuperando pulsos fracos de pulsares com cos = 0.9923 e compressão 5.75x (onde VLBI 2-bit colapsa para cos = 0.08).',
+      'Caixa-Preta Aeroespacial O(1) em 34.8 KB: Retém 5/5 assinaturas precursoras de falha ao longo de T = 8.000+ quadros de telemetria com crescimento exato Δ = +0 B (cos = 0.9989), onde um buffer circular de mesmo tamanho retém 0/5.',
+      'Compressão 12.05x em Campos de Choque CFD HDR: O vetor nulo exato na entrada 0 da LUT256 garante erro zero absoluto (0.00000000) em regiões de vácuo calmo preservando frentes de choque de Mach com decodificação aleatória O(1) por bloco.',
+    ],
+    techStack: ['ScarCodec v4.0', 'Subespaço Nulo P_⊥', 'LUT256 Vácuo Exato', 'Caixa-Preta 34.8 KB', 'Decode O(1)'],
+    githubUrl: 'https://github.com/byte-od/mixture-of-scars',
+    paperUrl: 'https://doi.org/10.5281/zenodo.24172784',
+    labAnchor: '#physical-scar-lab',
+    metrics: [
+      { label: 'Recuperação sob RFI 1.000x', value: 'cos = 0.9923 (5.75x)' },
+      { label: 'Compressão CFD HDR', value: '12.05x (Vácuo 0.0)' },
+    ],
+  },
+  {
+    id: 'aura-system-one',
+    title: 'AURA / System One — Origem do GradientScarMemory (34.8 KB)',
+    badge: '🧬 Berço do SCache · Deep RL Incorporado',
+    category: 'embodied_origin',
+    specs: 'GradientScarMemory 34.8 KB · Batedores Ghost-Jump · 0.23 ms CPU S1',
+    summary:
+      'O motor de Deep Reinforcement Learning incorporado onde nasceram a memória constante O(1) de 34.8 KB (GradientScarMemory / SCache), a retenção exponencial ponderada por surpresa (Surpresa = R_0 - V(s_0)), os Batedores de Fronteira e a representação invariante Tri-Compass.',
+    details: [
+      'Berço do SCache O(1): GradientScarMemory substitui históricos episódicos lineares por uma matriz compacta constante de 34.8 KB modulada por choque de surpresa temporal (R_0 - V(s_0)).',
+      'Batedores de Fronteira (Frontier Ghost-Jump Scouts) sondam bifurcações de alta entropia à frente no tempo (> 2.000 FPS em lote com isolamento curricular estrito) e gravam cicatrizes de choque diretamente no SCache.',
+      'UniversalS1Agent executa inferência reflexiva determinística pura em CPU em 0.23 ms P50 (~1.6M parâmetros) com contrato completo de incerteza epistêmica (confiança, entropia normalizada, margem p_1 - p_2).',
+      'Treinado por mais de 450M+ passos em 128 ambientes paralelos C++/Rust, resolvendo embaralhamentos do Cubo de Rubik até Profundidade 10 (232.2B estados) sem busca em árvore MCTS — rodando ao vivo no navegador via ONNX Wasm SIMD.',
+    ],
+    techStack: ['GradientScarMemory 34.8 KB', 'Frontier Scouts', 'Tri-Compass', 'UniversalS1Agent', 'Rust / PyTorch', 'ONNX Wasm SIMD'],
+    githubUrl: 'https://github.com/byte-od/system_one',
+    labAnchor: '#aura-origin',
+    metrics: [
+      { label: 'GradientScarMemory', value: '34.8 KB Constante O(1)' },
+      { label: 'Latência Reflexiva S1', value: '0.23 ms CPU P50' },
+    ],
+  },
+];
+
+export function getPortfolioInfo(lang: 'en' | 'pt' = 'en'): PortfolioInfo {
+  return lang === 'pt' ? PORTFOLIO_INFO_PT : PORTFOLIO_INFO_EN;
+}
 
 export function getProjects(lang: 'en' | 'pt' = 'en'): ProjectData[] {
-  if (lang !== 'pt') return PROJECTS;
-
-  return [
-    {
-      id: 'mixture-of-scars',
-      title: 'Mixture of Scars (MoS) & SCache',
-      badge: '🔥 Pioneiro Mundial 72B em GPU 16GB & KV-Cache O(1)',
-      featured: true,
-      category: 'ml_ai',
-      specs: 'LLM 72B (80 Camadas) em 2.40 GB VRAM · SCache O(1): 100k Tokens em 34 KB vs 32.8 GB KV Cache',
-      summary: 'Arquitetura de sistemas pioneira para LLMs que resolve simultaneamente os dois maiores gargalos físicos da inteligência artificial: (1) Mixture of Scars (MoS) executa todas as 80 camadas de um modelo de 72 bilhões de parâmetros em uma GPU comum de 16 GB com pico de VRAM estritamente abaixo de 2.40 GB via desquantização streaming INT4 em tempo real; (2) Scar Cache (SCache) substitui o KV Cache linear O(T) por uma memória associativa tensorial multi-slot constante O(1) residente em 34.8 KB no Cache L1, comprovada sob estresse contínuo de 100.000 tokens com redução superior a 99.999% de VRAM.',
-      details: [
-        'Prova Comprovada em Hardware de 16GB: Executou todas as 80 camadas de geometria 72B (8.192 dimensão oculta, 29.568 MLP) em 70.31s com pico de 2.40 GB VRAM em GPU única Nvidia L4/T4.',
-        'Eliminação do KV Cache a 100.000 Tokens: Substituiu 32.77 GB de KV Cache linear por exatos 34.80 KB de MultiSlotSCache constante O(1) no Cache L1, com atualizações sub-5µs e >99.999% de economia de VRAM.',
-        'Desquantizador Streaming INT4 em Hardware: Desenvolveu kernel dinâmico desempacotando pesos INT4 para o fluxo residual FP16 sem acúmulo de memória nem estrangulamento de barramento PCI-e.',
-        'Retenção Contínua Needle-in-a-Haystack: Validou retenção de fatos sob Regra Delta de Widrow-Hoff em slots heterogêneos de decaimento multi-escala temporal.',
-        'Validação Competitiva no Mundo Real: Impulsiona nosso score de 0.625 no Leaderboard da competição Kaggle Name That LLM ($50.000 USD), identificando a assinatura de 18 modelos de ponta.',
-        'Reprodutibilidade Interativa com 1 Clique: Notebook público no Google Colab aberto para a comunidade reproduzir os benchmarks ao vivo em GPUs gratuitas.'
-      ],
-      techStack: ['Python', 'PyTorch', 'CUDA', 'Desquantizador Streaming INT4', 'Memória Associativa', 'Regra Delta (Widrow-Hoff)', 'Substituição de KV-Cache', 'Google Colab', 'Kaggle'],
-      githubUrl: 'https://github.com/byte-od/mixture-of-scars',
-      colabUrl: 'https://colab.research.google.com/github/byte-od/mixture-of-scars/blob/main/notebooks/Proof_70B_MoS_on_16GB_GPU.ipynb',
-      metrics: [
-        { label: 'Pico VRAM (72B)', value: '2.40 GB (80 Camadas)' },
-        { label: 'Redução KV Cache', value: '99.999% (34 KB)' },
-        { label: 'Contexto Testado', value: '100.000 Tokens' },
-        { label: 'Benchmark Kaggle', value: '0.625 Score Oficial' },
-      ],
-    },
-    {
-      id: 'system_one',
-      title: 'AURA (Motor Universal Sistema 1)',
-      badge: 'Motor Flagship de Deep RL Incorporado',
-      category: 'ml_ai',
-      specs: 'Inferência Sub-0.25ms em CPU · Lean GRU Recorrente · Teacher SIL Assimétrico · 430M+ Passos',
-      summary: 'Autonomous Universal Reflex Architecture (AURA) — motor de Aprendizado por Reforço Profundo Incorporado de altíssimo throughput e kernel de reflexo reativo (Sistema 1) projetado para solucionar espaços de estados combinatórios altamente deceptivos (Cubo de Rubik até Nível 10 com 232 bilhões de estados) com latência determinística sub-milissegundo em CPU sem árvore de busca.',
-      details: [
-        'Arquitetou política recorrente ultra-enxuta (Tronco GRU Lean, invariância espacial Tri-Compass e front-end tensorial) executando passes diretos de política+valor em 0.23ms em CPU pura.',
-        'Desenvolveu framework de Treinamento Híbrido Assimétrico integrando PPO Recorrente a 16 workers professores com lookahead, destilando comutadores não-monotônicos complexos em um buffer de Self-Imitation Learning (SIL) de 10.240 trajetórias com DPO Online Contrastivo (c-SIL).',
-        'Construiu ambiente Gym vetorizado headless em C++/Rust atingindo throughput de >20.000 passos/s em 128 instâncias paralelas, escalando o treinamento acima de 430 milhões de passos.',
-        'Conquistou 100% de taxa de resolução em D1–D4 com caminhos matematicamente ótimos (1.0–3.9 movimentos), 88% em D5, 84% em D6, 60% em D7, 32% em D9 e desbloqueou oficialmente a profundidade D10 (~232,2 bilhões de configurações).',
-        'Implementou pipeline de exportação ONNX Runtime com zero overhead para inferência direta no navegador via WebAssembly com paridade tensorial sub-milissegundo.'
-      ],
-      techStack: ['Python', 'PyTorch', 'PPO Recorrente', 'Self-Imitation Learning (SIL)', 'DPO Online', 'ONNX Runtime / WASM', 'Gymnasium / Envs Vetorizados', 'C++ / Rust'],
-      githubUrl: 'https://github.com/byte-od/system_one',
-      metrics: [
-        { label: 'Latência', value: '0.23ms CPU P50' },
-        { label: 'Throughput', value: '>20.000 FPS' },
-        { label: 'Espaço de Estados', value: '232 Bilhões (D10)' },
-        { label: 'Acurácia D1-D4', value: '100.0% Ótimo' },
-      ],
-    },
-    {
-      id: 'cir-engine',
-      title: 'CIR-Engine & Cir-Jev',
-      badge: 'Arquitetura ML Central',
-      category: 'ml_ai',
-      specs: '503M Parâmetros · 16 Camadas · 1536 Dim · 12 Cabeças (4 KV)',
-      summary: 'Transformer causal autorregressivo proprietário de 503M parâmetros projetado, treinado e avaliado do zero em PyTorch sem wrappers de alto nível pré-fabricados.',
-      details: [
-        'Implementação de técnicas modernas de atenção e normalização, incluindo Rotary Position Embeddings (RoPE), RMSNorm e Scaled Dot-Product Attention (SDPA/FlashAttention).',
-        'Arquitetura de pipeline de treinamento distribuído via torchrun & PyTorch DistributedDataParallel (DDP) em clusters NVIDIA Tesla T4 e L4 com precisão mista (FP16/AMP).',
-        'Alcançou throughput de ~6.200 tokens/s e redução de 66% no tempo de época (de 180 min para 61 min).',
-        'Formulou gramática estrita canônica de comunicação ([OP:QUERY], [OP:SOLVE], [OP:RESULT] [VAL: ...]) com 98–100% de conformidade de formato e zero desvio antropomórfico.',
-        'Interceptor autônomo de uso de ferramentas em tempo de execução: emite chamadas estruturadas de sub-rotina ([OP:CALC]) acionando execução determinística em Python com retorno verificado em O(1) e 100% de precisão de cálculo.',
-        'SFT Prompt Loss Masking (labels = -100) prevenindo sobreajuste (overfitting) nos templates de raciocínio.',
-        'MLOps headless conectando VS Code, Git e Kaggle API para despachar jobs de treinamento autonomamente e validar inferência local via Apple Silicon Metal (MPS) com latência de ~0,19s.'
-      ],
-      techStack: ['PyTorch', 'DistributedDataParallel (DDP)', 'CUDA', 'RoPE', 'FlashAttention', 'Kaggle API', 'Apple Metal (MPS)'],
-      githubUrl: 'https://github.com/byte-od/cir-jev',
-      interactiveType: 'transformer_sim',
-      metrics: [
-        { label: 'Parâmetros', value: '503M' },
-        { label: 'Throughput DDP', value: '~6.200 t/s' },
-        { label: 'Redução de Época', value: '-66%' },
-        { label: 'Precisão Ferramentas', value: '100% O(1)' },
-      ],
-    },
-    {
-      id: 'mddd-cli',
-      title: 'mddd-cli (Spec-Driven Dev via Diagramas & Matrizes)',
-      badge: 'Ferramenta Dev & Pacote NPM',
-      category: 'developer_tooling',
-      specs: 'Spec-Driven Development · Diagramas & Matrizes Executáveis · Pacote NPM',
-      summary: 'Framework CLI de Spec-Driven Development (SDD) que utiliza diagramas arquiteturais e matrizes de decisão formais — ao invés de puro texto ambíguo — como a especificação executável para compilar sistemas em Clean Architecture.',
-      details: [
-        'Pioneiro em Spec-Driven Development (SDD): substitui especificações vagas e sujeitas a desvios em puro texto por diagramas com AST validável e matrizes de decisão determinísticas.',
-        'Compila topologias visuais de domínio e matrizes de decisão diretamente em entidades de Clean Architecture, casos de uso e contratos gRPC/TypeScript com 100% de cobertura de branches.',
-        'Publicado no npm para consumo global; assegura alinhamento rigoroso entre a especificação arquitetural e o código implementado.'
-      ],
-      techStack: ['TypeScript', 'Node.js', 'Mermaid.js', 'Parsing AST', 'Matrizes de Decisão', 'CLI', 'Clean Architecture'],
-      githubUrl: 'https://github.com/byte-od/mermaid-diagram-driven-development',
-      packageUrl: 'https://www.npmjs.com/package/mddd-cli',
-      interactiveType: 'mermaid_demo',
-      metrics: [
-        { label: 'Paradigma', value: 'Spec-Driven Dev' },
-        { label: 'Entrada Spec', value: 'Diagramas & Matrizes' },
-        { label: 'Saída Código', value: 'Clean Architecture' },
-      ],
-    },
-    {
-      id: 'mad-cli',
-      title: 'MAD-cli (Mermaid Auto-Doccing)',
-      badge: 'Documentação Viva & CLI de Arquitetura',
-      category: 'developer_tooling',
-      specs: 'Código-para-Mermaid Vivo · Parser de Tags MAD',
-      summary: 'Ferramenta CLI e automação que analisa tags de comentário especiais MAD (<!-- MAD:... -->, @mad) em bases de código e as transforma em diagramas de arquitetura Mermaid vivos e auto-atualizáveis diretamente na documentação Markdown.',
-      details: [
-        'Projetado para eliminar a obsolescência de documentação ao extrair diagramas Mermaid de sequência, classes e fluxogramas diretamente da AST e tags em Go, Dart, TypeScript e Python.',
-        'Verifica e sincroniza blocos <!-- MAD:SEQUENCE -->, <!-- MAD:FLOWCHART --> e <!-- MAD:ARCHITECTURE --> a cada commit ou execução de pipeline CI.',
-        'Forma um ciclo bidirecional contínuo de arquitetura com o mddd-cli: mddd-cli compila diagramas para código, enquanto MAD-cli extrai a realidade viva do código de volta para diagramas verificáveis.',
-        'Ferramenta open-source para visibilidade arquitetural transparente entre equipes de engenharia distribuídas.'
-      ],
-      techStack: ['Go', 'TypeScript', 'Parsing AST', 'Mermaid.js', 'Documentação Viva', 'Git Hooks', 'CLI'],
-      githubUrl: 'https://github.com/byte-od/mad',
-      metrics: [
-        { label: 'Motor de Sintaxe', value: 'Tags MAD' },
-        { label: 'Ciclo de Sincronia', value: 'Código-para-Diagrama' },
-      ],
-    },
-    {
-      id: 'flutter-scene-fork',
-      title: 'flutter_scene (Fork & Contribuições em Animações)',
-      badge: 'Computação Gráfica & Animações de Scenes',
-      category: 'mobile_graphics',
-      specs: 'Grafo de Cena 3D · Animações de Scenes · Shaders Customizados',
-      summary: 'Fork customizado do motor gráfico 3D do Flutter (flutter_scene) com contribuições focadas na esteira de animações de scenes, interpolação de keyframes, framebuffers de baixa latência e shaders em Metal/Vulkan.',
-      details: [
-        'Contribuições com foco no pipeline de animações de scenes, reprodução de keyframes e hierarquias de transformação 3D.',
-        'Engenharia de pipelines customizados de shaders e otimizações de buffer de memória para renderização de ativos 3D em tempo real.',
-        'Demonstra fluência profunda em renderização de baixo nível (C++, shaders) unificada de forma transparente a aplicações mobile de alto nível (Dart/Flutter).'
-      ],
-      techStack: ['Dart', 'C++', 'Flutter Scene fork', 'Metal/Vulkan', 'Shaders GLSL/MSL', 'Animações de Scenes'],
-      githubUrl: 'https://github.com/byte-od/flutter_scene',
-      interactiveType: 'graphics_demo',
-      metrics: [
-        { label: 'Alvo', value: '60-120 FPS' },
-        { label: 'Foco', value: 'Animações de Scenes' },
-        { label: 'Substrato', value: 'Metal / Vulkan' },
-      ],
-    },
-    {
-      id: 'gittrack',
-      title: 'GitTrack',
-      badge: 'Rastreamento Granular & Análise IA VIP',
-      category: 'developer_tooling',
-      specs: 'Rastreamento Detalhado de Commits · Token Privado · Análise IA (VIP)',
-      summary: 'Plataforma de rastreamento detalhado de commits para desenvolvedores, com suporte a token de acesso para repositórios privados e geração de análises aprofundadas de impacto e qualidade via IA no plano VIP.',
-      details: [
-        'Rastreamento minucioso do fluxo de commits e evolução arquitetural do desenvolvedor em tempo real.',
-        'Inclusão de token de acesso pessoal (PAT) para indexação segura de repositórios privados com mascaramento de dados sensíveis.',
-        'Plano VIP: Solicitação de análises detalhadas por Inteligência Artificial sobre a qualidade, impacto e coerência arquitetural dos commits.',
-        'Construído com núcleo em Go para processamento de alto rendimento de logs e índices em SQLite.'
-      ],
-      techStack: ['Go', 'APIs Git Plumbing', 'Tokens de Acesso Pessoal', 'Análise de Código por IA', 'SQLite', 'CLI'],
-      interactiveType: 'git_telemetry',
-      metrics: [
-        { label: 'Rastreamento', value: 'Commits Detalhados' },
-        { label: 'Repos Privados', value: 'Acesso via Token' },
-        { label: 'Análise de IA', value: 'Plano VIP' },
-        { label: 'Motor', value: 'Núcleo em Golang' },
-      ],
-    },
-    {
-      id: 'register-red',
-      title: 'Register-red',
-      badge: 'Gestão Financeira & Nuvem',
-      category: 'developer_tooling',
-      specs: 'Apple Numbers (.numbers) · Sincronia Google Drive · Daemon 24h no Mac · Feed de Ações em Tempo Real · FastAPI & React 19',
-      summary: 'Painel web moderno de gestão financeira e projeção orçamentária com integração bidirecional nativa para planilhas Apple Numbers (.numbers) no Google Drive, daemon autônomo 24h de polling de e-mails no Mac e HUD com feed de últimas ações em tempo real.',
-      details: [
-        'Leitura e mutação nativa de arquivos Apple Numbers (.numbers) com Python (numbers-parser) e exportação em Excel estilizado (.xlsx) via openpyxl.',
-        'Daemon autônomo 24h em segundo plano no macOS: consulta o Gmail a cada 20s via IMAP SSL, higieniza comprovantes bancários (Nubank), isola valores com precisão decimal exata e executa baixa automática com tolerância inteligente.',
-        'Central de Inteligência & HUD com feed de Últimas Ações: histórico em tempo real das movimentações financeiras com identificação de origem (Gmail 24h, IA Gemini, Manual), status de pagamento e atualização contínua.',
-        'Controle por voz e linguagem natural com Gemini: integração com Web Speech API para ditar gastos, dar baixa em contas e síntese de voz (TTS) para leitura de resumos financeiros.',
-        'Sincronização direta com Google Drive em nuvem para gravação atômica na planilha original e indexação contínua de diretórios.',
-        'Clonagem inteligente de próximos meses: replica despesas fixas recorrentes, reseta pendências, ajusta vencimentos e transfere economias remanescentes como saldo do mês anterior.',
-        'Acesso multi-dispositivo unificado: servidor local no Mac acessível pelo tablet e celular via rede Wi-Fi local (192.168.1.250:8000) ou remotamente via Tailscale.',
-        'Arquitetura full-stack combinando backend assíncrono em FastAPI e interface reativa moderna em React 19, TypeScript, Tailwind CSS e Vite.'
-      ],
-      techStack: ['Python 3.11', 'FastAPI', 'numbers-parser', 'Google Drive API', 'Daemon IMAP / Gmail', 'IA Gemini', 'React 19', 'TypeScript', 'Tailwind CSS'],
-      githubUrl: 'https://github.com/byte-od/Register-red',
-      metrics: [
-        { label: 'Pipeline Sync', value: 'Google Drive' },
-        { label: 'Daemon 24h', value: 'Gmail Polling 20s' },
-        { label: 'HUD Feed', value: 'Tempo Real' },
-        { label: 'IA & Voz', value: 'Ações Gemini' },
-        { label: 'Formato', value: '.numbers Nativo' },
-      ],
-    },
-  ];
-}
-
-export const EXPERIENCES: ExperienceData[] = [
-  {
-    company: 'Asapp Desenvolvimento',
-    role: 'Principal Architect & Founder',
-    period: '2026 – Present',
-    location: 'Remote',
-    type: 'Full-time / Leadership',
-    highlights: [
-      'Spearhead software architecture and technology strategy, delivering microservices, cloud-native platforms, and high-performance cross-platform applications using Go, Next.js, and Flutter.',
-      'Architected Appfy, a modular micro-apps platform and marketplace leveraging distributed services on Google Cloud Platform (GCP).',
-      'Created and maintain open-source developer tooling, including mddd-cli (Mermaid Diagram Driven Development CLI) on npm.',
-      'Integrate multi-agent AI development workflows (Cursor, Cline, Roo Code, LiteLLM) to accelerate code generation, automated review, and testing pipelines.'
-    ],
-    technologies: ['Go (Golang)', 'Next.js', 'Flutter', 'Google Cloud Platform (GCP)', 'mddd-cli', 'Multi-Agent LLMs'],
-  },
-  {
-    company: 'Opah IT',
-    role: 'Senior Software Engineer / Mobile Specialist',
-    period: '2026 – Present',
-    location: 'Remote',
-    type: 'Consulting',
-    highlights: [
-      'Consult and engineer mission-critical, high-performance Flutter/Android solutions for enterprise clients.',
-      'Enforce robust architecture design patterns, code quality standards, and CI/CD best practices across distributed engineering teams.',
-      'Grant security of 3rd-party libraries for mobile applications with Dex-guard, Obfuscation, and Encryption.'
-    ],
-    technologies: ['Flutter', 'Android', 'Clean Architecture', 'CI/CD', 'Dex-guard', 'Security Hardening'],
-  },
-  {
-    company: 'Arlequim Technologies',
-    role: 'Flutter Specialist & Multiplatform Lead',
-    period: '07/2025 – Present',
-    location: 'Remote',
-    type: 'Full-time',
-    highlights: [
-      'Technical leadership in the development of multiplatform solutions, integrating high-performance Flutter front-ends.',
-      'Implementation of Technical SEO and AEO (Answer Engine Optimization) strategies to optimize content discoverability by search engines and AI-based answer engines.',
-      'Migration of state management and dependency injection systems, resulting in increased stability and reduced technical debt.',
-      'Configuration of CI/CD pipelines focusing on automated testing (Golden Image) to ensure visual integrity at scale.'
-    ],
-    technologies: ['Flutter', 'Technical SEO', 'AEO', 'Golden Image Tests', 'CI/CD Pipelines', 'GCP'],
-  },
-  {
-    company: 'Asapp Desenvolvimento (Consulting Era)',
-    role: 'Founder / Lead Developer',
-    period: '10/2023 – 03/2024',
-    location: 'Remote',
-    type: 'Leadership',
-    highlights: [
-      'Founded and led a consultancy focused on high-complexity Desktop, Mobile, and Web applications.',
-      'Developed web applications with a focus on hybrid rendering, ensuring maximum performance and superior indexing for corporate clients.',
-      'Led the refactoring of MVP to V2 for strategic projects, resulting in an App Store rating increase from 4.2 to 4.87.'
-    ],
-    technologies: ['Next.js', 'Flutter', 'Hybrid Rendering', 'SSR/ISR', 'Core Web Vitals'],
-  },
-  {
-    company: 'Grupo Data',
-    role: 'Flutter Architect & Technical Lead',
-    period: '11/2021 – 10/2022',
-    location: 'Remote',
-    type: 'Contract',
-    highlights: [
-      'Responsible for the maintenance and evolution of the "Tim Beta" mobile application, serving over 1 million active users.',
-      'Orchestrated the complete refactoring of the mobile application to align with the critical enterprise backend migration from .NET to Java.'
-    ],
-    technologies: ['Flutter', '1M+ Active Users', 'Java', '.NET Migration', 'Clean Architecture'],
-  },
-  {
-    company: 'Grupo GFT',
-    role: 'Mobile Developer & Tech Lead',
-    period: '07/2020 – 11/2021',
-    location: 'Remote',
-    type: 'Full-time',
-    highlights: [
-      'Development of critical features for tier-1 financial institutions (Banco Original and Banco Votorantim) using Java, Kotlin, and Flutter.',
-      'Pioneered the implementation of custom native keyboard SDKs with IPC communication for secure Flutter financial applications.'
-    ],
-    technologies: ['Flutter', 'Kotlin', 'Java', 'Banking FinTech', 'IPC Native Keyboards'],
-  },
-  {
-    company: 'DevMaker Mobile Apps',
-    role: 'Mobile Developer',
-    period: '04/2019 – 07/2020',
-    location: 'Remote',
-    type: 'Full-time',
-    highlights: [
-      'Android (Java/Kotlin), iOS (Swift), and React Native engineering.',
-      'Acted as the company’s first React Native developer, leading new client projects and training internal engineering teams.'
-    ],
-    technologies: ['React Native', 'Swift', 'Kotlin', 'iOS', 'Android'],
-  },
-];
-
-export function getExperiences(lang: 'en' | 'pt' = 'en'): ExperienceData[] {
-  if (lang !== 'pt') return EXPERIENCES;
-
-  return [
-    {
-      company: 'Asapp Desenvolvimento',
-      role: 'Arquiteto Principal & Fundador',
-      period: '2026 – Presente',
-      location: 'Remoto',
-      type: 'Tempo Integral / Liderança',
-      highlights: [
-        'Liderança técnica em arquitetura de software e estratégia tecnológica, entregando microsserviços, plataformas nativas em nuvem e aplicações multiplataforma de alta performance com Go, Next.js e Flutter.',
-        'Arquitetou a Appfy, uma plataforma e marketplace modular de micro-apps aproveitando serviços distribuídos no Google Cloud Platform (GCP).',
-        'Criou e mantém ferramentas open-source para desenvolvedores, incluindo o mddd-cli (CLI de desenvolvimento dirigido a diagramas Mermaid) no npm.',
-        'Integração de fluxos de trabalho com IA multi-agente (Cursor, Cline, Roo Code, LiteLLM) acelerando pipelines de geração de código, testes e revisão automatizada.'
-      ],
-      technologies: ['Go (Golang)', 'Next.js', 'Flutter', 'Google Cloud Platform (GCP)', 'mddd-cli', 'LLMs Multi-Agente'],
-    },
-    {
-      company: 'Opah IT',
-      role: 'Engenheiro de Software Sênior / Especialista Mobile',
-      period: '2026 – Presente',
-      location: 'Remoto',
-      type: 'Consultoria',
-      highlights: [
-        'Consultoria e engenharia de soluções críticas de alta performance em Flutter/Android para clientes corporativos de grande porte.',
-        'Aplicação de padrões rigorosos de Clean Architecture, diretrizes de qualidade de código e melhores práticas de CI/CD entre equipes distribuídas.',
-        'Garantia de segurança de bibliotecas de terceiros para aplicações mobile com Dex-guard, ofuscação avançada e criptografia de ponta a ponta.'
-      ],
-      technologies: ['Flutter', 'Android', 'Clean Architecture', 'CI/CD', 'Dex-guard', 'Blindagem de Segurança'],
-    },
-    {
-      company: 'Arlequim Technologies',
-      role: 'Especialista Flutter & Líder Multiplataforma',
-      period: '07/2025 – Presente',
-      location: 'Remoto',
-      type: 'Tempo Integral',
-      highlights: [
-        'Liderança técnica no desenvolvimento de soluções multiplataforma com front-ends Flutter de alto rendimento.',
-        'Implementação de estratégias de SEO Técnico e AEO (Answer Engine Optimization) para otimização de descoberta de conteúdo por buscadores e motores de resposta de IA.',
-        'Migração de arquiteturas de gerenciamento de estado e injeção de dependência, aumentando estabilidade e eliminando débitos técnicos críticos.',
-        'Configuração de pipelines de CI/CD focados em testes automatizados de Golden Image para assegurar integridade visual em escala.'
-      ],
-      technologies: ['Flutter', 'SEO Técnico', 'AEO', 'Testes Golden Image', 'Pipelines CI/CD', 'GCP'],
-    },
-    {
-      company: 'Asapp Desenvolvimento (Fase de Consultoria)',
-      role: 'Fundador / Desenvolvedor Líder',
-      period: '10/2023 – 03/2024',
-      location: 'Remoto',
-      type: 'Liderança',
-      highlights: [
-        'Fundação e liderança de consultoria focada em aplicações corporativas de alta complexidade para Desktop, Mobile e Web.',
-        'Desenvolvimento de aplicações web com foco em renderização híbrida, garantindo máxima performance e indexação superior para clientes corporativos.',
-        'Liderança na refatoração de MVP para V2 em projetos estratégicos, elevando a avaliação na App Store de 4.2 para 4.87.'
-      ],
-      technologies: ['Next.js', 'Flutter', 'Renderização Híbrida', 'SSR/ISR', 'Core Web Vitals'],
-    },
-    {
-      company: 'Grupo Data',
-      role: 'Arquiteto Flutter & Líder Técnico',
-      period: '11/2021 – 10/2022',
-      location: 'Remoto',
-      type: 'Contrato',
-      highlights: [
-        'Responsável pela manutenção e evolução da aplicação móvel "Tim Beta", atendendo mais de 1 milhão de usuários ativos.',
-        'Orquestrou a refatoração completa da aplicação mobile para alinhamento com a migração crítica do backend corporativo de .NET para Java.'
-      ],
-      technologies: ['Flutter', '1M+ Usuários Ativos', 'Java', 'Migração .NET', 'Clean Architecture'],
-    },
-    {
-      company: 'Grupo GFT',
-      role: 'Desenvolvedor Mobile & Líder Técnico',
-      period: '07/2020 – 11/2021',
-      location: 'Remoto',
-      type: 'Tempo Integral',
-      highlights: [
-        'Desenvolvimento de funcionalidades críticas para instituições financeiras tier-1 (Banco Original e Banco Votorantim) usando Java, Kotlin e Flutter.',
-        'Pioneirismo na implementação de SDKs nativos customizados de teclado com comunicação IPC segura para aplicações bancárias em Flutter.'
-      ],
-      technologies: ['Flutter', 'Kotlin', 'Java', 'FinTech Bancária', 'Teclados Nativos IPC'],
-    },
-    {
-      company: 'DevMaker Mobile Apps',
-      role: 'Desenvolvedor Mobile',
-      period: '04/2019 – 07/2020',
-      location: 'Remoto',
-      type: 'Tempo Integral',
-      highlights: [
-        'Engenharia mobile em Android (Java/Kotlin), iOS (Swift) e React Native.',
-        'Atuou como o primeiro desenvolvedor React Native da empresa, liderando novos projetos de clientes e capacitando as equipes internas.'
-      ],
-      technologies: ['React Native', 'Swift', 'Kotlin', 'iOS', 'Android'],
-    },
-  ];
-}
-
-export const SKILL_CATEGORIES: SkillCategory[] = [
-  {
-    title: 'Machine Learning & AI',
-    skills: [
-      { name: 'Causal LLMs & Transformers', level: 'Core Architect', highlight: true },
-      { name: 'PyTorch & torchrun (DDP)', level: 'Cluster Scale', highlight: true },
-      { name: 'CUDA & Apple Metal (MPS)', level: 'Acceleration', highlight: true },
-      { name: 'Rotary Position Embeddings (RoPE)', level: 'Positional Logic', highlight: true },
-      { name: 'RMSNorm & SDPA / FlashAttention', level: 'Kernel Opt', highlight: true },
-      { name: 'DistributedDataParallel (DDP)', level: 'Multi-GPU Cluster', highlight: true },
-      { name: 'Grouped-Query Attention (GQA)', level: 'Memory Efficient', highlight: true },
-      { name: 'Byte-Level BPE Tokenization', level: 'Custom Tokenizer', highlight: true },
-      { name: 'SFT Prompt Loss Masking', level: 'Fine-Tuning', highlight: true },
-      { name: 'Autonomous Tool-Use Interception', level: 'Agentic Tooling', highlight: true },
-      { name: 'Kaggle API Automation', level: 'MLOps Pipelines', highlight: true },
-    ],
-  },
-  {
-    title: 'Software Architecture & Systems',
-    skills: [
-      { name: 'Distributed Microservices', level: 'Enterprise Go', highlight: true },
-      { name: 'Clean Architecture & SOLID', level: 'Domain Driven', highlight: true },
-      { name: 'Multi-Agent AI Pipelines', level: 'Agentic Workflows', highlight: true },
-      { name: 'Spec-Driven Dev (mddd-cli)', level: 'Author & Maintainer', highlight: true },
-      { name: 'Micro-apps Architecture', level: 'Modular Scale', highlight: true },
-      { name: 'CI/CD & Golden Image Testing', level: 'Automated QA', highlight: true },
-      { name: 'Technical SEO & AEO (Answer Engine)', level: 'AI Search Opt', highlight: true },
-    ],
-  },
-  {
-    title: 'Languages & Core Tech',
-    skills: [
-      { name: 'Python (PyTorch / Data Science)', level: 'Senior ML', highlight: true },
-      { name: 'Go (Golang)', level: 'Principal Services', highlight: true },
-      { name: 'Dart / Flutter (Mobile, Desktop, Web)', level: 'Lead / 8+ Years', highlight: true },
-      { name: 'TypeScript / JavaScript', level: 'Full-Stack Modern', highlight: true },
-      { name: 'Next.js (App Router, SSR, ISR)', level: 'Web Architect', highlight: true },
-      { name: 'Java & Kotlin', level: 'Android & Enterprise', highlight: true },
-      { name: 'Swift (iOS Native)', level: 'iOS Native', highlight: true },
-      { name: 'SQL & PostgreSQL', level: 'Relational Scale', highlight: true },
-      { name: 'Firestore / Redis / MongoDB', level: 'Distributed Caching', highlight: true },
-      { name: 'C++ & Metal/Vulkan Shaders', level: 'Low-Level Graphics', highlight: true },
-    ],
-  },
-  {
-    title: 'Education & Honors',
-    skills: [
-      { name: 'B.Sc. in Data Science', level: 'Higher Education', highlight: true },
-      { name: 'Postgraduate: Machine Learning & Deep Learning', level: 'Specialization', highlight: true },
-      { name: 'EF SET English Certificate C2 Proficient (75/100)', level: 'CEFR C2 Native Equiv', highlight: true },
-      { name: 'Go Programming: The Complete Bootcamp', level: 'Certified', highlight: true },
-      { name: 'Next.js Specialist (SSR, ISR, Core Web Vitals)', level: 'Certified Specialist', highlight: true },
-    ],
-  },
-];
-
-export function getSkillCategories(lang: 'en' | 'pt' = 'en'): SkillCategory[] {
-  if (lang !== 'pt') return SKILL_CATEGORIES;
-
-  return [
-    {
-      title: 'Machine Learning & IA',
-      skills: [
-        { name: 'LLMs Causais & Transformers', level: 'Arquiteto Central', highlight: true },
-        { name: 'PyTorch & torchrun (DDP)', level: 'Escala em Cluster', highlight: true },
-        { name: 'CUDA & Apple Metal (MPS)', level: 'Aceleração de Hardware', highlight: true },
-        { name: 'Rotary Position Embeddings (RoPE)', level: 'Lógica Posicional', highlight: true },
-        { name: 'RMSNorm & SDPA / FlashAttention', level: 'Otimização de Kernel', highlight: true },
-        { name: 'DistributedDataParallel (DDP)', level: 'Cluster Multi-GPU', highlight: true },
-        { name: 'Grouped-Query Attention (GQA)', level: 'Eficiência de Memória', highlight: true },
-        { name: 'Tokenização BPE em Nível de Byte', level: 'Tokenizador Próprio', highlight: true },
-        { name: 'SFT Prompt Loss Masking', level: 'Ajuste Fino (SFT)', highlight: true },
-        { name: 'Interceptação Autônoma de Ferramentas', level: 'Tooling Agêntico', highlight: true },
-        { name: 'Automação Kaggle API', level: 'Pipelines MLOps', highlight: true },
-      ],
-    },
-    {
-      title: 'Arquitetura de Software & Sistemas',
-      skills: [
-        { name: 'Microsserviços Distribuídos', level: 'Go Corporativo', highlight: true },
-        { name: 'Clean Architecture & SOLID', level: 'Orientado a Domínio', highlight: true },
-        { name: 'Pipelines de IA Multi-Agente', level: 'Workflows Agênticos', highlight: true },
-        { name: 'Spec-Driven Dev (mddd-cli)', level: 'Autor & Mantenedor', highlight: true },
-        { name: 'Arquitetura de Micro-aplicações', level: 'Escala Modular', highlight: true },
-        { name: 'CI/CD & Testes Golden Image', level: 'QA Automatizado', highlight: true },
-        { name: 'SEO Técnico & AEO (Answer Engine)', level: 'Otimização p/ IA', highlight: true },
-      ],
-    },
-    {
-      title: 'Linguagens & Tecnologias Centrais',
-      skills: [
-        { name: 'Python (PyTorch / Ciência de Dados)', level: 'ML Sênior', highlight: true },
-        { name: 'Go (Golang)', level: 'Serviços Principais', highlight: true },
-        { name: 'Dart / Flutter (Mobile, Desktop, Web)', level: 'Líder / 8+ Anos', highlight: true },
-        { name: 'TypeScript / JavaScript', level: 'Full-Stack Moderno', highlight: true },
-        { name: 'Next.js (App Router, SSR, ISR)', level: 'Arquiteto Web', highlight: true },
-        { name: 'Java & Kotlin', level: 'Android & Corporativo', highlight: true },
-        { name: 'Swift (iOS Nativo)', level: 'iOS Nativo', highlight: true },
-        { name: 'SQL & PostgreSQL', level: 'Escala Relacional', highlight: true },
-        { name: 'Firestore / Redis / MongoDB', level: 'Cache Distribuído', highlight: true },
-        { name: 'C++ & Shaders Metal/Vulkan', level: 'Gráficos Baixo Nível', highlight: true },
-      ],
-    },
-    {
-      title: 'Formação & Certificações',
-      skills: [
-        { name: 'Bacharelado em Ciência de Dados', level: 'Ensino Superior', highlight: true },
-        { name: 'Pós-Graduação: Machine Learning & Deep Learning', level: 'Especialização', highlight: true },
-        { name: 'Certificado de Inglês EF SET C2 Proficiente (75/100)', level: 'Equivalente Nativo', highlight: true },
-        { name: 'Programação Go: Bootcamp Completo', level: 'Certificado', highlight: true },
-        { name: 'Especialista Next.js (SSR, ISR, Core Web Vitals)', level: 'Especialista Certificado', highlight: true },
-      ],
-    },
-  ];
+  return lang === 'pt' ? PROJECTS_PT : PROJECTS_EN;
 }

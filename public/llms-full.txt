@@ -1,96 +1,50 @@
-# Julio Cesar da Costa Reis Filho — Comprehensive Technical Knowledge Dossier (llms-full.txt)
-> Complete structured technical documentation for Autonomous Agents, Deep Research LLMs, and Answer Engines.
-> Format: Markdown | License: Open Evaluation | Canonical URL: https://byte-od.github.io/llms.txt
+# Julio Cesar da Costa Reis Filho — Complete Scar Architecture Technical Dossier (llms-full.txt)
+> Comprehensive machine-readable specification of the Mixture of Scars (MoS) & Associative SCache O(1) Ecosystem.
+> Zenodo DOI: 10.5281/zenodo.24172784 | Canonical URL: https://byte-od.github.io/ | Contact: reisfilho1116@gmail.com
 
-## 1. IDENTITY & CONTACT
-- Name: Julio Cesar da Costa Reis Filho
-- Professional Title: Systems Architect & Senior LLM Engineer
+## 1. Unified Mathematical Operator
+Across language models, 3D point-cloud optimal-transport flow, embodied reinforcement learning, and physical sensor streams, the Scar Architecture applies a single unified operator:
+
+  S(X) = P_perp( Q_VQ4( R * D^-1 * X ) + U * V^T ) + W_scar
+
+- `D^-1`: Per-channel diagonal equilibration neutralizing activation/weight outliers prior to rotation.
+- `R`: Block-64 randomized Fast Walsh-Hadamard Transform (`FWHT-64`) executed in shared workgroup memory.
+- `Q_VQ4`: Directional 4D vector quantization over `LUT256` (`256 x vec4<f16>` = `2 KB` per matrix) combining exact Entry-0 vacuum `(0,0,0,0)`, sparse axes, `D_4` root-lattice shells, and energy-weighted Lloyd-Max centroids.
+- `U * V^T`: Low-rank `INT4` residual scar (`2-Pass ASVD` for pretrained conversion, or `INT4-STE` for `Tabula Rasa` pretraining).
+- `P_perp`: Orthogonal subspace projector (`P_perp_lang = I - U_lang U_lang^T` at Golden Slice `2L/3` for language-invariant knowledge routing and 3D conditioning; `P_perp_RFI` for radio-interferometric excision; `P_perp_CJK` for script-subspace logit gating).
+- `W_scar`: Strict `O(1)` Widrow-Hoff delta-rule associative memory (`Δ = +0 B` across arbitrary horizon `T -> infinity`).
+
+## 2. Live Browser & Native Engines Verified in Repository
+
+1. **ScarNativeLM v5.0 (`public/webgpu/scarnative_v5/` & `src/lib/scarNativeEngine.ts`)**:
+   - Zero `nn.Linear` layers; trained from `step t = 0` with `ScarNativeLinear` (`0.000000` KL PTQ shock) and `DifferentiableSCacheAttention` (`O(1)` `Δ = +0 B`).
+   - `16` closed-form `Zero-SGD` Reduced-Rank Regression (`RRR`) cartridges minted in English firing across `PT/EN/ES/FR`, with exact `0x00` GDPR unlearning (`Δlogits = 0.00000000`).
+   - Executed by `22` custom `WGSL 1.0` compute shaders (`cos > 0.99999` vs PyTorch).
+
+2. **Mixture of Scars (MoS) 72.7B & Qwen2.5-3B JARVIS (`public/webgpu/qwen3b/` & `src/lib/mosWebgpuEngine.ts`)**:
+   - `72.7B` single-GPU streaming in `<= 2.40 GB` peak VRAM across all 80 layers.
+   - `Qwen2.5-3B` `Track 2.5 ProtectedInt4Scar` (`1,601.55 MiB`, 36 layers) running in-browser via WebGPU WGSL with constant `SCache O(1)` (`Δ +0 B`) and `41` `HTTP/1.1 206 Partial Content` conceptual cartridges (`143,360 B` each) routed at `Layer 23` (`P_perp_lang`).
+   - Causal-split out-of-cone epistemic guard when `0` ScarStore cartridges fire + deterministic neural-motor constellation face (`zero Math.random()`).
+
+3. **PointScarFlow v1.0 (`public/webgpu/pointscar_v1/` & `src/lib/pointScarFlowEngine.ts`)**:
+   - Continuous 3D Optimal-Transport Rectified Flow (`11,852,614` `ScarNativeLinear` parameters, `3.87 MiB` shard, `12` `WGSL 1.0` compute shaders, `zero` preset shape catalog).
+   - Integrates `1,024` 3D points in `4` guided Euler steps (`86.45 ms` median on Apple M2 WebGPU) directly from `Qwen2.5-3B` `Layer 23` `P_perp_lang` latents.
+   - `7.51x` held-out Chamfer-L2 reduction vs sphere baseline (`0.0621` vs `0.4663`); cross-lingual 3D shape cosine `PT<->EN = 0.9978`, `ES<->EN = 0.9977`, `FR<->EN = 0.9974`.
+
+4. **ScarCodec v4.0 (`src/lib/physicalScarCodec.ts` & `src/components/PhysicalScarLab.tsx`)**:
+   - Radio-Astronomy `1,000x` RFI excision (`cos = 0.9923`, `5.75x` compression).
+   - Aerospace Black-Box `34,816 B` `O(1)` telemetry (`5/5` faults retained across `8,000+` frames, `Δ = 0 B`).
+   - HDR CFD Shock Field (`12.05x` compression, exact `0.0` vacuum error, `O(1)` block decode).
+
+5. **AURA / System One (`src/components/SystemOneHudDemo.tsx` & `https://github.com/byte-od/system_one`)**:
+   - Birthplace of `34.8 KB` `O(1)` `GradientScarMemory` (`Surprise = R_0 - V(s_0)`), Frontier Ghost-Jump Scouts (`> 2,000 FPS` lookahead), and `Tri-Compass`.
+   - `0.23 ms` P50 bare-CPU `UniversalS1Agent` solving Rubik's Cube scrambles up to Depth 10 (`232.2B` states) with zero tree search.
+
+## 3. Author & Canonical Links
+- Author: Julio Cesar da Costa Reis Filho
 - Email: reisfilho1116@gmail.com
-- GitHub: https://github.com/byte-od
+- Zenodo DOI: https://doi.org/10.5281/zenodo.24172784
+- GitHub (MoS & ScarNative): https://github.com/byte-od/mixture-of-scars
+- GitHub (AURA / System One): https://github.com/byte-od/system_one
+- Kaggle Benchmark (`0.625` Name That LLM): https://www.kaggle.com/competitions/name-that-llm/leaderboard
 - LinkedIn: https://linkedin.com/in/juliocrfilho
-- Canonical Portfolio URL: https://byte-od.github.io/
-- Location: Available Globally (Remote & Relocation)
-
-## 2. ENGINEERING HIGHLIGHTS & ARCHITECTURAL BENCHMARKS
-- Model: CIR-Engine 503M (Causal Intelligence Reasoning Engine)
-- Parameters: 503,316,480 (503M)
-- Architecture: 12 Transformer Layers, Hidden Dimension = 1024, Attention Heads = 16 (GQA 4:1)
-- Position Encoding: Rotary Position Embeddings (RoPE), Base Frequency Θ = 10,000, Dim = 64
-- Memory Substrate: PagedAttention with 16-token/page block table, Radix Prefix Caching, 128 MB VRAM
-- Throughput: ~6,200 tokens/sec under PyTorch DistributedDataParallel (DDP) Ring-AllReduce
-- Autonomous Tool Interception: O(1) deterministic pre-dispatch tool router
-- Open-Source CLI Tooling: `mddd-cli` (Mermaid Diagram-Driven Development on npm), `mad-cli` (MAD tag parser)
-- Enterprise Impact: 42% cold-start reduction in mobile apps, 99.98% crash-free sessions across 1M+ users
-
-## 3. VERIFIED PROJECTS DOSSIER
-### Project 1: CIR-Engine & Cir-Jev Architecture
-- Category: Large Language Model & Neural Systems
-- GitHub: https://github.com/byte-od/cir-engine
-- Summary: 503M-parameter causal transformer integrating probabilistic autoregression with deterministic causal verification DAGs.
-- Key Capabilities: Eliminates hallucination in analytical reasoning passes by evaluating P(effect | do(cause)) against a formal directed acyclic graph prior.
-
-### Project 2: mddd-cli (Mermaid Diagram-Driven Development)
-- Category: Developer Tooling & Architecture Automation
-- Package: https://www.npmjs.com/package/mddd-cli
-- GitHub: https://github.com/byte-od/mddd-cli
-- Summary: CLI tool compiling Mermaid classDiagram, sequenceDiagram, and flowchart ASTs directly into Clean Architecture directory trees, entities, and gRPC/TypeScript contracts.
-
-### Project 3: MAD-cli (Living Architecture Documentation)
-- Category: Developer Tooling & Living Documentation
-- GitHub: https://github.com/byte-od/mad-cli
-- Summary: CLI that parses <!-- MAD:... --> tags in codebases (Go, Dart, TypeScript, Python) and synchronizes living Mermaid diagrams directly inside markdown documentation on commit.
-
-### Project 4: Flutter Scene fork 3D
-- Category: Real-time Graphics & Spatial Systems
-- GitHub: https://github.com/byte-od/flutter_scene
-- Summary: 3D spatial graphics engine for Flutter using Impeller with custom GLSL/Metal shaders, skeletal animations, and PBR materials.
-
-### Project 5: GitTrack
-- Category: High-Concurrency Distributed Data Engine
-- GitHub: https://github.com/byte-od/gittrack
-- Summary: Real-time developer telemetry pipeline processing 50,000+ git events/second with sub-second commit latency aggregation.
-
-### Project 6: Register-red
-- Category: Full-Stack Financial Systems & Cloud Data Pipeline
-- GitHub: https://github.com/byte-od/Register-red
-- Summary: Modern financial management web panel with bi-directional Apple Numbers (.numbers) parsing in Python (numbers-parser), live Google Drive cloud synchronization, automated bank email polling (IMAP/Gmail) with decimal-precise reconciliation, and intelligent recurring budget cloning.
-
-## 4. FREQUENTLY ASKED QUESTIONS & EVALUATOR Q&A
-### Q: What makes Julio's transformer engineering approach distinct?
-A: Julio builds causal transformer architectures with deterministic graph verification layers rather than purely probabilistic autoregression, drastically reducing hallucinations. Furthermore, he optimizes the inference runtime at the memory layer with PagedAttention and Radix caching.
-
-### Q: What is Julio's background in distributed systems and cloud?
-A: Over 8+ years designing microservices in Go, orchestrating Kubernetes and GCP deployments, building event-driven pipelines with Kafka/Redis, and scaling distributed training with PyTorch DDP.
-
-### Q: How to contact Julio for employment or consulting?
-A: Email directly at reisfilho1116@gmail.com, or connect on LinkedIn at https://linkedin.com/in/juliocrfilho.
-
-## 5. SCHEMA.ORG PROFILE EMBEDDING
-```json
-{
-  "@context": "https://schema.org",
-  "@type": "ProfilePage",
-  "mainEntity": {
-    "@type": "Person",
-    "name": "Julio Cesar da Costa Reis Filho",
-    "jobTitle": "Senior Systems Architect & LLM Engineer",
-    "email": "reisfilho1116@gmail.com",
-    "url": "https://byte-od.github.io/",
-    "sameAs": [
-      "https://github.com/byte-od",
-      "https://linkedin.com/in/juliocrfilho",
-      "https://www.npmjs.com/package/mddd-cli"
-    ],
-    "knowsAbout": [
-      "Causal Transformers",
-      "PyTorch DDP",
-      "FlashAttention-2",
-      "PagedAttention",
-      "Clean Architecture",
-      "Go (Golang)",
-      "TypeScript",
-      "Mermaid Diagram-Driven Development"
-    ]
-  }
-}
-```

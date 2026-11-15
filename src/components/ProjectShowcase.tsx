@@ -3,11 +3,12 @@ import { ProjectData, getProjects } from '../data/portfolio-data';
 import {
   ExternalLink,
   Github,
-  Package,
+  FileText,
   Check,
   Copy,
   PlayCircle,
   Sparkles,
+  FlaskConical,
 } from 'lucide-react';
 
 interface ProjectShowcaseProps {
@@ -15,13 +16,17 @@ interface ProjectShowcaseProps {
 }
 
 export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' }) => {
-  const [filter, setFilter] = useState<'all' | 'ml_ai' | 'developer_tooling' | 'mobile_graphics'>('all');
+  const [filter, setFilter] = useState<'all' | 'foundation_llm' | 'spatial_physical' | 'embodied_origin'>('all');
   const [activeProjectModal, setActiveProjectModal] = useState<ProjectData | null>(null);
   const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
 
   const projects = getProjects(lang);
   const filteredProjects = projects.filter((p) => filter === 'all' || p.category === filter);
-  const activeProject = activeProjectModal ? (projects.find((p) => p.id === activeProjectModal.id) ?? activeProjectModal) : null;
+  const activeProject = activeProjectModal
+    ? projects.find((p) => p.id === activeProjectModal.id) ?? activeProjectModal
+    : null;
+
+  const cloneCmd = 'git clone https://github.com/byte-od/mixture-of-scars.git';
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -31,9 +36,9 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
 
   return (
     <div className="space-y-8">
-      {/* Filter Tabs (Interactive buttons with click handlers) */}
+      {/* Filter Tabs & Canonical Clone Command */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-1 p-1 bg-zinc-900 border border-zinc-800 rounded-lg">
+        <div className="flex flex-wrap items-center gap-1 p-1 bg-zinc-900 border border-zinc-800 rounded-lg">
           <button
             type="button"
             onClick={() => setFilter('all')}
@@ -41,53 +46,56 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
               filter === 'all' ? 'bg-zinc-800 text-white shadow-xs' : 'text-zinc-400 hover:text-white'
             }`}
           >
-            {lang === 'pt' ? 'Todos os Projetos' : 'All Systems'} ({projects.length})
+            {lang === 'pt' ? 'Todo o Ecossistema Scar' : 'All Scar Systems'} ({projects.length})
           </button>
           <button
             type="button"
-            onClick={() => setFilter('ml_ai')}
+            onClick={() => setFilter('foundation_llm')}
             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              filter === 'ml_ai' ? 'bg-zinc-800 text-[#adff2f] shadow-xs' : 'text-zinc-400 hover:text-white'
+              filter === 'foundation_llm' ? 'bg-zinc-800 text-[#adff2f] shadow-xs' : 'text-zinc-400 hover:text-white'
             }`}
           >
-            {lang === 'pt' ? 'ML & LLMs' : 'ML & LLMs'}
+            {lang === 'pt' ? 'Motores LLM & SCache' : 'Foundation & LLM'}
           </button>
           <button
             type="button"
-            onClick={() => setFilter('developer_tooling')}
+            onClick={() => setFilter('spatial_physical')}
             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              filter === 'developer_tooling' ? 'bg-zinc-800 text-[#38bdf8] shadow-xs' : 'text-zinc-400 hover:text-white'
+              filter === 'spatial_physical' ? 'bg-zinc-800 text-[#38bdf8] shadow-xs' : 'text-zinc-400 hover:text-white'
             }`}
           >
-            {lang === 'pt' ? 'Ferramentas Dev & CLIs' : 'Developer Tooling & CLIs'}
+            {lang === 'pt' ? 'Fluxo 3D & ScarCodec Físico' : '3D Flow & Physical Codec'}
           </button>
           <button
             type="button"
-            onClick={() => setFilter('mobile_graphics')}
+            onClick={() => setFilter('embodied_origin')}
             className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors cursor-pointer ${
-              filter === 'mobile_graphics' ? 'bg-zinc-800 text-[#c4b5fd] shadow-xs' : 'text-zinc-400 hover:text-white'
+              filter === 'embodied_origin' ? 'bg-zinc-800 text-[#c4b5fd] shadow-xs' : 'text-zinc-400 hover:text-white'
             }`}
           >
-            {lang === 'pt' ? 'Gráficos & Mobile' : 'Graphics & Mobile'}
+            {lang === 'pt' ? 'Berço RL (AURA 34.8 KB)' : 'RL Origin (AURA 34.8 KB)'}
           </button>
         </div>
 
-        {/* NPM command snippet quick copy */}
         <div className="flex items-center gap-2 text-xs font-mono bg-zinc-900/80 border border-zinc-800 px-3 py-1.5 rounded-lg text-zinc-300">
           <span className="text-zinc-500">$</span>
-          <span>npx mddd-cli --init</span>
+          <span className="truncate max-w-[260px] sm:max-w-none">{cloneCmd}</span>
           <button
             type="button"
-            onClick={() => copyToClipboard('npx mddd-cli --init')}
-            className="text-zinc-400 hover:text-[#adff2f] transition-colors ml-1 cursor-pointer"
-            title={lang === 'pt' ? 'Copiar comando' : 'Copy command'}
+            onClick={() => copyToClipboard(cloneCmd)}
+            className="text-zinc-400 hover:text-[#adff2f] transition-colors ml-1 cursor-pointer shrink-0"
+            title={lang === 'pt' ? 'Copiar comando git clone' : 'Copy git clone command'}
           >
-            {copiedCmd === 'npx mddd-cli --init' ? <Check className="w-3.5 h-3.5 text-[#adff2f]" /> : <Copy className="w-3.5 h-3.5" />}
+            {copiedCmd === cloneCmd ? (
+              <Check className="w-3.5 h-3.5 text-[#adff2f]" />
+            ) : (
+              <Copy className="w-3.5 h-3.5" />
+            )}
           </button>
         </div>
       </div>
 
-      {/* Projects Grid */}
+      {/* Scar Pillars Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProjects.map((project) => (
           <div
@@ -99,13 +107,28 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
             }`}
           >
             <div>
-              {/* Category indicator & Github link */}
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className={`text-[11px] font-mono flex items-center gap-1.5 ${project.featured ? 'text-[#adff2f] font-bold' : 'text-zinc-400'}`}>
+                <span
+                  className={`text-[11px] font-mono flex items-center gap-1.5 ${
+                    project.featured ? 'text-[#adff2f] font-bold' : 'text-zinc-400'
+                  }`}
+                >
                   {project.featured && <Sparkles className="w-3.5 h-3.5 text-[#adff2f] animate-pulse" />}
                   {project.badge}
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  {project.paperUrl && (
+                    <a
+                      href={project.paperUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 px-2 py-0.5 rounded bg-sky-500/15 text-[#38bdf8] border border-sky-400/35 text-[10px] font-mono font-bold hover:bg-sky-500/25 transition-colors"
+                      title={lang === 'pt' ? 'Abrir Paper Zenodo DOI' : 'Open Zenodo DOI Paper'}
+                    >
+                      <FileText className="w-3 h-3" />
+                      <span>DOI</span>
+                    </a>
+                  )}
                   {project.colabUrl && (
                     <a
                       href={project.colabUrl}
@@ -118,18 +141,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
                       <span>Colab</span>
                     </a>
                   )}
-                  {project.packageUrl && (
-                    <a
-                      href={project.packageUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-zinc-500 hover:text-[#adff2f] transition-colors p-1"
-                      title={lang === 'pt' ? 'Pacote NPM' : 'NPM Package'}
-                    >
-                      <Package className="w-4 h-4" />
-                    </a>
-                  )}
-                  {project.githubUrl ? (
+                  {project.githubUrl && (
                     <a
                       href={project.githubUrl}
                       target="_blank"
@@ -139,35 +151,20 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
                     >
                       <Github className="w-4 h-4" />
                     </a>
-                  ) : (
-                    <span
-                      className="text-zinc-600 px-1 py-0.5 text-[10px] font-mono rounded bg-zinc-900 border border-zinc-800 select-none"
-                      title={lang === 'pt' ? 'Repositório Interno' : 'Internal Repository'}
-                    >
-                      int
-                    </span>
                   )}
                 </div>
               </div>
 
-              {/* Title */}
               <h4 className="text-lg font-bold text-white group-hover:text-[#adff2f] transition-colors">
                 {project.title}
               </h4>
 
-              {/* Specs metadata */}
               {project.specs && (
-                <div className="text-[11px] font-mono text-[#38bdf8] mt-1 mb-3">
-                  {project.specs}
-                </div>
+                <div className="text-[11px] font-mono text-[#38bdf8] mt-1 mb-3">{project.specs}</div>
               )}
 
-              {/* Summary */}
-              <p className="text-xs text-zinc-400 leading-relaxed mb-4">
-                {project.summary}
-              </p>
+              <p className="text-xs text-zinc-400 leading-relaxed mb-4">{project.summary}</p>
 
-              {/* Metric stats if any */}
               {project.metrics && (
                 <div className="grid grid-cols-2 gap-2 my-3 p-2.5 bg-zinc-900/50 rounded-lg border border-zinc-850">
                   {project.metrics.slice(0, 2).map((m, idx) => (
@@ -180,10 +177,9 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
               )}
             </div>
 
-            {/* Footer with Tech Stack and Details button */}
             <div className="pt-4 border-t border-zinc-850 mt-2">
               <div className="flex flex-wrap gap-1.5 mb-3">
-                {project.techStack.slice(0, 3).map((tech) => (
+                {project.techStack.slice(0, 4).map((tech) => (
                   <span
                     key={tech}
                     className="text-[10px] font-mono text-zinc-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800"
@@ -191,14 +187,24 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
                     {tech}
                   </span>
                 ))}
-                {project.techStack.length > 3 && (
+                {project.techStack.length > 4 && (
                   <span className="text-[10px] font-mono text-zinc-600 px-1 py-0.5">
-                    +{project.techStack.length - 3}
+                    +{project.techStack.length - 4}
                   </span>
                 )}
               </div>
 
-              {project.colabUrl && (
+              {project.labAnchor && (
+                <a
+                  href={project.labAnchor}
+                  className="w-full text-xs font-mono py-2 rounded-lg bg-[#adff2f] hover:bg-lime-300 text-black font-bold transition-all flex items-center justify-center gap-1.5 shadow-md shadow-lime-400/10 mb-2 cursor-pointer"
+                >
+                  <FlaskConical className="w-3.5 h-3.5" />
+                  <span>{lang === 'pt' ? 'Testar no Lab Ao Vivo Nesta Página' : 'Test in Live Lab on This Page'}</span>
+                </a>
+              )}
+
+              {!project.labAnchor && project.colabUrl && (
                 <a
                   href={project.colabUrl}
                   target="_blank"
@@ -215,7 +221,7 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
                 onClick={() => setActiveProjectModal(project)}
                 className="w-full text-xs font-mono py-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>{lang === 'pt' ? 'Ver Especificação Completa' : 'Inspect Specification'}</span>
+                <span>{lang === 'pt' ? 'Ver Matemática & Especificação' : 'Inspect Math & Specification'}</span>
                 <ExternalLink className="w-3 h-3" />
               </button>
             </div>
@@ -227,7 +233,6 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
       {activeProject && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
           <div className="relative w-full max-w-2xl bg-zinc-950 border border-zinc-750 rounded-2xl p-6 lg:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
             <div className="flex items-start justify-between pb-4 border-b border-zinc-800">
               <div>
                 <span className="text-xs font-mono text-[#adff2f]">{activeProject.badge}</span>
@@ -246,19 +251,17 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
               </button>
             </div>
 
-            {/* Modal Body */}
             <div className="py-6 space-y-6">
               <div>
                 <h5 className="text-xs font-mono uppercase text-zinc-500 tracking-wider mb-2">
-                  {lang === 'pt' ? 'Visão Geral' : 'Overview'}
+                  {lang === 'pt' ? 'Resumo Executivo' : 'Executive Summary'}
                 </h5>
                 <p className="text-sm text-zinc-300 leading-relaxed">{activeProject.summary}</p>
               </div>
 
-              {/* Architectural Highlights */}
               <div>
                 <h5 className="text-xs font-mono uppercase text-zinc-500 tracking-wider mb-2">
-                  {lang === 'pt' ? 'Arquitetura Técnica & Conquistas' : 'Technical Architecture & Achievements'}
+                  {lang === 'pt' ? 'Garantias Algorítmicas & Resultados Verificados' : 'Algorithmic Guarantees & Verified Results'}
                 </h5>
                 <ul className="space-y-2">
                   {activeProject.details.map((detail, idx) => (
@@ -270,10 +273,9 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
                 </ul>
               </div>
 
-              {/* Tech Stack Chips */}
               <div>
                 <h5 className="text-xs font-mono uppercase text-zinc-500 tracking-wider mb-2">
-                  {lang === 'pt' ? 'Stack Tecnológica' : 'Tech Stack'}
+                  {lang === 'pt' ? 'Operadores & Stack' : 'Operators & Stack'}
                 </h5>
                 <div className="flex flex-wrap gap-1.5">
                   {activeProject.techStack.map((tech) => (
@@ -288,21 +290,31 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
               </div>
             </div>
 
-            {/* Modal Footer */}
             <div className="pt-4 border-t border-zinc-850 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
+                {activeProject.paperUrl && (
+                  <a
+                    href={activeProject.paperUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#adff2f] text-black font-mono text-xs font-bold rounded-lg hover:bg-lime-300 transition-colors shadow-lg shadow-lime-400/10 cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>Zenodo DOI</span>
+                  </a>
+                )}
                 {activeProject.colabUrl && (
                   <a
                     href={activeProject.colabUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-[#adff2f] text-black font-mono text-xs font-bold rounded-lg hover:bg-lime-300 transition-colors shadow-lg shadow-lime-400/10 cursor-pointer"
+                    className="flex items-center gap-2 px-4 py-2 bg-zinc-900 text-[#adff2f] border border-[#adff2f]/40 font-mono text-xs font-bold rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer"
                   >
                     <PlayCircle className="w-4 h-4" />
-                    <span>{lang === 'pt' ? 'Abrir Live Test no Colab' : 'Launch Live Test on Colab'}</span>
+                    <span>Google Colab</span>
                   </a>
                 )}
-                {activeProject.githubUrl ? (
+                {activeProject.githubUrl && (
                   <a
                     href={activeProject.githubUrl}
                     target="_blank"
@@ -312,10 +324,6 @@ export const ProjectShowcase: React.FC<ProjectShowcaseProps> = ({ lang = 'en' })
                     <Github className="w-4 h-4" />
                     <span>{lang === 'pt' ? 'Ver no GitHub' : 'View on GitHub'}</span>
                   </a>
-                ) : (
-                  <span className="text-xs font-mono text-zinc-500 italic">
-                    {lang === 'pt' ? 'Repositório Interno / Proprietário' : 'Internal / Proprietary Repository'}
-                  </span>
                 )}
               </div>
 

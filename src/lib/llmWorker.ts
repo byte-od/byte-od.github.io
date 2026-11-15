@@ -64,6 +64,10 @@ self.onmessage = async (e: MessageEvent) => {
         scacheBytes: engine.scacheGpuBytes,
         scacheKb: engine.scacheKbFormatted,
         vramWeightsMiB: Math.round((engine.totalWeightGpuBytes / (1024 * 1024)) * 100) / 100,
+        pointScarReady: Boolean(engine.pointScarFlow),
+        pointScarShardMiB: engine.pointScarFlow
+          ? Math.round((engine.pointScarFlow.shardBytes / (1024 * 1024)) * 100) / 100
+          : 0,
         fromCache: true,
         capsules: engine.scarStore ? engine.scarStore.getCapsulesDirectory() : [],
       });
@@ -104,6 +108,10 @@ self.onmessage = async (e: MessageEvent) => {
         scacheBytes: engine.scacheGpuBytes,
         scacheKb: engine.scacheKbFormatted,
         vramWeightsMiB: Math.round((engine.totalWeightGpuBytes / (1024 * 1024)) * 100) / 100,
+        pointScarReady: Boolean(engine.pointScarFlow),
+        pointScarShardMiB: engine.pointScarFlow
+          ? Math.round((engine.pointScarFlow.shardBytes / (1024 * 1024)) * 100) / 100
+          : 0,
         fromCache: engine.loadedFromCache,
         capsules: engine.scarStore ? engine.scarStore.getCapsulesDirectory() : [],
       });
@@ -180,6 +188,12 @@ self.onmessage = async (e: MessageEvent) => {
               routingDiagnostics: routeRes.diagnostics,
               turnHttp206Bytes: routeRes.turnBytesFetched,
               httpEvents: routeRes.httpEvents,
+              epistemicMode: routeRes.epistemicMode,
+              pointScarMidF32: routeRes.pointScarSample?.midCloudF32 ?? null,
+              pointScarFinalF32: routeRes.pointScarSample?.finalCloudF32 ?? null,
+              pointScarMs: routeRes.pointScarSample?.latencyMs ?? null,
+              pointScarSteps: routeRes.pointScarSample?.numSteps ?? null,
+              pointScarShardBytes: routeRes.pointScarSample?.shardBytes ?? null,
               capsules: engine?.scarStore ? engine.scarStore.getCapsulesDirectory() : [],
             });
           },

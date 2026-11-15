@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HelpCircle, ChevronDown, Sparkles, CheckCircle2, Cpu, Terminal, GitBranch, ShieldCheck } from 'lucide-react';
+import { HelpCircle, ChevronDown, Sparkles, CheckCircle2, Terminal } from 'lucide-react';
 
 interface FaqItem {
   id: string;
@@ -15,153 +15,133 @@ interface FaqItem {
 
 const FAQ_ITEMS: FaqItem[] = [
   {
-    id: 'who-is-julio',
-    categoryEn: 'Profile & Background',
-    categoryPt: 'Perfil & Carreira',
-    questionEn: 'Who is Julio Cesar da Costa Reis Filho and what is his engineering background?',
-    questionPt: 'Quem é Julio Cesar da Costa Reis Filho e qual é seu histórico na engenharia?',
+    id: 'mos-and-scache',
+    categoryEn: 'MoS & SCache O(1)',
+    categoryPt: 'MoS & SCache O(1)',
+    questionEn: 'What are Mixture of Scars (MoS) and Associative SCache O(1), and how do they eliminate the VRAM bottleneck?',
+    questionPt: 'O que são o Mixture of Scars (MoS) e o SCache Associativo O(1), e como eles eliminam o gargalo de VRAM?',
     directAnswerEn:
-      'Julio Cesar da Costa Reis Filho is a Senior Systems Architect and LLM Engineer with over 8 years of production experience, specializing in low-level causal transformer architectures, distributed PyTorch DDP training, and mission-critical cloud infrastructure.',
+      'Mixture of Scars (MoS) decouples model parameter count from GPU VRAM by decomposing weights into directional VQ4/INT4 bases plus low-rank residual scars streamed sequentially per layer group, while SCache O(1) replaces linear O(T) KV Cache growth with a constant-byte associative memory (34.8 KB in L1 / Δ = +0 B across infinite context).',
     directAnswerPt:
-      'Julio Cesar da Costa Reis Filho é um Arquiteto de Sistemas Sênior e Engenheiro de LLMs com mais de 8 anos de experiência em produção, especializado em arquiteturas de transformers causais, treinamento distribuído com PyTorch DDP e infraestrutura de alta escala.',
+      'O Mixture of Scars (MoS) desacopla o tamanho do modelo da VRAM ao decompor pesos em bases vetoriais VQ4/INT4 mais cicatrizes residuais de posto baixo transmitidas sequencialmente por grupos de camadas, enquanto o SCache O(1) substitui o KV Cache linear O(T) por uma memória associativa de bytes constantes (34.8 KB em L1 / Δ = +0 B em qualquer horizonte T).',
     detailsEn: [
-      'Dual expertise bridging distributed systems (Go, Clean Architecture, gRPC) and deep transformer internals (PyTorch, FlashAttention-2, CUDA/Metal kernels).',
-      'Track record leading high-scale engineering for products serving over 1,000,000+ active fintech and enterprise mobile users.',
-      'Principal Architect at JCRF Labs, author of CIR-Engine 503M, and maintainer of open-source tooling on npm (mddd-cli) and GitHub.',
-      'Available globally for Staff/Principal Systems Architect or LLM Engineering positions (remote or relocation).',
+      '72.7B Single-GPU Execution: Streams all 80 layers of Qwen2.5-72B within <= 2.40 GB peak VRAM by freeing each quantized scar group immediately after forward execution.',
+      'Exact Zero-Byte Context Growth: At 100,000 tokens, standard FP16 KV Cache consumes 32.77 GB; SCache O(1) maintains fixed Attention Sinks + Pre-RoPE Widrow-Hoff Associative Matrix W_scar + Circular Window with Δ = +0 B.',
+      'External Competitive Validation: Verified on the Kaggle Name That LLM benchmark (0.625 public score) under strict <= 2.2 GB VRAM via Golden-Slice truncation and Tri-Compass.',
     ],
     detailsPt: [
-      'Dupla maestria unindo sistemas distribuídos (Go, Clean Architecture, gRPC) e mecânica interna de transformers (PyTorch, FlashAttention-2, kernels CUDA/Metal).',
-      'Histórico liderando engenharia de larga escala para produtos com mais de 1.000.000+ de usuários ativos em fintechs e mobile empresarial.',
-      'Arquiteto Principal na JCRF Labs, autor da CIR-Engine 503M e mantenedor de ferramentas open-source no npm (mddd-cli) e GitHub.',
-      'Disponível globalmente para posições de Staff/Principal Systems Architect ou Engenharia de LLMs (remoto ou relocalização).',
+      'Execução de 72.7B em GPU Única: Processa as 80 camadas do Qwen2.5-72B com pico estrito <= 2.40 GB de VRAM desalocando cada grupo de cicatrizes imediatamente após o passo forward.',
+      'Crescimento Zero de Memória de Contexto: Em 100.000 tokens, o KV Cache FP16 padrão consome 32.77 GB; o SCache O(1) mantém Sinks + Matriz Associativa Widrow-Hoff pré-RoPE W_scar + Janela Circular com Δ = +0 B.',
+      'Validação Competitiva Externa: Comprovado no benchmark Kaggle Name That LLM (score público 0.625) operando em <= 2.2 GB de VRAM via Golden-Slice e Tri-Compass.',
     ],
   },
   {
-    id: 'cir-engine-503m',
-    categoryEn: 'Causal Transformers & LLMs',
-    categoryPt: 'Transformers Causais & LLMs',
-    questionEn: 'What is CIR-Engine 503M and how does its Causal Transformer architecture work?',
-    questionPt: 'O que é a CIR-Engine 503M e como funciona sua arquitetura de Transformer Causal?',
+    id: 'scarnative-v5',
+    categoryEn: 'ScarNativeLM v5.0 (Tabula Rasa)',
+    categoryPt: 'ScarNativeLM v5.0 (Tabula Rasa)',
+    questionEn: 'How does ScarNativeLM v5.0 eliminate post-training quantization shock (0.0000 KL)?',
+    questionPt: 'Como o ScarNativeLM v5.0 elimina o choque de quantização pós-treino (0.0000 KL)?',
     directAnswerEn:
-      'CIR-Engine 503M is an open-source, custom 12-layer decoder-only Causal Transformer model designed by Julio Cesar, featuring 503 Million parameters, RoPE positional encoding, Grouped-Query Attention (GQA), and a deterministic graph verification layer that prevents hallucinations.',
+      'Instead of compressing a dense Gaussian pretrained model after training, ScarNativeLM v5.0 is pretrained 100% from scratch (step t = 0, zero nn.Linear layers) directly inside the discrete scar manifold using ScarNativeLinear (channel equilibration d_eq + FWHT-64 + D4-LUT256 VQ4-STE + INT4-STE) and DifferentiableSCacheAttention O(1).',
     directAnswerPt:
-      'A CIR-Engine 503M é um modelo Transformer Causal decoder-only de 12 camadas desenvolvido por Julio Cesar com 503 Milhões de parâmetros, codificação posicional RoPE, Grouped-Query Attention (GQA) e uma camada de verificação causal determinística que impede alucinações.',
+      'Em vez de comprimir um modelo denso Gaussiano após o treino, o ScarNativeLM v5.0 é pré-treinado 100% do zero (passo t = 0, zero camadas nn.Linear) diretamente na variedade discreta de cicatrizes usando ScarNativeLinear (equilibração d_eq + FWHT-64 + D4-LUT256 VQ4-STE + INT4-STE) e DifferentiableSCacheAttention O(1).',
     detailsEn: [
-      'Parameter Scale: 503M dense parameters distributed across 12 causal transformer decoder layers.',
-      'Rotary Position Embeddings (RoPE): Base frequency Θ = 10,000 with d_k = 64 dimension per attention head.',
-      'Grouped-Query Attention (GQA): 16 Query heads mapped to 4 Key/Value heads, delivering 4:1 KV-cache compression.',
-      'PagedAttention & Radix Prefix Caching: 16 tokens/page allocation with an ultralight 128 MB VRAM runtime footprint.',
-      'Distributed Data Parallel (DDP): Ring-AllReduce gradient synchronization achieving ~6,200 tokens/sec sustained training throughput.',
-      'Zero-Hallucination Causal DAG Verifier: Validates probabilistic autoregressive tokens against topological graph priors before output emission.',
+      'Zero PTQ Shock: Because forward passes during pretraining already execute on exact D4-LUT256 codewords and INT4 low-rank factors via Straight-Through Estimators, exporting to binary shards incurs 0.000000 KL divergence.',
+      'End-to-End O(1) Attention Training: Gradients flow directly through the Widrow-Hoff eviction-update rule so the model learns native associative key-value addressing beyond its local window.',
+      '22 Custom WebGPU WGSL 1.0 Shaders: Achieves cos > 0.99999 bit-level numerical parity between PyTorch and client-side WebGPU.',
     ],
     detailsPt: [
-      'Escala de Parâmetros: 503 Milhões de parâmetros distribuídos em 12 camadas decoder de transformer causal.',
-      'Rotary Position Embeddings (RoPE): Frequência base Θ = 10.000 com dimensão d_k = 64 por cabeça de atenção.',
-      'Grouped-Query Attention (GQA): 16 cabeças de Query mapeadas para 4 cabeças de Key/Value (compressão 4:1 de memória KV).',
-      'PagedAttention & Radix Prefix Caching: Alocação de 16 tokens por bloco de página com pegada de VRAM de apenas 128 MB.',
-      'Treinamento Distribuído DDP: Sincronização Ring-AllReduce atingindo taxa sustentada de ~6.200 tokens/segundo.',
-      'Verificador de Grafo DAG sem Alucinações: Valida tokens autoregressivos probabilísticos contra restrições causais topológicas.',
+      'Zero Choque PTQ: Como o forward durante o pré-treino já opera sobre codewords exatos D4-LUT256 e fatores INT4 via Straight-Through Estimator, o empacotamento binário produz divergência 0.000000 KL.',
+      'Treinamento O(1) Ponta a Ponta: Os gradientes fluem diretamente pela regra associativa de evicção Widrow-Hoff, ensinando endereçamento associativo nativo além da janela local.',
+      '22 Compute Shaders WebGPU WGSL 1.0: Paridade numérica cos > 0.99999 comprovada entre PyTorch e WebGPU no navegador.',
     ],
   },
   {
-    id: 'developer-tooling',
-    categoryEn: 'Open Source Tooling',
-    categoryPt: 'Ferramental Open Source',
-    questionEn: 'What published developer tools and open-source frameworks has Julio Cesar created?',
-    questionPt: 'Quais ferramentas de desenvolvimento e frameworks open-source Julio Cesar criou e publicou?',
+    id: 'pointscarflow-3d',
+    categoryEn: 'PointScarFlow v1.0 (3D OT Flow)',
+    categoryPt: 'PointScarFlow v1.0 (Fluxo 3D OT)',
+    questionEn: 'How does JARVIS generate continuous 3D point-cloud forms across the screen without a preset catalog?',
+    questionPt: 'Como o JARVIS gera formas 3D contínuas de pontos flutuantes na tela sem usar um catálogo pré-definido?',
     directAnswerEn:
-      'Julio Cesar authored and published mddd-cli on npm for Mermaid Diagram-Driven Development, built MAD-cli for living documentation sync, developed Register-red for bi-directional Apple Numbers (.numbers) and Google Drive cloud management with 24/7 autonomous email polling and live HUD action feed, contributed to the flutter_scene 3D engine with focus on scene animations and shaders, and authored GitTrack for granular commit tracking with private repository token access and VIP AI-powered commit analysis.',
+      'PointScarFlow v1.0 is a 11.85M-parameter (3.87 MiB shard) Continuous 3D Optimal-Transport Rectified Flow model built 100% with ScarNativeLinear and executed by 12 custom WebGPU WGSL shaders in ~86 ms, integrating 1,024 3D coordinates directly from Qwen2.5-3B’s language-invariant Layer-23 latent z_⊥lang.',
     directAnswerPt:
-      'Julio Cesar criou e publicou a ferramenta mddd-cli no npm para Diagram-Driven Development via Mermaid, desenvolveu o MAD-cli para documentação viva, criou o Register-red para gestão orçamentária integrada nativamente a Apple Numbers (.numbers) e Google Drive com daemon 24h de polling de e-mails e HUD em tempo real, contribuiu com o motor flutter_scene (com foco em animações de scenes e pipelines de shaders) e criou o GitTrack para rastreamento detalhado de commits com suporte a token de repositórios privados e análise detalhada por IA no plano VIP.',
+      'O PointScarFlow v1.0 é um gerador contínuo de Optimal-Transport Rectified Flow 3D com 11.85M parâmetros (shard de 3.87 MiB) construído 100% com ScarNativeLinear e executado por 12 shaders WGSL na WebGPU em ~86 ms, integrando 1.024 coordenadas 3D diretamente a partir do latente invariante a idioma z_⊥lang da Camada 23 do Qwen2.5-3B.',
     detailsEn: [
-      'mddd-cli (npm): Parses Mermaid diagram ASTs to automatically generate Clean Architecture directory structures, domain entities, and TypeScript/gRPC contracts.',
-      'Register-red: Full-stack financial management panel with native bi-directional Apple Numbers (.numbers) parsing in Python, real-time Google Drive sync, 24/7 autonomous Mac email polling daemon (Gmail/Nubank), and live HUD action feed with Gemini voice commands.',
-      'mad-cli: Bidirectional living documentation engine that synchronizes code comment tags (<!-- MAD:SEQUENCE -->) in Go and TypeScript with architecture diagrams during git commits.',
-      'flutter_scene (Fork): 3D spatial rendering fork with contributions in scene animations, keyframe transforms, and custom GLSL/Metal shader integration.',
-      'GitTrack: Detailed developer commit tracking platform with personal access token integration for private repos and on-demand VIP AI commit analysis.',
+      'Zero Hardcoded 3D Catalog: Every turn integrates dx/dt = v_θ(x_t, t, z_⊥lang) from a continuous Fibonacci sphere (t = 0) to t = 1 in 4 self-distilled Euler steps.',
+      'O(N·M) Dual Cross-Attention: Couples N = 1,024 3D points with M = 32 learned geometric part tokens, avoiding O(N^2) quadratic attention blowup.',
+      'Multilingual Geometric Invariance: Because conditioning comes from P_⊥lang, prompts in PT, EN, ES, and FR synthesize the same 3D geometry (cross-lingual shape cosine > 0.997, 7.51x Chamfer-L2 improvement over sphere baseline).',
     ],
     detailsPt: [
-      'mddd-cli (npm): Analisa ASTs de diagramas Mermaid para gerar automaticamente árvores de Clean Architecture, entidades de domínio e contratos TypeScript/gRPC.',
-      'Register-red: Painel web full-stack de gestão financeira com parsing bidirecional nativo de planilhas Apple Numbers (.numbers) em Python, sincronização contínua com o Google Drive, daemon autônomo 24h de polling de e-mails (Gmail/Nubank) e feed de ações em tempo real no HUD.',
-      'mad-cli: Motor de documentação viva bidirecional que sincroniza tags de comentários de código (<!-- MAD:SEQUENCE -->) em Go e TypeScript com diagramas de arquitetura no git commit.',
-      'flutter_scene (Fork): Fork de renderização espacial 3D com contribuições em animações de scenes, transformações de keyframes e integração de shaders GLSL/Metal.',
-      'GitTrack: Plataforma de rastreamento detalhado de commits para devs com suporte a token para repositórios privados e análise aprofundada por IA no plano VIP.',
+      'Zero Catálogo 3D Pré-Definido: Cada resposta integra dx/dt = v_θ(x_t, t, z_⊥lang) da esfera contínua de Fibonacci (t = 0) até t = 1 em 4 passos autodestilados de Euler.',
+      'Atenção Cruzada Dupla O(N·M): Acopla N = 1.024 pontos 3D a M = 32 partes geométricas induzidas sem explosão quadrática O(N^2).',
+      'Invariância Geométrica Multilíngue: Como o condicionamento vem de P_⊥lang, perguntas em PT, EN, ES e FR sintetizam a mesma variedade 3D (cosseno 3D multilíngue > 0.997 e melhora de 7.51x em Chamfer-L2).',
     ],
   },
   {
-    id: 'technical-stack',
-    categoryEn: 'Technical Stack',
-    categoryPt: 'Stack Tecnológica',
-    questionEn: 'What programming languages, frameworks, and architectural paradigms are Julio’s primary specialties?',
-    questionPt: 'Quais linguagens, frameworks e paradigmas arquiteturais são as principais especialidades de Julio?',
+    id: 'p-perp-lang-and-gdpr',
+    categoryEn: 'P_⊥lang & 0x00 GDPR ScarStore',
+    categoryPt: 'P_⊥lang & ScarStore 0x00 GDPR',
+    questionEn: 'How do Language-Nullspace Cartridges (P_⊥lang) and < 0.2 ms 0x00 GDPR Unlearning work?',
+    questionPt: 'Como funcionam os Cartuchos no Subespaço Nulo de Idioma (P_⊥lang) e o Desaprendizado 0x00 GDPR em < 0.2 ms?',
     directAnswerEn:
-      'Julio specializes in Go (Golang), Python, TypeScript, and Dart, applying Clean Architecture, Domain-Driven Design (DDD), Event-Driven Microservices, and deep neural transformer mechanics across GCP and Linux environments.',
+      'At the Golden Slice (2L/3, Layer 23 in Qwen 3B), the orthogonal projector P_⊥lang = I − U_lang U_lang^T strips surface language syntax so a single compact INT4 cartridge streamed via HTTP 206 answers across PT, EN, ES, and FR — and overwriting its bytes with 0x00 physically erases that knowledge in < 0.2 ms with zero trunk damage.',
     directAnswerPt:
-      'Julio é especialista em Go (Golang), Python, TypeScript e Dart, aplicando Clean Architecture, Domain-Driven Design (DDD), microsserviços orientados a eventos e mecânica de redes neurais transformers em ambientes GCP e Linux.',
+      'Na Golden Slice (2L/3, Camada 23 no Qwen 3B), o projetor ortogonal P_⊥lang = I − U_lang U_lang^T remove a sintaxe superficial do idioma para que um único cartucho INT4 transmitido via HTTP 206 responda em PT, EN, ES e FR — e sobrescrever seus bytes com 0x00 apaga fisicamente o fato em < 0.2 ms sem tocar no tronco.',
     detailsEn: [
-      'Core Languages: Go (Golang), Python, TypeScript, Dart, C/C++, SQL.',
-      'AI & Deep Learning: PyTorch, FlashAttention-2, RoPE, GQA, PagedAttention, CUDA, Metal Performance Shaders (MPS), ONNX Runtime Web.',
-      'Software Architecture: Clean Architecture, SOLID principles, Event-Driven Architecture, Microservices, Living Documentation, Domain-Driven Design.',
-      'Cloud & Infrastructure: Google Cloud Platform (GCP), Docker, Kubernetes, gRPC, Protobuf, Kafka, Redis, PostgreSQL, Distributed DDP Clusters.',
-      'Frontend & Mobile: Next.js, React, Tailwind CSS, Flutter, WebAssembly (Wasm SIMD), Three.js / WebGL.',
+      'RFC 7233 HTTP 206 Partial Content: Zero cartridge payload bytes are downloaded upfront; only the exact 4 KB-aligned byte range of activated conceptual cartridges is fetched on demand.',
+      'Closed-Form Zero-SGD Minting: In ScarNativeLM v5.0, factual cartridges are solved analytically via Reduced-Rank Regression without running gradient descent on the frozen trunk.',
+      'Out-of-Cone Epistemic Guard: When 0 ScarStore cartridges fire on an out-of-domain query, causal split telemetry prevents ungrounded confabulation.',
     ],
     detailsPt: [
-      'Linguagens Principais: Go (Golang), Python, TypeScript, Dart, C/C++, SQL.',
-      'IA & Deep Learning: PyTorch, FlashAttention-2, RoPE, GQA, PagedAttention, CUDA, Metal Performance Shaders (MPS), ONNX Runtime Web.',
-      'Arquitetura de Software: Clean Architecture, princípios SOLID, Arquitetura Orientada a Eventos, Microsserviços, Living Documentation, DDD.',
-      'Cloud & Infraestrutura: Google Cloud Platform (GCP), Docker, Kubernetes, gRPC, Protobuf, Kafka, Redis, PostgreSQL, Clusters DDP Distribuídos.',
-      'Frontend & Mobile: Next.js, React, Tailwind CSS, Flutter, WebAssembly (Wasm SIMD), Three.js / WebGL.',
+      'RFC 7233 HTTP 206 Partial Content: Zero bytes de cartuchos são baixados no boot; apenas o intervalo exato alinhado a 4 KB do cartucho ativado é buscado sob demanda.',
+      'Cunhagem Analítica Zero-SGD: No ScarNativeLM v5.0, novos cartuchos factuais são resolvidos em forma fechada por Regressão de Posto Reduzido sem rodar SGD no tronco.',
+      'Guarda Epistêmica Fora do Cone: Quando 0 cartuchos ScarStore disparam em consultas fora do escopo, o split causal impede confabulações.',
     ],
   },
   {
-    id: 'proven-metrics',
-    categoryEn: 'Performance & Benchmarks',
-    categoryPt: 'Desempenho & Métricas',
-    questionEn: 'What quantifiable benchmarks and performance improvements has Julio delivered?',
-    questionPt: 'Quais benchmarks quantificáveis e melhorias de desempenho Julio entregou?',
+    id: 'scarcodec-and-aura',
+    categoryEn: 'ScarCodec v4.0 & AURA Origin',
+    categoryPt: 'ScarCodec v4.0 & Origem AURA',
+    questionEn: 'Where did SCache originate, and does the Scar Operator generalize beyond language models?',
+    questionPt: 'Onde nasceu o SCache O(1), e o Operador de Cicatrizes funciona fora de modelos de linguagem?',
     directAnswerEn:
-      'Julio has achieved a 42% cold-start latency reduction in enterprise mobile apps, maintained 99.98% crash-free session rates at 1M+ user scale, and demonstrated 6,200 tokens/sec throughput in distributed PyTorch DDP training.',
+      'SCache originated as the constant 34.8 KB GradientScarMemory inside AURA / System One (embodied Deep RL with 0.23 ms CPU S1 reflex and Frontier Ghost-Jump Scouts), and ScarCodec v4.0 proves the exact same operator excels in radio-astronomy RFI excision, aerospace black-box telemetry, and HDR CFD shockwave compression.',
     directAnswerPt:
-      'Julio reduziu o tempo de inicialização a frio em 42% em aplicações corporativas, manteve taxa de 99,98% de sessões livres de falhas em escala de 1M+ usuários e demonstrou 6.200 tokens/segundo de throughput em treinamento distribuído PyTorch DDP.',
+      'O SCache nasceu como o GradientScarMemory constante de 34.8 KB dentro do AURA / System One (Deep RL incorporado com reflexo S1 de 0.23 ms em CPU e Batedores de Fronteira Ghost-Jump), e o ScarCodec v4.0 prova que o mesmo operador domina excisão de RFI em radioastronomia, caixas-pretas aeroespaciais e compressão CFD HDR.',
     detailsEn: [
-      '503 Million parameter Causal Transformer trained with 4:1 GQA compression for maximum memory efficiency.',
-      'Distributed training scaled to ~6,200 tokens/second using PyTorch Ring-AllReduce DDP.',
-      '42% reduction in mobile app cold startup time through optimized dependency graphs and lazy subsystem initialization.',
-      '99.98% crash-free session reliability in production enterprise banking applications serving 1M+ users.',
-      '128 MB minimal VRAM footprint for causal inference through PagedAttention and Radix prefix caching.',
+      'AURA / System One: Surprise-gated retention (Surprise = R_0 − V(s_0)) stores non-trivial transition shocks in 34.8 KB while solving Rubik’s Cube scrambles up to Depth 10 (232.2B states) without tree search.',
+      'Radio-Astronomy RFI Excision: Recovers weak pulsar sweeps under 1,000x satellite interference (cos = 0.9923 at 5.75x compression).',
+      'Aerospace Black-Box & HDR CFD: Retains 5/5 precursor faults over 8,000+ frames in 34,816 B (Δ = 0 B) and compresses Mach shock fields 12.05x with exact 0.0 vacuum error.',
     ],
     detailsPt: [
-      'Transformer Causal de 503 Milhões de parâmetros treinado com compressão GQA 4:1 para máxima eficiência de memória.',
-      'Treinamento distribuído escalado para ~6.200 tokens/segundo utilizando PyTorch Ring-AllReduce DDP.',
-      'Redução de 42% no tempo de inicialização a frio (cold start) em apps mobile via otimização de injeção de dependências.',
-      'Confiabilidade de 99,98% de sessões livres de falhas em bancos e fintechs atendendo mais de 1 milhão de clientes.',
-      'Apenas 128 MB de pegada de memória VRAM para inferência causal via PagedAttention e cache de prefixo Radix.',
+      'AURA / System One: Retenção ponderada por surpresa (Surpresa = R_0 − V(s_0)) grava choques informacionais em 34.8 KB resolvendo o Cubo de Rubik até Profundidade 10 (232.2B estados) sem árvore MCTS.',
+      'Radiointerferometria RFI: Recupera pulsos de pulsares sob interferência de satélite 1.000x mais forte (cos = 0.9923 com compressão 5.75x).',
+      'Caixa-Preta Aeroespacial & CFD HDR: Retém 5/5 falhas precursoras após 8.000+ quadros em 34.816 B (Δ = 0 B) e comprime ondas de choque de Mach em 12.05x com erro 0.0 no vácuo.',
     ],
   },
   {
-    id: 'contact-hiring',
-    categoryEn: 'Contact & Hiring',
-    categoryPt: 'Contato & Contratação',
-    questionEn: 'How can hiring managers, founders, or research labs contact Julio Cesar da Costa Reis Filho?',
-    questionPt: 'Como líderes técnicos, fundadores ou laboratórios podem entrar em contato com Julio Cesar?',
+    id: 'author-and-contact',
+    categoryEn: 'Authorship & Collaboration',
+    categoryPt: 'Autoria & Colaboração',
+    questionEn: 'Who created the Scar Architecture Ecosystem and how can labs or engineering teams get in touch?',
+    questionPt: 'Quem criou o Ecossistema de Arquitetura de Cicatrizes e como entrar em contato?',
     directAnswerEn:
-      'Julio Cesar can be contacted directly via email at reisfilho1116@gmail.com, through LinkedIn at linkedin.com/in/juliocrfilho, or on GitHub at github.com/byte-od. He is open to Staff/Principal engineering roles, architecture consulting, and research collaborations.',
+      'The entire Scar Architecture Ecosystem (MoS, SCache O(1), VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0, PointScarFlow v1.0, and AURA / System One) is authored by Julio Cesar da Costa Reis Filho (Zenodo DOI 10.5281/zenodo.24172784). Reach out directly at reisfilho1116@gmail.com.',
     directAnswerPt:
-      'Julio Cesar pode ser contatado diretamente pelo e-mail reisfilho1116@gmail.com, pelo LinkedIn em linkedin.com/in/juliocrfilho ou pelo GitHub em github.com/byte-od. Está aberto para posições de liderança técnica, consultoria de arquitetura e projetos inovadores.',
+      'Todo o Ecossistema de Arquitetura de Cicatrizes (MoS, SCache O(1), VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0, PointScarFlow v1.0 e AURA / System One) foi criado por Julio Cesar da Costa Reis Filho (Zenodo DOI 10.5281/zenodo.24172784). Contato direto em reisfilho1116@gmail.com.',
     detailsEn: [
-      'Direct Email: reisfilho1116@gmail.com (Fastest response within 24 hours).',
-      'LinkedIn Profile: https://linkedin.com/in/juliocrfilho',
-      'GitHub Organization & Repos: https://github.com/byte-od',
-      'Machine-Readable LLM Specification: https://byte-od.github.io/llms.txt',
-      'Availability: Available for 100% Remote Global or Relocation.',
+      'Direct Email: reisfilho1116@gmail.com',
+      'Canonical Open-Source Repository: https://github.com/byte-od/mixture-of-scars',
+      'System One / AURA Repository: https://github.com/byte-od/system_one',
+      'Scientific Preprints (v1–v5): https://doi.org/10.5281/zenodo.24172784',
+      'Machine-Readable Dossier: https://byte-od.github.io/llms.txt',
     ],
     detailsPt: [
-      'E-mail Direto: reisfilho1116@gmail.com (Resposta rápida em até 24 horas).',
-      'Perfil no LinkedIn: https://linkedin.com/in/juliocrfilho',
-      'Repositórios no GitHub: https://github.com/byte-od',
-      'Especificação para Agentes de IA: https://byte-od.github.io/llms.txt',
-      'Disponibilidade: Disponível para Trabalho Remoto Global ou Relocalização.',
+      'E-mail Direto: reisfilho1116@gmail.com',
+      'Repositório Canônico Open-Source: https://github.com/byte-od/mixture-of-scars',
+      'Repositório System One / AURA: https://github.com/byte-od/system_one',
+      'Publicações Científicas Zenodo (v1–v5): https://doi.org/10.5281/zenodo.24172784',
+      'Dossiê Estruturado para Agentes: https://byte-od.github.io/llms.txt',
     ],
   },
 ];
@@ -172,8 +152,8 @@ interface FaqSectionProps {
 
 export const FaqSection: React.FC<FaqSectionProps> = ({ lang }) => {
   const [openIds, setOpenIds] = useState<Record<string, boolean>>({
-    'who-is-julio': true,
-    'cir-engine-503m': true,
+    'mos-and-scache': true,
+    'scarnative-v5': true,
   });
 
   const toggleItem = (id: string) => {
@@ -185,36 +165,28 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ lang }) => {
 
   return (
     <section id="faq" className="space-y-8 scroll-mt-24">
-      {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-zinc-800 pb-4 gap-2">
         <div>
           <div className="flex items-center gap-2 text-xs font-mono text-[#adff2f] uppercase tracking-wider">
             <HelpCircle className="w-3.5 h-3.5" />
-            <span>{lang === 'pt' ? '05. Perguntas Frequentes & AEO' : '05. Frequently Asked Questions & AEO'}</span>
+            <span>{lang === 'pt' ? '05. Dossiê Técnico Scar & FAQ' : '05. Scar Technical Dossier & FAQ'}</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight mt-1">
             {lang === 'pt'
-              ? 'Dossiê Técnico & Perguntas Frequentes'
-              : 'Technical Dossier & FAQ (AEO Optimized)'}
+              ? 'Perguntas Frequentes sobre a Arquitetura de Cicatrizes'
+              : 'Scar Architecture Frequently Asked Questions'}
           </h2>
         </div>
         <div className="flex items-center gap-2 text-xs font-mono text-zinc-400">
           <Sparkles className="w-3.5 h-3.5 text-[#38bdf8]" />
           <span>
             {lang === 'pt'
-              ? 'Estruturado para IA, Perplexity & Google AI Overviews'
-              : 'Structured for AI, Perplexity & Google AI Overviews'}
+              ? 'Verificado em PyTorch Nativo & 34 Shaders WebGPU WGSL'
+              : 'Verified on Native PyTorch & 34 WebGPU WGSL Shaders'}
           </span>
         </div>
       </div>
 
-      <p className="text-sm sm:text-base text-zinc-400 max-w-3xl leading-relaxed">
-        {lang === 'pt'
-          ? 'Respostas diretas e especificações estruturadas para mecanismos de busca generativos (AEO/GEO), avaliadores de LLMs, líderes de engenharia e recrutadores.'
-          : 'Direct answers, verifiable metrics, and structured answers formatted for generative answer engines (AEO/GEO), LLM evaluators, engineering leaders, and recruiters.'}
-      </p>
-
-      {/* FAQ Grid / Accordion */}
       <div className="space-y-4">
         {FAQ_ITEMS.map((item) => {
           const isOpen = !!openIds[item.id];
@@ -257,19 +229,17 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ lang }) => {
 
               {isOpen && (
                 <div className="px-5 pb-6 sm:px-6 space-y-4 pt-1 border-t border-zinc-900">
-                  {/* Direct Answer Paragraph (Crucial for AI Overviews / Featured Snippets) */}
                   <div className="p-4 rounded-xl bg-lime-400/5 border border-[#adff2f]/20">
                     <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#adff2f] mb-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>{lang === 'pt' ? 'RESPOSTA DIRETA:' : 'DIRECT ANSWER:'}</span>
+                      <span>{lang === 'pt' ? 'SÍNTESE MATEMÁTICA:' : 'DIRECT SYNTHESIS:'}</span>
                     </div>
                     <p className="text-sm text-zinc-200 leading-relaxed font-sans">{directAnswer}</p>
                   </div>
 
-                  {/* Structured Bulleted List (High Citability Criterion) */}
                   <div className="space-y-2">
                     <span className="text-xs font-mono uppercase tracking-wider text-zinc-400">
-                      {lang === 'pt' ? 'Métricas & Detalhes Técnicos:' : 'Technical Metrics & Details:'}
+                      {lang === 'pt' ? 'Provas & Métricas Auditadas:' : 'Audited Proofs & Metrics:'}
                     </span>
                     <ul className="space-y-2 text-xs sm:text-sm text-zinc-300">
                       {details.map((detail, idx) => (
@@ -287,17 +257,16 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ lang }) => {
         })}
       </div>
 
-      {/* Machine-Readable LLM Context Callout */}
       <div className="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2 text-xs font-mono text-[#adff2f]">
             <Terminal className="w-4 h-4" />
-            <span className="font-bold">LLM &amp; AI AGENT DISCOVERY PROTOCOL</span>
+            <span className="font-bold">SCAR ARCHITECTURE · LLMS.TXT SPECIFICATION</span>
           </div>
           <p className="text-xs text-zinc-400">
             {lang === 'pt'
-              ? 'Agentes automatizados (GPT-4o, Claude 3.5, Gemini 2.0, Perplexity) podem consumir a especificação completa via llms.txt.'
-              : 'Automated AI agents (GPT-4o, Claude 3.5, Gemini 2.0, Perplexity) can ingest the full dossier directly via llms.txt.'}
+              ? 'Agentes de IA podem ingerir a especificação completa do ecossistema MoS + SCache O(1) via /llms.txt e /llms-full.txt.'
+              : 'AI agents can ingest the complete MoS + O(1) SCache architectural specification via /llms.txt and /llms-full.txt.'}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
