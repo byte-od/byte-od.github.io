@@ -24,6 +24,10 @@ import {
   runBlackBoxSCacheProof,
   runRadioTelescopeRfiProof,
 } from '../src/lib/physicalScarCodec';
+import {
+  ScarNativeCpuExecutor,
+  type ScarNativeManifestJSON,
+} from '../src/lib/scarNativeEngine';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -606,20 +610,22 @@ async function main() {
     'apply_script_subspace_gate',
     'vec_equilibrate_f16',
     'mos_fused_prot_int4_int4scar_gemv',
+    'scarnative_widrow_hoff_evict_update',
+    'scarnative_o1_hybrid_gqa_attention',
   ];
 
   const computeMatches = [...wgslSrc.matchAll(/@compute\s+@workgroup_size\([^)]+\)\s*fn\s+([a-zA-Z0-9_]+)/g)].map(
     (m) => m[1]
   );
   assert(
-    computeMatches.length === 20,
-    `Expected exactly 20 @compute WGSL entrypoints, found ${computeMatches.length}: ${computeMatches.join(', ')}`
+    computeMatches.length === 22,
+    `Expected exactly 22 @compute WGSL entrypoints, found ${computeMatches.length}: ${computeMatches.join(', ')}`
   );
   for (const mustHave of expectedEntrypoints) {
     assert(computeMatches.includes(mustHave), `Missing required WGSL entrypoint: ${mustHave}`);
   }
   console.log(
-    `[PASS 7/8] 20/20 WGSL 1.0 Compute Shaders Byte-Identical across all Native/HF/Web copies (${wgslSrc.length} B)`
+    `[PASS 7/9] 22/22 WGSL 1.0 Compute Shaders Byte-Identical across all Native/HF/Web copies (${wgslSrc.length} B)`
   );
 
   // ---------------------------------------------------------------------------
@@ -659,11 +665,85 @@ async function main() {
     assert(Math.abs(o1.values[i] - fullSlice[i]) < 1e-6, `O(1) block decode mismatch at index ${i}`);
   }
   console.log(
-    `[PASS 8/8] Physical Scar Lab v4.0 (1,000x RFI cos=${p1.scarCodecCosine.toFixed(4)} · 34,816 B SCache Δ=0 B 5/5 · CFD ${p3.compressionRatio.toFixed(2)}x Vacuum=0.0 O(1) Parity)`
+    `[PASS 8/9] Physical Scar Lab v4.0 (1,000x RFI cos=${p1.scarCodecCosine.toFixed(4)} · 34,816 B SCache Δ=0 B 5/5 · CFD ${p3.compressionRatio.toFixed(2)}x Vacuum=0.0 O(1) Parity)`
+  );
+
+  // ---------------------------------------------------------------------------
+  // TEST 9: Pure Scar-Native Engine v5.0 Lab (`Tabula Rasa` Binary Shard, O(1), P_⊥lang & 0x00 GDPR)
+  // ---------------------------------------------------------------------------
+  for (const rel of ['src/lib/scarNativeEngine.ts', 'src/components/ScarNativeLab.tsx']) {
+    const raw = fs.readFileSync(path.join(PORTFOLIO_ROOT, rel), 'utf-8');
+    const clean = stripComments(raw);
+    assert(!/Math\.random\s*\(/.test(clean), `Forbidden Math.random() detected in ${rel}`);
+  }
+
+  const snDir = path.join(PORTFOLIO_ROOT, 'public/webgpu/scarnative_v5');
+  const snManifest = JSON.parse(fs.readFileSync(path.join(snDir, 'scarnative_manifest.json'), 'utf-8')) as ScarNativeManifestJSON;
+  const snTokJson = JSON.parse(fs.readFileSync(path.join(snDir, 'tokenizer.json'), 'utf-8')) as { id_to_token: string[] };
+  const snWgsl = fs.readFileSync(path.join(snDir, 'mos_scache_kernels.wgsl'), 'utf-8');
+  assert(snWgsl === wgslSrc, 'public/webgpu/scarnative_v5/mos_scache_kernels.wgsl != canonical mos_scache.wgsl');
+  const snShardNodeBuf = fs.readFileSync(path.join(snDir, snManifest.shard_file));
+  const snShardArrayBuf = snShardNodeBuf.buffer.slice(
+    snShardNodeBuf.byteOffset,
+    snShardNodeBuf.byteOffset + snShardNodeBuf.byteLength
+  );
+
+  const snExec = new ScarNativeCpuExecutor(snManifest, snShardArrayBuf, snTokJson);
+  assert(snExec.cartridges.size === 16, `Expected 16 Zero-SGD cartridges in v5.0 bundle, got ${snExec.cartridges.size}`);
+
+  // 1) Long-range O(1) passkey (`T > 80` >> `S+W = 20`) with ΔSCache = 0 B
+  const fillerPt = Array.from(
+    { length: 4 },
+    () => 'o sistema analisa o fluxo de telemetria com memória constante e zero ruído no vácuo .'
+  ).join(' ');
+  const pkPrompt = `<lang:pt> <user> chave secreta <passkey> alpha = 7 , beta = 4 , gamma = 2 </passkey> . ${fillerPt} qual é a chave secreta ? <assistant>`;
+  const snPkRes = snExec.generate(pkPrompt, { maxNewTokens: 14, useScarStore: false, enableWidrowHoff: true });
+  assert(snPkRes.prefillTokens >= 75, `Expected overflow prefill >= 75 tokens, got ${snPkRes.prefillTokens}`);
+  assert(snPkRes.scacheDeltaBytes === 0, `O(1) SCache violated: Δ=${snPkRes.scacheDeltaBytes}`);
+  assert(
+    snPkRes.outputText.includes('alpha = 7, beta = 4, gamma = 2'),
+    `Expected exact 3-slot passkey recall from ScarNativeLM v5.0, got "${snPkRes.outputText}"`
+  );
+  const snWinOnly = snExec.generate(pkPrompt, { maxNewTokens: 14, useScarStore: false, enableWidrowHoff: false });
+  assert(
+    !snWinOnly.outputText.includes('alpha = 7, beta = 4, gamma = 2'),
+    `Window-only ablation unexpectedly retained evicted passkey: "${snWinOnly.outputText}"`
+  );
+
+  // 2) Cross-lingual `PT / EN / ES / FR` Zero-SGD Cartridge Routing (`ent_orion = 516 km`) + `0x00` GDPR Wipe
+  const orionPrompts: Record<PolyglotLang, string> = {
+    pt: '<lang:pt> <user> <fact> qual é o valor exato de órbita do módulo orion ? <assistant>',
+    en: '<lang:en> <user> <fact> what is the exact orbit value of module orion ? <assistant>',
+    es: '<lang:es> <user> <fact> ¿ cuál es el valor exacto de órbita del módulo orion ? <assistant>',
+    fr: '<lang:fr> <user> <fact> quelle est la valeur exacte de orbite du module orion ? <assistant>',
+  };
+  for (const lg of ['pt', 'en', 'es', 'fr'] as const) {
+    const r = snExec.generate(orionPrompts[lg], { maxNewTokens: 14, useScarStore: true });
+    assert(r.routedCartridgeId === 'ent_orion', `Expected ent_orion route in ${lg}, got ${r.routedCartridgeId}`);
+    assert(
+      r.outputText.includes('516') && r.outputText.includes('km'),
+      `Expected 516 km in ${lg} from EN-minted cartridge, got "${r.outputText}"`
+    );
+  }
+
+  const preMintRef = snExec.generate(orionPrompts.pt, { maxNewTokens: 1, useScarStore: false });
+  snExec.gdprZeroWipe('ent_orion');
+  const postWipe = snExec.generate(orionPrompts.pt, { maxNewTokens: 14, useScarStore: true });
+  assert(postWipe.routedCartridgeId === null, `Wiped cartridge still routed: ${postWipe.routedCartridgeId}`);
+  assert(!postWipe.outputText.includes('516'), `Wiped cartridge leaked 516: "${postWipe.outputText}"`);
+  let maxGdprDiff = 0.0;
+  for (let i = 0; i < preMintRef.firstTokenLogits.length; i++) {
+    maxGdprDiff = Math.max(maxGdprDiff, Math.abs(preMintRef.firstTokenLogits[i] - postWipe.firstTokenLogits[i]));
+  }
+  assert(maxGdprDiff === 0, `Expected exact 0.00000000 GDPR logit diff, got ${maxGdprDiff}`);
+  snExec.restoreCartridge('ent_orion');
+
+  console.log(
+    `[PASS 9/9] Pure Scar-Native Engine v5.0 (${(snManifest.shard_bytes / (1024 * 1024)).toFixed(2)} MiB Tabula-Rasa Shard · SCache ${snPkRes.scacheBytesFinal} B Δ=0 B · PT/EN/ES/FR Zero-SGD RRR · 0x00 GDPR Δlogits=0)`
   );
 
   console.log('\n================================================================================');
-  console.log('ALL 8/8 UNIFIED QWEN JARVIS + PHYSICAL SCAR LAB v4.0 VERIFICATION SUITES PASSED!');
+  console.log('ALL 9/9 UNIFIED QWEN JARVIS + PHYSICAL SCAR LAB v4.0 + SCAR-NATIVE v5.0 SUITES PASSED!');
   console.log('================================================================================');
 }
 

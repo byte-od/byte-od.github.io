@@ -1564,3 +1564,346 @@ fn mos_fused_prot_int4_int4scar_gemv(
         rw_f32_a[row] = val;
     }
 }
+
+// ============================================================================
+// SCAR-NATIVE v5.0 END-TO-END LEARNED O(1) WIDROW-HOFF & HYBRID GQA KERNELS
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// 21. Pure Scar-Native v5.0 Content-Addressed Pre-RoPE Widrow-Hoff Eviction
+//     & O(1) Triple-Channel (K_rope, K_raw, V) Sink/Ring Update (`Δ = +0 B`)
+//     1 workgroup per KV head (`wgid.x = h_kv in 0 .. n_kv_heads - 1`).
+//
+//     params: p0=layer_idx, p1=n_kv_heads, p2=head_dim,
+//             p3=num_sink, p4=slide_len, p5=counts_u32_total
+//     ro_u32_b: step_state_u32 ([1]=pos_t)
+//     ro_f32_a: k_rope_cur [n_kv_heads * head_dim]
+//     ro_f32_b: v_cur      [n_kv_heads * head_dim]
+//     ro_f32_c: k_raw_and_gates:
+//               - [0 .. n_kv_heads * head_dim - 1]: k_raw_cur (Pre-RoPE)
+//               - [n_kv_heads * head_dim .. + n_kv_heads * (head_dim + 3)]:
+//                   per KV head stride (head_dim + 3): [w_gate(head_dim), b_gate, lambda_h, eta_h]
+//     rw_f32_a: scarnative_w_scar_f32 [L * n_kv_heads * head_dim * head_dim]
+//     rw_u32_a: scarnative_kv_f16_u32:
+//               - [0 .. counts_u32_total - 1]: 4 u32 per (layer, h_kv):
+//                   [sink_cnt, win_cnt, absorbed_cnt, reserved]
+//               - [counts_u32_total ..]: 3 * cap_per_head * vec_u32 per (layer, h_kv):
+//                   K_rope [cap_per_head], K_raw [cap_per_head], V [cap_per_head]
+// ----------------------------------------------------------------------------
+var<workgroup> wg_sn_kraw: array<f32, 128>;
+var<workgroup> wg_sn_vev: array<f32, 128>;
+var<workgroup> wg_sn_ku: array<f32, 128>;
+var<workgroup> wg_sn_err: array<f32, 128>;
+var<workgroup> wg_sn_red: array<f32, 64>;
+var<workgroup> wg_sn_ctrl: array<u32, 6>;
+
+@compute @workgroup_size(64, 1, 1)
+fn scarnative_widrow_hoff_evict_update(
+    @builtin(workgroup_id) wgid: vec3<u32>,
+    @builtin(local_invocation_id) lid: vec3<u32>,
+) {
+    let tid = lid.x;
+    let layer_idx = params.p0;
+    let n_kv_heads = params.p1;
+    let head_dim = params.p2;
+    let num_sink = params.p3;
+    let slide_len = params.p4;
+    let counts_u32_total = params.p5;
+    let h_kv = wgid.x;
+
+    let head_flat = layer_idx * n_kv_heads + h_kv;
+    let cnt_base = head_flat * 4u;
+    let cap_per_head = num_sink + slide_len;
+    let vec_u32 = head_dim >> 1u;
+    let head_stride = 3u * cap_per_head * vec_u32;
+    let krope_base = counts_u32_total + head_flat * head_stride;
+    let kraw_base = krope_base + cap_per_head * vec_u32;
+    let v_base = krope_base + 2u * cap_per_head * vec_u32;
+    let w_base = head_flat * head_dim * head_dim;
+
+    if (tid == 0u) {
+        let pos_t = ro_u32_b[1];
+        let sink_cnt = rw_u32_a[cnt_base + 0u];
+        let win_cnt = rw_u32_a[cnt_base + 1u];
+        let absorbed = rw_u32_a[cnt_base + 2u];
+        wg_sn_ctrl[0] = pos_t;
+        wg_sn_ctrl[1] = sink_cnt;
+        wg_sn_ctrl[2] = win_cnt;
+        wg_sn_ctrl[3] = absorbed;
+        wg_sn_ctrl[4] = select(0u, 1u, (pos_t >= num_sink) && (win_cnt >= slide_len));
+    }
+    workgroupBarrier();
+
+    let pos_t = wg_sn_ctrl[0];
+    let sink_cnt = wg_sn_ctrl[1];
+    let win_cnt = wg_sn_ctrl[2];
+    let absorbed = wg_sn_ctrl[3];
+    let do_evict = wg_sn_ctrl[4] != 0u;
+    let rel_t = select(0u, pos_t - num_sink, pos_t >= num_sink);
+    let ring_idx = select(0u, rel_t % max(slide_len, 1u), slide_len > 0u);
+    let ring_slot = num_sink + ring_idx;
+
+    // Step 1: Unpack evicted Pre-RoPE K_raw and V from `ring_slot` and compute ||k_raw||_2
+    var kn_sq: f32 = 0.0;
+    if (do_evict) {
+        for (var p = tid; p < vec_u32; p += 64u) {
+            let krp = unpack2x16float(rw_u32_a[kraw_base + ring_slot * vec_u32 + p]);
+            let vp = unpack2x16float(rw_u32_a[v_base + ring_slot * vec_u32 + p]);
+            let d0 = p << 1u;
+            wg_sn_kraw[d0] = krp.x;
+            wg_sn_kraw[d0 + 1u] = krp.y;
+            wg_sn_vev[d0] = vp.x;
+            wg_sn_vev[d0 + 1u] = vp.y;
+            kn_sq += krp.x * krp.x + krp.y * krp.y;
+        }
+    }
+    wg_sn_red[tid] = kn_sq;
+    workgroupBarrier();
+
+    for (var s = 32u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            wg_sn_red[tid] += wg_sn_red[tid + s];
+        }
+        workgroupBarrier();
+    }
+
+    if (do_evict) {
+        let inv_kn = 1.0 / max(sqrt(wg_sn_red[0]), 1e-6);
+        for (var d = tid; d < head_dim; d += 64u) {
+            wg_sn_ku[d] = wg_sn_kraw[d] * inv_kn;
+        }
+    }
+    workgroupBarrier();
+
+    // Step 2: Widrow-Hoff prediction `pred = W_scar @ ku` and unnormalized value error `err = v_ev - pred`
+    if (do_evict) {
+        for (var r = tid; r < head_dim; r += 64u) {
+            let w_row = w_base + r * head_dim;
+            var pred_r: f32 = 0.0;
+            for (var c = 0u; c < head_dim; c += 1u) {
+                pred_r += rw_f32_a[w_row + c] * wg_sn_ku[c];
+            }
+            wg_sn_err[r] = wg_sn_vev[r] - pred_r;
+        }
+    }
+    workgroupBarrier();
+
+    // Step 3: Surprise-Gated Widrow-Hoff Delta update:
+    //   g_tau = sigmoid(dot(w_gate_h, k_raw_ev) + b_gate_h)
+    //   W_scar = (1 - lambda_h * g_tau) * W_scar + (eta_h * g_tau) * (err @ ku^T)
+    let gate_stride = head_dim + 3u;
+    let gate_off = n_kv_heads * head_dim + h_kv * gate_stride;
+    var g_dot: f32 = 0.0;
+    if (do_evict) {
+        for (var d = tid; d < head_dim; d += 64u) {
+            g_dot += ro_f32_c[gate_off + d] * wg_sn_kraw[d];
+        }
+    }
+    wg_sn_red[tid] = g_dot;
+    workgroupBarrier();
+
+    for (var s = 32u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            wg_sn_red[tid] += wg_sn_red[tid + s];
+        }
+        workgroupBarrier();
+    }
+
+    if (do_evict) {
+        let b_gate = ro_f32_c[gate_off + head_dim + 0u];
+        let lambda_h = ro_f32_c[gate_off + head_dim + 1u];
+        let eta_h = ro_f32_c[gate_off + head_dim + 2u];
+        let z_gate = clamp(wg_sn_red[0] + b_gate, -20.0, 20.0);
+        let g_tau = 1.0 / (1.0 + exp(-z_gate));
+        let decay_eff = 1.0 - lambda_h * g_tau;
+        let lr_eff = eta_h * g_tau;
+        for (var r = tid; r < head_dim; r += 64u) {
+            let w_row = w_base + r * head_dim;
+            let e_r = wg_sn_err[r];
+            for (var c = 0u; c < head_dim; c += 1u) {
+                rw_f32_a[w_row + c] = decay_eff * rw_f32_a[w_row + c] + lr_eff * e_r * wg_sn_ku[c];
+            }
+        }
+    }
+    workgroupBarrier();
+
+    // Step 4: Write current `(k_rope_cur, k_raw_cur, v_cur)` into Sink or Ring Slot
+    let write_slot = select(ring_slot, pos_t, pos_t < num_sink);
+    let in_off = h_kv * head_dim;
+    for (var p = tid; p < vec_u32; p += 64u) {
+        let d0 = p << 1u;
+        let krop2 = vec2<f32>(ro_f32_a[in_off + d0], ro_f32_a[in_off + d0 + 1u]);
+        let kraw2 = vec2<f32>(ro_f32_c[in_off + d0], ro_f32_c[in_off + d0 + 1u]);
+        let vn2 = vec2<f32>(ro_f32_b[in_off + d0], ro_f32_b[in_off + d0 + 1u]);
+        rw_u32_a[krope_base + write_slot * vec_u32 + p] = pack2x16float(krop2);
+        rw_u32_a[kraw_base + write_slot * vec_u32 + p] = pack2x16float(kraw2);
+        rw_u32_a[v_base + write_slot * vec_u32 + p] = pack2x16float(vn2);
+    }
+    if (tid == 0u) {
+        if (pos_t < num_sink) {
+            if ((pos_t + 1u) > sink_cnt) {
+                rw_u32_a[cnt_base + 0u] = pos_t + 1u;
+            }
+        } else {
+            rw_u32_a[cnt_base + 1u] = min(slide_len, win_cnt + 1u);
+            if (do_evict) {
+                rw_u32_a[cnt_base + 2u] = absorbed + 1u;
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 22. Pure Scar-Native v5.0 O(1) Hybrid RoPE Sink+Window + Content-Addressed
+//     Widrow-Hoff Fast-Weight Read Attention (`cos > 0.999999` vs PyTorch)
+//     1 workgroup per Query head (`wgid.x = h_q in 0 .. n_q_heads - 1`).
+//
+//     params: p0=layer_idx, p1=n_q_heads, p2=n_kv_heads, p3=head_dim,
+//             p4=num_sink, p5=slide_len, p6=counts_u32_total, f0=attn_scale
+//     ro_u32_a: scarnative_kv_f16_u32
+//     ro_f32_a: q_rope_cur [n_q_heads * head_dim]
+//     ro_f32_b: scarnative_w_scar_f32 [L * n_kv_heads * head_dim * head_dim]
+//     ro_f32_c: q_raw_and_alpha:
+//               - [0 .. n_q_heads * head_dim - 1]: q_raw_cur (Pre-RoPE)
+//               - [n_q_heads * head_dim .. + n_q_heads]: alpha_assoc[h_q] (`tanh(beta_h)`)
+//     rw_f32_a: attn_out [n_q_heads * head_dim]
+// ----------------------------------------------------------------------------
+var<workgroup> wg_sn_qrope: array<f32, 128>;
+var<workgroup> wg_sn_qu: array<f32, 128>;
+var<workgroup> wg_sn_logits: array<f32, 512>;
+var<workgroup> wg_sn_ared: array<f32, 64>;
+var<workgroup> wg_sn_acnts: array<u32, 4>;
+
+@compute @workgroup_size(64, 1, 1)
+fn scarnative_o1_hybrid_gqa_attention(
+    @builtin(workgroup_id) wgid: vec3<u32>,
+    @builtin(local_invocation_id) lid: vec3<u32>,
+) {
+    let tid = lid.x;
+    let layer_idx = params.p0;
+    let n_q_heads = params.p1;
+    let n_kv_heads = params.p2;
+    let head_dim = params.p3;
+    let num_sink = params.p4;
+    let slide_len = params.p5;
+    let counts_u32_total = params.p6;
+    let attn_scale = params.f0;
+
+    let h_q = wgid.x;
+    let gqa_group = n_q_heads / n_kv_heads;
+    let h_kv = h_q / gqa_group;
+    let head_flat = layer_idx * n_kv_heads + h_kv;
+    let cnt_base = head_flat * 4u;
+
+    let cap_per_head = num_sink + slide_len;
+    let vec_u32 = head_dim >> 1u;
+    let head_stride = 3u * cap_per_head * vec_u32;
+    let krope_base = counts_u32_total + head_flat * head_stride;
+    let v_base = krope_base + 2u * cap_per_head * vec_u32;
+    let w_base = head_flat * head_dim * head_dim;
+
+    var qraw_sq: f32 = 0.0;
+    for (var d = tid; d < head_dim; d += 64u) {
+        wg_sn_qrope[d] = ro_f32_a[h_q * head_dim + d];
+        let qr = ro_f32_c[h_q * head_dim + d];
+        wg_sn_qu[d] = qr;
+        qraw_sq += qr * qr;
+    }
+    wg_sn_ared[tid] = qraw_sq;
+    if (tid < 4u) {
+        wg_sn_acnts[tid] = ro_u32_a[cnt_base + tid];
+    }
+    workgroupBarrier();
+
+    for (var s = 32u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            wg_sn_ared[tid] += wg_sn_ared[tid + s];
+        }
+        workgroupBarrier();
+    }
+
+    let inv_qn = 1.0 / max(sqrt(wg_sn_ared[0]), 1e-6);
+    for (var d = tid; d < head_dim; d += 64u) {
+        wg_sn_qu[d] = wg_sn_qu[d] * inv_qn;
+    }
+    workgroupBarrier();
+
+    let sink_cnt = wg_sn_acnts[0];
+    let win_cnt = wg_sn_acnts[1];
+    let absorbed = wg_sn_acnts[2];
+    let total_keys = sink_cnt + win_cnt;
+
+    // Phase 1: Exact scaled dot-product logits over `[Sinks ∪ Sliding Ring]`
+    var local_max: f32 = -1e30;
+    for (var idx = tid; idx < total_keys; idx += 64u) {
+        let phys_slot = select(num_sink + (idx - sink_cnt), idx, idx < sink_cnt);
+        let k_off = krope_base + phys_slot * vec_u32;
+        var dot_qk: f32 = 0.0;
+        for (var p = 0u; p < vec_u32; p += 1u) {
+            let kp = unpack2x16float(ro_u32_a[k_off + p]);
+            let d0 = p << 1u;
+            dot_qk += wg_sn_qrope[d0] * kp.x + wg_sn_qrope[d0 + 1u] * kp.y;
+        }
+        let lg = dot_qk * attn_scale;
+        wg_sn_logits[idx] = lg;
+        if (lg > local_max) {
+            local_max = lg;
+        }
+    }
+    wg_sn_ared[tid] = local_max;
+    workgroupBarrier();
+
+    for (var s = 32u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            wg_sn_ared[tid] = max(wg_sn_ared[tid], wg_sn_ared[tid + s]);
+        }
+        workgroupBarrier();
+    }
+    let max_lg = wg_sn_ared[0];
+
+    var local_sum: f32 = 0.0;
+    for (var idx = tid; idx < total_keys; idx += 64u) {
+        let ex = exp(wg_sn_logits[idx] - max_lg);
+        wg_sn_logits[idx] = ex;
+        local_sum += ex;
+    }
+    wg_sn_ared[tid] = local_sum;
+    workgroupBarrier();
+
+    for (var s = 32u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            wg_sn_ared[tid] += wg_sn_ared[tid + s];
+        }
+        workgroupBarrier();
+    }
+    let inv_sum = 1.0 / max(wg_sn_ared[0], 1e-12);
+    for (var idx = tid; idx < total_keys; idx += 64u) {
+        wg_sn_logits[idx] = wg_sn_logits[idx] * inv_sum;
+    }
+    workgroupBarrier();
+
+    // Phase 2: Combine Local+Sink Softmax V aggregation with Content-Addressed `W_scar @ qu`
+    let alpha_assoc = select(0.0, ro_f32_c[n_q_heads * head_dim + h_q], absorbed > 0u);
+    for (var p = tid; p < vec_u32; p += 64u) {
+        var v_acc = vec2<f32>(0.0, 0.0);
+        for (var idx = 0u; idx < total_keys; idx += 1u) {
+            let phys_slot = select(num_sink + (idx - sink_cnt), idx, idx < sink_cnt);
+            let vp = unpack2x16float(ro_u32_a[v_base + phys_slot * vec_u32 + p]);
+            v_acc += wg_sn_logits[idx] * vp;
+        }
+        let d0 = p << 1u;
+        var fast0: f32 = 0.0;
+        var fast1: f32 = 0.0;
+        if (absorbed > 0u) {
+            let w_r0 = w_base + d0 * head_dim;
+            let w_r1 = w_base + (d0 + 1u) * head_dim;
+            for (var c = 0u; c < head_dim; c += 1u) {
+                let q_c = wg_sn_qu[c];
+                fast0 += ro_f32_b[w_r0 + c] * q_c;
+                fast1 += ro_f32_b[w_r1 + c] * q_c;
+            }
+        }
+        rw_f32_a[h_q * head_dim + d0] = v_acc.x + alpha_assoc * fast0;
+        rw_f32_a[h_q * head_dim + d0 + 1u] = v_acc.y + alpha_assoc * fast1;
+    }
+}
