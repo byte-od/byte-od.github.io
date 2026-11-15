@@ -15,6 +15,7 @@ import { FloatingTokenMonitor } from './components/FloatingTokenMonitor';
 import { AmbientTensorCanvas } from './components/AmbientTensorCanvas';
 import { HostIntegrityBanner } from './components/HostIntegrityBanner';
 import { PortfolioAgentWidget } from './components/PortfolioAgentWidget';
+import { PhysicalScarLab } from './components/PhysicalScarLab';
 import {
   Github,
   Mail,
@@ -476,9 +477,28 @@ export default function App() {
 
           {/* Hero Action Buttons & External Channels */}
           <div className="flex flex-wrap items-center gap-4 pt-4">
+            <button
+              type="button"
+              data-testid="hero-open-jarvis-btn"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('open-jarvis-agent'));
+              }}
+              className="px-5 py-2.5 bg-[#adff2f] hover:bg-lime-300 text-black text-xs font-mono font-extrabold rounded-lg transition-all flex items-center gap-2 shadow-[0_0_24px_rgba(173,255,47,0.3)] hover:shadow-[0_0_34px_rgba(173,255,47,0.5)] cursor-pointer"
+              title={
+                lang === 'pt'
+                  ? 'Focar rosto flutuante JARVIS conectado ao Qwen 3B (20 Shaders WGSL + SCache O(1))'
+                  : 'Focus floating JARVIS face wired to Qwen 3B (20 WGSL Shaders + SCache O(1))'
+              }
+            >
+              <Bot className="w-4 h-4" />
+              <span>
+                {lang === 'pt' ? 'Falar com JARVIS (Qwen 3B · 20 WGSL)' : 'Talk to JARVIS (Qwen 3B · 20 WGSL)'}
+              </span>
+            </button>
+
             <a
               href="#cir-engine"
-              className="px-5 py-2.5 bg-[#adff2f] hover:bg-lime-300 text-black text-xs font-mono font-bold rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-lime-400/10 cursor-pointer"
+              className="px-5 py-2.5 bg-zinc-900 hover:bg-zinc-850 text-[#adff2f] text-xs font-mono font-bold rounded-lg border border-[#adff2f]/50 hover:border-[#adff2f] transition-all flex items-center gap-2 cursor-pointer"
             >
               <Cpu className="w-4 h-4" />
               <span>{lang === 'pt' ? 'Explorar CIR-Engine 503M' : 'Inspect CIR-Engine 503M'}</span>
@@ -547,21 +567,21 @@ export default function App() {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-[#adff2f]/15 text-[#adff2f] border border-[#adff2f]/40 shadow-xs">
                     <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                    {lang === 'pt' ? 'BREAKTHROUGH MUNDIAL · NOV 2026' : 'WORLD-FIRST BREAKTHROUGH · NOV 2026'}
+                    {lang === 'pt' ? 'RELEASE v4.0.0 · NATIVO + WEBGPU + FÍSICA' : 'RELEASE v4.0.0 · NATIVE + WEBGPU + PHYSICS'}
                   </span>
                   <span className="text-[11px] font-mono text-zinc-400 bg-zinc-900 px-2.5 py-1 rounded border border-zinc-800">
-                    Open-Source &amp; Kaggle Top 5k
+                    Zenodo DOI 10.5281/zenodo.24172784
                   </span>
                 </div>
 
                 <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight">
-                  Mixture of Scars (MoS) &amp; SCache
+                  Mixture of Scars (MoS) v4.0, SCache O(1) &amp; ScarCodec
                 </h3>
 
                 <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
                   {lang === 'pt'
-                    ? 'Arquitetura pioneira que resolve simultaneamente os dois maiores limites físicos de LLMs: executa todas as 80 camadas de um 72B em GPUs comuns de 16 GB com pico de 2.40 GB VRAM, e substitui o KV Cache linear O(T) por uma memória associativa O(1) de 34 KB no L1 Cache comprovada em 100.000 tokens com >99.999% de economia.'
-                    : 'Pioneering dual systems architecture cracking both physical memory walls of foundation models: executes all 80 transformer layers of 72B parameter geometry on a consumer 16GB GPU with 2.40 GB peak VRAM, and eliminates the linear O(T) KV Cache using an O(1) 34 KB L1 associative memory verified under 100,000 continuous tokens with >99.999% VRAM savings.'}
+                    ? 'Operadores direcionais unificados em PyTorch/Metal/Triton e 20 shaders WebGPU WGSL 1.0: executa 72.7B em <24 GB VRAM (Sub-2-Bit MoS) ou 1.92 GB streaming, roda Qwen 3B poliglota no navegador com 41 cartuchos HTTP 206 de 140 KB (P_⊥lang 164/164 = 100%), trava o SCache em O(1) (Δ +0 B) e extrai a biblioteca física independente ScarCodec para radiotelescópios, caixas-pretas de 34,8 KB e ondas de choque CFD/HDR.'
+                    : 'Unified directional scar operators across PyTorch/Metal/Triton and 20 pure WGSL 1.0 WebGPU shaders: fits 72.7B in <24 GB VRAM (Sub-2-Bit MoS) or 1.92 GB streaming, runs polyglot Qwen 3B in-browser with 41 × 140 KB HTTP 206 cartridges (P_⊥lang 164/164 = 100%), locks SCache strictly at O(1) (Δ +0 B), and ships standalone Physical ScarCodec for radio telescopes, 34.8 KB black-boxes, and CFD/HDR shock fields.'}
                 </p>
 
                 {/* Stat badges */}
@@ -588,13 +608,11 @@ export default function App() {
               {/* Action buttons */}
               <div className="flex flex-col sm:flex-row lg:flex-col gap-3 w-full lg:w-auto shrink-0">
                 <a
-                  href="https://colab.research.google.com/github/byte-od/mixture-of-scars/blob/main/notebooks/Proof_70B_MoS_on_16GB_GPU.ipynb"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="#physical-scar-lab"
                   className="px-5 py-3 rounded-xl bg-[#adff2f] hover:bg-lime-300 text-black font-mono text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-lg shadow-lime-400/20 cursor-pointer"
                 >
                   <PlayCircle className="w-4 h-4" />
-                  <span>{lang === 'pt' ? 'Executar Live Test no Colab' : 'Launch Live Test on Colab'}</span>
+                  <span>{lang === 'pt' ? 'Abrir Physical Scar Lab v4.0' : 'Open Physical Scar Lab v4.0'}</span>
                 </a>
 
                 <a
@@ -620,6 +638,9 @@ export default function App() {
             </div>
           </div>
         </section>
+
+        {/* SECTION 0: DOMAIN-INDEPENDENT PHYSICAL SCAR LAB (v4.0) */}
+        <PhysicalScarLab lang={lang} />
 
         {/* SECTION 1: CIR-ENGINE (CORE AI/ML ARCHITECTURE) */}
         <section id="cir-engine" className="space-y-6">

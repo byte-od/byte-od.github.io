@@ -46,8 +46,9 @@ $$\widehat{W} = \Big(\text{FWHT}_{64}^{-1}\big(\alpha_b \cdot \text{LUT}_{256}[\
 | **Opção 1A:** `VQ4 + 2-Pass INT4-Scar` (`embed INT3`) | `943 MiB` (`0,921 GiB`) | `6,4x` | `1.7728` | `56,2%` | Piso físico: comprimir `embed_tokens` em `INT3` faz ES escorregar para PT no fim da geração. |
 | **Opção 1B:** **`VQ4 + 2-Pass INT4-Scar` (`embed INT4`)** | **`1.016 MiB` (`0,992 GiB`)** | **`5,9x`** | **`1.5561`** | **`59,3%`** (`PT 64,0%`) | **Fura `< 1,00 GiB` mantendo `PT`, `EN`, `ES` e `FR` 100% firmes no idioma do início ao fim!** |
 | **Config 2:** `VQ4-Scar` Híbrido (`FP16` Scars) | `1.176 MiB` (`1,149 GiB`) | `5,1x` | `1.4343` | `61,5%` | Menor que `NF3` com `> 2x` menor `KL` e fluência nos 4 idiomas. |
-| **Trilha 2.4-A (Lean):** `VQ4 + INT4-Scar + gate_proj INT4` | `1.150 MiB` (`1,123 GiB`) | `5,4x` | `1.4698` | `60,5%` (`PT 65,1%`) | Paridade física `Nativo <-> WebGPU` `cos = 1.000000`; exige `r=96` nas bordas `L34..35` (`up_proj`) contra colisão CJK. |
-| **Trilha 2.4-B (Triad):** `VQ4 + INT4-Scar + gate/o_proj INT4` | `1.190 MiB` (`1,163 GiB`) | `5,2x` | `1.5111` | `63,2%` (`PT 68,6%`) | Menor que `NF3` com salto de `Top-1` para `63,2%` (`FR/EN/ES` cristalinos; identificou sensibilidade CJK de `up_proj` em `L34..35`). |
+| **Trilha 2.4-A (Lean):** `VQ4 + INT4-Scar + gate_proj INT4` | `1.150 MiB` (`1,123 GiB`) | `5,4x` | `1.4698` | `60,5%` (`PT 65,1%`) | Paridade física `Nativo <-> WebGPU` `cos = 1.000000`; exige blindagem contra colisão CJK. |
+| **Trilha 2.4-B (Triad):** `VQ4 + INT4-Scar + gate/o_proj INT4` | `1.190 MiB` (`1,163 GiB`) | `5,2x` | `1.5111` | `63,2%` (`PT 68,6%`) | Menor que `NF3` com salto de `Top-1` para `63,2%` (`FR/EN/ES` cristalinos). |
+| **Trilha 2.4-C (Shielded):** **`Triad + Shader #18 ScriptSubspaceGate (`P_⊥CJK`)`** | **`1.190,45 MiB` (`1,163 GiB`)** | **`5,18x`** | **`1.5240`** (`PT 1.3934`) | **`59,3%`** (`PT 64,5%`) | **`0%` vazamento CJK (`8/8`) + `100%` pureza `PT/EN/ES/FR` + `ZH` 100% intacto + Paridade `cos = 1.00000012`!** |
 | **Config 3 (Roadmap #2):** **`MoS INT4 + ASVD Poliglota`** | **`1.631 MiB` (`1,593 GiB`)** | **`3,7x`** | **`0.6938`** | **`74,5%`** (`ES 80,4%`) | **Elimina 100% do vazamento `FR -> ZH`** e entrega rigor de livro-texto nos 4 idiomas. |
 
 ---
@@ -105,10 +106,10 @@ $$\widehat{W} = \Big(\text{FWHT}_{64}^{-1}\big(\alpha_b \cdot \text{LUT}_{256}[\
 Para garantir integridade absoluta entre os motores **Nativo** e **Web**, toda implementação segue este contrato:
 1. **Módulo Canônico Nativo (`scar_cache/vq4_scar_mos.py`):**
    - Empacota qualquer `nn.Linear` em formato binário unificado (`codes_u32`, `scales_f16`, `lut256_f16`, `d_eq_f16`, `a_scar_int4`, `b_scar_int4`) via `VQ4ScarLinear` e `quantize_matrix_vq4_scar_2pass`, executando nativamente em `PyTorch (CPU / Metal MPS / CUDA)`.
-2. **Kernels Canônicos WebGPU (`mos_scache_kernels.wgsl`):**
+2. **Kernels Canônicos WebGPU (`mos_scache_kernels.wgsl` — 18 Shaders WGSL 1.0 Core):**
    - `vq4_equilibrate_fwht64`: Aplica `(x / d_fp16) * rademacher` + `FWHT-64` ortonormal em `6` estágios de memória compartilhada uma única vez por vetor de entrada.
    - `mos_fused_vq4_int4scar_gemv`: Carrega `LUT256` em `4 KB` de `var<workgroup>`, decodifica `16` pesos por `u32` coalescido e funde a cicatriz `INT4 B_scar` + `bias` sem materializar matrizes intermediárias.
-3. **Suíte Obrigatória de Paridade Dupla (`tests/test_vq4_scar_native_and_webgpu.py`):**
-   - Valida simultaneamente:
-     - **(A) Motor Nativo (`PyTorch CPU/MPS`):** Orçamento exato de bytes, ganho do `2-Pass INT4-ASVD` sobre `1-Pass` e sobre escalar `2-bit` em ativações reais *held-out* (`PT/EN/ES/FR`).
-     - **(B) Motor WebGPU Físico (`wgpu` WGSL 1.0):** Compilação pura WGSL 1.0 na GPU física e paridade numérica (`cosine_similarity > 0.999999`, erro máximo `< 1e-3`) contra o `VQ4ScarLinear` nativo em projeções reais do `Qwen2.5-3B`.
+   - `apply_script_subspace_gate` (Shader #18): Aplica o *gate* de subespaço ativo ortogonal de escrita (`P_⊥CJK`, bitmask compacto de `18.55 KB` = `31.112` tokens CJK no vocabulário Qwen2.5) diretamente no buffer de logits da GPU antes da redução Top-2 quando a consulta não contém caracteres CJK, preservando `100%` da fluência em Chinês/Japonês/Coreano quando presentes (`cos = 1.00000000` entre PyTorch e WebGPU).
+3. **Suítes Obrigatórias de Paridade Dupla e Anti-Fachada (`6/6` Python/WGSL + `7/7` TypeScript/JARVIS):**
+   - `tests/test_vq4_scar_native_and_webgpu.py` (`6/6 PASSED`) & `scripts/verify_track24c_shielded_3b_polyglot.py` (`8/8` pureza `PT/EN/ES/FR`, `0%` CJK leak, `ZH` intacto, paridade `cos = 1.00000012`).
+   - `portfolio/scripts/verify_jarvis_polyglot_antifacade.ts` (`7/7 PASSED`): prova estática e dinâmica de `Zero Math.random()`, determinismo `var = 0.00000000`, `52/52` prompts poliglotas (`PT/EN/ES/FR`), monotonicidade pupilar epistêmica ($p_1 - p_2$) e choque `LGPD 0x00`.

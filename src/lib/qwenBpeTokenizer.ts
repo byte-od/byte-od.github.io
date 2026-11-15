@@ -4,7 +4,21 @@
  * Includes Persistent CacheStorage (`mos-webgpu-v4-assets`) for zero repeat network downloads.
  */
 
-export const MOS_WEBGPU_CACHE_NAME = 'mos-webgpu-v4-assets-v1';
+export const MOS_WEBGPU_CACHE_NAME = 'mos-webgpu-v4-assets-v2';
+const LEGACY_MOS_WEBGPU_CACHE_NAMES = ['mos-webgpu-v4-assets', 'mos-webgpu-v4-assets-v1'];
+
+let legacyCachesPruned = false;
+export async function pruneLegacyMosWebgpuCaches(): Promise<void> {
+  if (legacyCachesPruned || typeof caches === 'undefined') return;
+  legacyCachesPruned = true;
+  for (const oldName of LEGACY_MOS_WEBGPU_CACHE_NAMES) {
+    try {
+      await caches.delete(oldName);
+    } catch (_) {
+      // Ignore storage permission restrictions
+    }
+  }
+}
 
 const QWEN_SPLIT_RE =
   /(?:'s|'t|'re|'ve|'m|'ll|'d|'S|'T|'RE|'VE|'M|'LL|'D)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+/gu;
@@ -44,6 +58,7 @@ function escapeRegExp(s: string): string {
 export async function fetchWithPersistentCache(url: string): Promise<{ response: Response; fromCache: boolean }> {
   if (typeof caches !== 'undefined') {
     try {
+      await pruneLegacyMosWebgpuCaches();
       const cache = await caches.open(MOS_WEBGPU_CACHE_NAME);
       const cached = await cache.match(url);
       if (cached && cached.ok) {

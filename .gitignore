@@ -8,3 +8,4 @@ coverage/
 !.env.example
 public/models/s1_mixed_replay_*.onnx
 public/models/s1_overnight_*.onnx
+public/webgpu/qwen3b/mos_shard_*.bin

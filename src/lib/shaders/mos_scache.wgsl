@@ -1414,3 +1414,153 @@ fn mos_fused_vq4_int4scar_gemv(
         rw_f32_a[row] = val;
     }
 }
+
+// ----------------------------------------------------------------------------
+// 18. Script-Orthogonal Active Subspace Gate (`P_perp_CJK` Logit Mask)
+//     Suppresses spurious bilingual CJK/Hangul/Kana token collisions in ultra-low-bit
+//     polyglot decoding when the user's prompt contains zero CJK characters (`p1 == 1u`),
+//     while remaining a strict `0.0` no-op when CJK is active (`p1 == 0u`).
+//     params: p0 = vocab_size, p1 = suppress_cjk (0u or 1u), f0 = penalty (e.g. 64.0)
+//     ro_u32_a: packed bitmask [ceil(vocab_size / 32)] (bit `vid & 31u` == 1u iff CJK token)
+//     rw_f32_a: logits [vocab_size]
+//     dispatch: ((vocab_size + 255u) >> 8u, 1u, 1u)
+// ----------------------------------------------------------------------------
+@compute @workgroup_size(256, 1, 1)
+fn apply_script_subspace_gate(
+    @builtin(global_invocation_id) gid: vec3<u32>,
+) {
+    let vid = gid.x;
+    if (vid >= params.p0 || params.p1 == 0u) {
+        return;
+    }
+    let mask_word = ro_u32_a[vid >> 5u];
+    if (((mask_word >> (vid & 31u)) & 1u) != 0u) {
+        rw_f32_a[vid] = rw_f32_a[vid] - params.f0;
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 19. Pure Channel Equilibration (`x_eq[col] = x[col] / d_eq_f16[col]`)
+//     Used by `ProtectedInt4ScarMatrix` (`prot_int4_scar`) on nonlinear triad
+//     projections (`gate_proj`, `o_proj`, `k/v_proj`, boundary `q_proj`).
+//     params: p0 = in_dim, p1 = d_eq_u32_off
+//     ro_u32_a: layer shard containing FP16 `d_eq` [in_dim]
+//     ro_f32_a: raw input vector `x` [in_dim]
+//     rw_f32_a: equilibrated vector `x_eq` [in_dim]
+//     dispatch: ((in_dim + 255u) >> 8u, 1u, 1u)
+// ----------------------------------------------------------------------------
+@compute @workgroup_size(256, 1, 1)
+fn vec_equilibrate_f16(
+    @builtin(global_invocation_id) gid: vec3<u32>,
+) {
+    let col = gid.x;
+    if (col >= params.p0) {
+        return;
+    }
+    let d_val = unpack_f16_lane(ro_u32_a[params.p1 + (col >> 1u)], col);
+    rw_f32_a[col] = ro_f32_a[col] / d_val;
+}
+
+// ----------------------------------------------------------------------------
+// 20. Fused Protected Block-64 INT4 + Row-Scaled INT4 B_scar GEMV
+//     Executes `ProtectedInt4ScarMatrix` with ZERO FP16 weight expansion:
+//       y[row] = dot(dequant_block64_int4(base_packed[row], base_scales[row]), x_eq)
+//              + dot(dequant_rowwise_int4(b_packed[row], b_scale[row]), u)
+//              + optional_bias[row]
+//     params:
+//       p0 = out_dim
+//       p1 = in_dim (multiple of 64)
+//       p2 = rank (0, or multiple of 8, e.g. 24)
+//       p3 = packed_u32_off    ([out_dim, in_dim / 8] u32 words)
+//       p4 = scales_u32_off    (FP16 block-64 scales [out_dim, in_dim / 64])
+//       p5 = bscar_u32_off     (packed INT4 [out_dim, rank / 8] u32 words + FP16 row scales [out_dim])
+//       p6 = bias_u32_off
+//       p7 = has_bias (0u or 1u)
+//     ro_u32_a: layer shard
+//     ro_f32_a: equilibrated input `x_eq` [in_dim] (or raw `x` if un-equilibrated)
+//     ro_f32_b: compressed-scar latent `u = A_scar @ x_raw` [rank]
+//     rw_f32_a: output `y` [out_dim]
+//     dispatch: ((out_dim + 7u) >> 3u, 1u, 1u)
+// ----------------------------------------------------------------------------
+var<workgroup> wg_prot_mos: array<f32, 256>;
+
+@compute @workgroup_size(256, 1, 1)
+fn mos_fused_prot_int4_int4scar_gemv(
+    @builtin(workgroup_id) wgid: vec3<u32>,
+    @builtin(local_invocation_id) lid: vec3<u32>,
+) {
+    let tid = lid.x;
+    let sub_row = tid >> 5u;
+    let lane = tid & 31u;
+    let row = wgid.x * 8u + sub_row;
+
+    let out_dim = params.p0;
+    let in_dim = params.p1;
+    let rank = params.p2;
+    let words_per_row = in_dim >> 3u;
+    let blocks_per_row = in_dim >> 6u;
+
+    var acc: f32 = 0.0;
+    if (row < out_dim) {
+        let p_row_base = params.p3 + row * words_per_row;
+        let s_row_base = row * blocks_per_row;
+        for (var w_idx = lane; w_idx < words_per_row; w_idx += 32u) {
+            let word = ro_u32_a[p_row_base + w_idx];
+            let blk_idx = s_row_base + (w_idx >> 3u);
+            let scale = unpack_f16_lane(ro_u32_a[params.p4 + (blk_idx >> 1u)], blk_idx);
+            let c0 = w_idx << 3u;
+            let q0 = f32((word >>  0u) & 0xFu) - 8.0;
+            let q1 = f32((word >>  4u) & 0xFu) - 8.0;
+            let q2 = f32((word >>  8u) & 0xFu) - 8.0;
+            let q3 = f32((word >> 12u) & 0xFu) - 8.0;
+            let q4 = f32((word >> 16u) & 0xFu) - 8.0;
+            let q5 = f32((word >> 20u) & 0xFu) - 8.0;
+            let q6 = f32((word >> 24u) & 0xFu) - 8.0;
+            let q7 = f32((word >> 28u) & 0xFu) - 8.0;
+            let sub_dot = q0 * ro_f32_a[c0 + 0u] + q1 * ro_f32_a[c0 + 1u]
+                        + q2 * ro_f32_a[c0 + 2u] + q3 * ro_f32_a[c0 + 3u]
+                        + q4 * ro_f32_a[c0 + 4u] + q5 * ro_f32_a[c0 + 5u]
+                        + q6 * ro_f32_a[c0 + 6u] + q7 * ro_f32_a[c0 + 7u];
+            acc += sub_dot * scale;
+        }
+
+        if (rank > 0u) {
+            let b_words_per_row = rank >> 3u;
+            let b_row_base = params.p5 + row * b_words_per_row;
+            let b_scales_off = params.p5 + out_dim * b_words_per_row;
+            let b_scale = unpack_f16_lane(ro_u32_a[b_scales_off + (row >> 1u)], row);
+            var b_acc: f32 = 0.0;
+            for (var bw = lane; bw < b_words_per_row; bw += 32u) {
+                let bword = ro_u32_a[b_row_base + bw];
+                let r0 = bw << 3u;
+                b_acc += (f32((bword >>  0u) & 0xFu) - 8.0) * ro_f32_b[r0 + 0u]
+                       + (f32((bword >>  4u) & 0xFu) - 8.0) * ro_f32_b[r0 + 1u]
+                       + (f32((bword >>  8u) & 0xFu) - 8.0) * ro_f32_b[r0 + 2u]
+                       + (f32((bword >> 12u) & 0xFu) - 8.0) * ro_f32_b[r0 + 3u]
+                       + (f32((bword >> 16u) & 0xFu) - 8.0) * ro_f32_b[r0 + 4u]
+                       + (f32((bword >> 20u) & 0xFu) - 8.0) * ro_f32_b[r0 + 5u]
+                       + (f32((bword >> 24u) & 0xFu) - 8.0) * ro_f32_b[r0 + 6u]
+                       + (f32((bword >> 28u) & 0xFu) - 8.0) * ro_f32_b[r0 + 7u];
+            }
+            acc += b_acc * b_scale;
+        }
+    }
+
+    wg_prot_mos[tid] = acc;
+    workgroupBarrier();
+
+    for (var s = 16u; s > 0u; s >>= 1u) {
+        if (lane < s) {
+            wg_prot_mos[tid] += wg_prot_mos[tid + s];
+        }
+        workgroupBarrier();
+    }
+
+    if (lane == 0u && row < out_dim) {
+        var val = wg_prot_mos[sub_row * 32u];
+        if (params.p7 != 0u) {
+            val += unpack_f16_lane(ro_u32_a[params.p6 + (row >> 1u)], row);
+        }
+        rw_f32_a[row] = val;
+    }
+}

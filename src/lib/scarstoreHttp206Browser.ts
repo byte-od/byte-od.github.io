@@ -10,7 +10,7 @@
  */
 
 export const PORTFOLIO_DEFAULT_SYSTEM_PROMPT =
-  "You are System One, the official AI assistant for Julio Reis's portfolio (byte-od.github.io), running locally via WebGPU WGSL, MoS, and SCache O(1). Never claim to be Julio; refer to Julio Reis in the third person. Always reply in the same language as the user's message in 2 to 4 complete sentences.";
+  "You are JARVIS, the official Qwen2.5-3B AI assistant for visitors on Julio Reis's portfolio (byte-od.github.io), running locally via WebGPU WGSL, MoS, and SCache O(1). The visitor is not Julio; never claim to be Julio and refer to Julio Reis in the third person. Always reply in the user's language in 2 to 4 complete sentences.";
 
 export interface CapsuleLink {
   label: string;
@@ -69,6 +69,22 @@ export interface ActiveCapsuleRuntime {
   finalFloats: Float32Array | null;
   fromCache: boolean;
   meta: CapsuleDirectoryEntry;
+}
+
+export interface AnchorCosineScore {
+  capsuleId: string;
+  category: string;
+  cosine: number;
+  gate: number;
+  tau: number;
+}
+
+export interface GoldenSliceRoutingDiagnostics {
+  anchorCosines: AnchorCosineScore[];
+  routingEntropy: number;
+  maxAnchorCosine: number;
+  zProbeEnergy: number;
+  langSubspaceRatio: number;
 }
 
 interface UnpackedCapsule {
@@ -463,6 +479,7 @@ export class BrowserScarStoreHTTP206 {
       try {
         const resp = await fetch(storeUrl, {
           method: 'GET',
+          cache: 'no-cache',
           headers: { Range: rangeHeader },
         });
         if (resp.status !== 206 && resp.status !== 200) {
@@ -552,10 +569,16 @@ export class BrowserScarStoreHTTP206 {
     return true;
   }
 
-  private _buildSpanProbes(xInFlat: Float32Array, numUserTokens: number): Float32Array[] {
+  private _buildSpanProbes(
+    xInFlat: Float32Array,
+    numUserTokens: number
+  ): { probes: Float32Array[]; zProbeEnergy: number; langSubspaceRatio: number } {
     const d = this.hiddenDim;
     const mu = this.muQueryLast;
     const probes: Float32Array[] = [];
+    let zProbeEnergy = 0.0;
+    let langSubspaceRatio = 0.0;
+    let capturedGlobalMetrics = false;
 
     const addWindowProbe = (sIdx: number, eIdx: number) => {
       const count = eIdx - sIdx;
@@ -572,6 +595,9 @@ export class BrowserScarStoreHTTP206 {
         vec[c] = v;
         normSq += v * v;
       }
+      if (!capturedGlobalMetrics) {
+        zProbeEnergy = Math.sqrt(normSq / Math.max(1, d));
+      }
       const invNorm = 1.0 / Math.max(Math.sqrt(normSq), 1e-8);
       for (let c = 0; c < d; c++) vec[c] *= invNorm;
 
@@ -580,12 +606,17 @@ export class BrowserScarStoreHTTP206 {
         const kLang = this.kLang;
         const uLang = this.uLangMid;
         const proj = new Float32Array(kLang);
+        let langSq = 0.0;
         for (let k = 0; k < kLang; k++) {
           let acc = 0.0;
           for (let c = 0; c < d; c++) {
             acc += vec[c] * uLang[c * kLang + k];
           }
           proj[k] = acc;
+          langSq += acc * acc;
+        }
+        if (!capturedGlobalMetrics) {
+          langSubspaceRatio = Math.min(1.0, Math.sqrt(Math.max(0.0, langSq)));
         }
         let projNormSq = 0.0;
         for (let c = 0; c < d; c++) {
@@ -601,6 +632,7 @@ export class BrowserScarStoreHTTP206 {
         const invProjNorm = 1.0 / Math.max(Math.sqrt(projNormSq), 1e-8);
         for (let c = 0; c < d; c++) vec[c] *= invProjNorm;
       }
+      capturedGlobalMetrics = true;
       probes.push(vec);
     };
 
@@ -624,26 +656,43 @@ export class BrowserScarStoreHTTP206 {
         }
       }
     }
-    return probes;
+    return { probes, zProbeEnergy, langSubspaceRatio };
   }
 
   public async routeAndFetchActiveCapsules(
     xInFlat: Float32Array,
     numUserTokens: number
-  ): Promise<{ active: ActiveCapsuleRuntime[]; turnBytesFetched: number; httpEvents: Http206Event[] }> {
+  ): Promise<{
+    active: ActiveCapsuleRuntime[];
+    turnBytesFetched: number;
+    httpEvents: Http206Event[];
+    diagnostics: GoldenSliceRoutingDiagnostics;
+  }> {
     const caps: CapsuleDirectoryEntry[] = this.meta.capsules || [];
     this.lastCosines.clear();
     this.lastActiveGates.clear();
     if (caps.length === 0 || numUserTokens <= 0) {
-      return { active: [], turnBytesFetched: 0, httpEvents: [] };
+      return {
+        active: [],
+        turnBytesFetched: 0,
+        httpEvents: [],
+        diagnostics: {
+          anchorCosines: [],
+          routingEntropy: 1.0,
+          maxAnchorCosine: 0.0,
+          zProbeEnergy: 0.0,
+          langSubspaceRatio: 0.0,
+        },
+      };
     }
 
     const d = this.hiddenDim;
-    const probes = this._buildSpanProbes(xInFlat, numUserTokens);
+    const { probes, zProbeEnergy, langSubspaceRatio } = this._buildSpanProbes(xInFlat, numUserTokens);
     const gVals = new Float32Array(caps.length);
     const cosArr = new Float32Array(caps.length);
     const idToIdx = new Map<string, number>();
     let maxGate = 0.0;
+    let maxGlobalCos = -2.0;
 
     for (let i = 0; i < caps.length; i++) {
       const cap = caps[i];
@@ -664,6 +713,7 @@ export class BrowserScarStoreHTTP206 {
         if (dot > maxCos) maxCos = dot;
       }
       cosArr[i] = maxCos;
+      if (maxCos > maxGlobalCos) maxGlobalCos = maxCos;
       this.lastCosines.set(cap.capsule_id, maxCos);
       const ramp = Math.max(cap.ramp, 1e-6);
       const g = Math.min(1.0, Math.max(0.0, (maxCos - cap.tau) / ramp));
@@ -671,8 +721,42 @@ export class BrowserScarStoreHTTP206 {
       if (g > maxGate) maxGate = g;
     }
 
+    const buildDiagnostics = (finalGates: Float32Array): GoldenSliceRoutingDiagnostics => {
+      const temp = 12.0;
+      const mVal = maxGlobalCos > -1.5 ? maxGlobalCos : 0.0;
+      let sumExp = 0.0;
+      const exps = new Float32Array(caps.length);
+      for (let i = 0; i < caps.length; i++) {
+        const w = Math.exp(Math.max(-60.0, (cosArr[i] - mVal) * temp));
+        exps[i] = w;
+        sumExp += w;
+      }
+      let ent = 0.0;
+      if (sumExp > 0 && caps.length > 1) {
+        for (let i = 0; i < caps.length; i++) {
+          const p = exps[i] / sumExp;
+          if (p > 1e-12) ent -= p * Math.log(p);
+        }
+        ent = Math.min(1.0, Math.max(0.0, ent / Math.log(caps.length)));
+      }
+      const anchorCosines: AnchorCosineScore[] = caps.map((c, idx) => ({
+        capsuleId: c.capsule_id,
+        category: c.metadata?.category || 'Concept',
+        cosine: Math.round(cosArr[idx] * 10000) / 10000,
+        gate: Math.round(finalGates[idx] * 10000) / 10000,
+        tau: c.tau,
+      }));
+      return {
+        anchorCosines,
+        routingEntropy: Math.round(ent * 10000) / 10000,
+        maxAnchorCosine: Math.round((maxGlobalCos > -1.5 ? maxGlobalCos : 0.0) * 10000) / 10000,
+        zProbeEnergy: Math.round(zProbeEnergy * 10000) / 10000,
+        langSubspaceRatio: Math.round(langSubspaceRatio * 10000) / 10000,
+      };
+    };
+
     if (maxGate <= 0.0) {
-      return { active: [], turnBytesFetched: 0, httpEvents: [] };
+      return { active: [], turnBytesFetched: 0, httpEvents: [], diagnostics: buildDiagnostics(gVals) };
     }
 
     const preGates = Float32Array.from(gVals);
@@ -750,6 +834,6 @@ export class BrowserScarStoreHTTP206 {
       }
     }
 
-    return { active, turnBytesFetched, httpEvents };
+    return { active, turnBytesFetched, httpEvents, diagnostics: buildDiagnostics(gVals) };
   }
 }

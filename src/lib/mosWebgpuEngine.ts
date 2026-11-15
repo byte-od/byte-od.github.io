@@ -1,11 +1,13 @@
 /**
- * Native In-Browser WebGPU Engine (`MoS INT4+ASVD` + `SCache O(1)` + `GoldenSliceScarStoreV4`)
+ * Native In-Browser WebGPU Engine (`MoS INT4+ASVD` + `VQ4-Scar` + `SCache O(1)` + `GoldenSliceScarStoreV4`)
  *
- * 100% Custom WGSL 1.0 Shaders (`mos_scache.wgsl`, 15 Compute Pipelines):
+ * 100% Custom WGSL 1.0 Shaders (`mos_scache.wgsl`, 18 Compute Pipelines):
  * - Zero Python Backend, Zero ONNX Runtime, Zero `@huggingface/transformers`, Zero O(T) KV Cache
+ * - Supports both `MoS Block-64 INT4 + ASVD` AND `VQ4-Scar` (`vq4_equilibrate_fwht64` + `mos_fused_vq4_int4scar_gemv`)
+ * - Includes `P_perp_CJK` Script-Orthogonal Active Subspace Gate (`apply_script_subspace_gate`, `18.55 KB` bitmask)
  * - Persistent CacheStorage (`mos-webgpu-v4-assets-v1`) for static `< 44 MiB` MoS shards (`0 MB` repeat load)
  * - Live RFC 7233 `HTTP/1.1 206 Partial Content` streaming for `61.25 KB` (`62,720 B`) universal cartridges
- * - Strictly constant `SCache O(1)` (`2733.6 KB`, `Δ +0 B`) across multi-turn conversations
+ * - Strictly constant `SCache O(1)` (`4230.8 KB`, `Δ +0 B`) across multi-turn conversations
  */
 
 import wgslBundledSource from './shaders/mos_scache.wgsl?raw';
@@ -13,10 +15,12 @@ import {
   MOS_WEBGPU_CACHE_NAME,
   QwenBPETokenizer,
   fetchWithPersistentCache,
+  pruneLegacyMosWebgpuCaches,
 } from './qwenBpeTokenizer';
 import {
   ActiveCapsuleRuntime,
   BrowserScarStoreHTTP206,
+  GoldenSliceRoutingDiagnostics,
   Http206Event,
   PORTFOLIO_DEFAULT_SYSTEM_PROMPT,
   computeHorizonScale,
@@ -25,7 +29,15 @@ import {
 } from './scarstoreHttp206Browser';
 
 const MAX_ROUTING_USER_TOKENS = 192;
-const PREFILL_BATCH_TOKENS = 128;
+// 4 tokens per GPUCommandBuffer (~280 ms on 36-layer 3B) prevents macOS Metal / Dawn 5s GPU watchdog timeouts
+// and allows <300 ms responsive AbortSignal cancellation + 60 FPS UI compositing during prefill.
+const PREFILL_BATCH_TOKENS = 4;
+
+function createAbortError(): Error {
+  const err = new Error('Geração interrompida pelo usuário.');
+  err.name = 'AbortError';
+  return err;
+}
 
 // Standard WebGPU numeric bitflags (avoids requiring external `@webgpu/types` in `tsconfig.json`)
 const GPU_BUF = {
@@ -58,6 +70,9 @@ export interface TokenStreamUpdate {
   scacheDeltaBytes: number;
   confidence: number;
   margin: number;
+  uncertainty: number;
+  horizonScale: number;
+  top1TokenId: number;
 }
 
 export interface EngineGenerationResult {
@@ -83,12 +98,16 @@ export interface EngineGenerationResult {
     titlePt?: string;
     category?: string;
   }>;
+  routingDiagnostics?: GoldenSliceRoutingDiagnostics;
   turnHttp206Bytes: number;
   totalHttp206Bytes: number;
   httpEvents: Http206Event[];
   meanConfidenceP1: number;
   meanMarginP1P2: number;
 }
+
+import { buildCjkVocabBitmaskU32, hasCjkScript } from './scriptSubspaceGate';
+export { buildCjkVocabBitmaskU32, hasCjkScript };
 
 function packKernelParams(
   ints: Partial<Record<'p0' | 'p1' | 'p2' | 'p3' | 'p4' | 'p5' | 'p6' | 'p7', number>> = {},
@@ -112,34 +131,81 @@ function packKernelParams(
   return buf;
 }
 
-export async function checkMosShardsCached(baseUrl = '/webgpu/qwen0p5b'): Promise<boolean> {
+export async function checkMosShardsCached(baseUrl = '/webgpu/qwen3b'): Promise<boolean> {
   if (typeof caches === 'undefined') return false;
   try {
+    await pruneLegacyMosWebgpuCaches();
     const cleanBase = baseUrl.replace(/\/$/, '');
     const cache = await caches.open(MOS_WEBGPU_CACHE_NAME);
     const keys = await cache.keys();
     const shardHits = keys.filter((req) => req.url.includes(`${cleanBase}/mos_shard_`)).length;
-    return shardHits >= 8;
+    return cleanBase.includes('qwen3b') ? shardHits >= 40 : shardHits >= 8;
   } catch (_) {
     return false;
   }
 }
 
 function findRepeatedSixGramStart(ids: number[]): number {
-  const k = 6;
-  if (ids.length < k * 2) return -1;
-  const tailStart = ids.length - k;
-  for (let i = 0; i <= tailStart - k; i++) {
-    let match = true;
-    for (let j = 0; j < k; j++) {
-      if (ids[i + j] !== ids[tailStart + j]) {
-        match = false;
-        break;
+  const n = ids.length;
+  // Guard 0: Catch immediate 1-token x4 consecutive stutter (e.g. "gó gó gó gó")
+  if (n >= 4 && ids[n - 1] === ids[n - 2] && ids[n - 2] === ids[n - 3] && ids[n - 3] === ids[n - 4]) {
+    return Math.max(1, n - 3);
+  }
+  // Guard 0b: Catch immediate 2-token x4 consecutive oscillation (e.g. "ab ab ab ab")
+  if (
+    n >= 8 &&
+    ids[n - 2] === ids[n - 4] &&
+    ids[n - 4] === ids[n - 6] &&
+    ids[n - 6] === ids[n - 8] &&
+    ids[n - 1] === ids[n - 3] &&
+    ids[n - 3] === ids[n - 5] &&
+    ids[n - 5] === ids[n - 7]
+  ) {
+    return Math.max(2, n - 6);
+  }
+  const k = 8;
+  if (ids.length >= k * 2) {
+    const tailStart = ids.length - k;
+    for (let i = 0; i <= tailStart - k; i++) {
+      let match = true;
+      for (let j = 0; j < k; j++) {
+        if (ids[i + j] !== ids[tailStart + j]) {
+          match = false;
+          break;
+        }
+      }
+      if (match) return tailStart;
+    }
+  }
+  // Guard 2: Catch 3x repeated 4-token subword stutters (e.g. "-Web-GL-SCache-Web")
+  const kShort = 4;
+  if (ids.length >= kShort * 4) {
+    const tailStart = ids.length - kShort;
+    let hits = 0;
+    let firstHit = -1;
+    for (let i = Math.max(0, ids.length - 40); i <= tailStart - kShort; i++) {
+      let match = true;
+      for (let j = 0; j < kShort; j++) {
+        if (ids[i + j] !== ids[tailStart + j]) {
+          match = false;
+          break;
+        }
+      }
+      if (match) {
+        if (firstHit < 0) firstHit = i + kShort;
+        hits++;
       }
     }
-    if (match) return tailStart;
+    if (hits >= 2 && firstHit >= 0) {
+      return tailStart;
+    }
   }
   return -1;
+}
+
+function hasCompoundHyphenDegeneration(text: string): boolean {
+  // Detects pathological 4+ hyphenated acronym chains like "WebGL-Web-GL-SCache-Web"
+  return /(?:[A-Za-z0-9]+-){4,}[A-Za-z0-9]+/.test(text);
 }
 
 function endsWithCompleteSentence(text: string): boolean {
@@ -189,6 +255,13 @@ export class BrowserMoSWebGPUEngine {
   private scacheKvSnapBuf: any;
   private scacheWScarSnapBuf: any;
   private scacheSalSnapBuf: any;
+  private scacheKvSysSnapBuf: any;
+  private scacheWScarSysSnapBuf: any;
+  private scacheSalSysSnapBuf: any;
+  private _sysSnapTokenIds: number[] = [];
+  private _sysSnapReady = false;
+  private _deviceLostError: Error | null = null;
+  private _deviceLostPromise!: Promise<never>;
   private turnSuffixIds: number[] = [];
   public sessionPos = 0;
   public turnCount = 0;
@@ -208,11 +281,16 @@ export class BrowserMoSWebGPUEngine {
   private gateBuf: any;
   private upBuf: any;
   private asvdUBuf: any;
+  private vq4XRotBuf: any;
+  private vq4DummyBuf: any;
   private logitsBuf: any;
   private top2S1F32Buf: any;
   private top2S1U32Buf: any;
   private top2OutBuf: any;
   private readbackTop2Buf: any;
+  private cjkBitmaskBuf: any;
+  private scriptGateUniform: any;
+  private cjkBitmaskReady = false;
 
   public readonly isGoldenSliceV4: boolean;
   public readonly midLayerIdx: number;
@@ -255,6 +333,22 @@ export class BrowserMoSWebGPUEngine {
   }) {
     this.device = opts.device;
     this.adapterLabel = opts.adapterLabel;
+    this._deviceLostPromise = new Promise<never>((_, reject) => {
+      if (this.device?.lost && typeof this.device.lost.then === 'function') {
+        this.device.lost.then((info: any) => {
+          const reason = info?.reason || 'unknown';
+          if (reason === 'destroyed') return;
+          const err = new Error(
+            `GPU WebGPU reiniciada pelo driver (${reason}): ${info?.message || 'timeout de comando GPU'}`
+          );
+          (err as any).code = 'WEBGPU_DEVICE_LOST';
+          this._deviceLostError = err;
+          reject(err);
+        });
+      }
+    });
+    // Prevent unhandled rejection when device is idle
+    this._deviceLostPromise.catch(() => {});
     this.manifest = opts.manifest;
     this.tokenizer = opts.tokenizer;
     this.scarStore = opts.scarStore;
@@ -317,6 +411,11 @@ export class BrowserMoSWebGPUEngine {
       'int4_vocab_logits_gemv',
       'logits_top2_reduce_stage1',
       'logits_top2_reduce_stage2',
+      'vq4_equilibrate_fwht64',
+      'mos_fused_vq4_int4scar_gemv',
+      'apply_script_subspace_gate',
+      'vec_equilibrate_f16',
+      'mos_fused_prot_int4_int4scar_gemv',
     ];
     for (const ep of entryPoints) {
       this.pipelines[ep] = this.device.createComputePipeline({
@@ -332,7 +431,7 @@ export class BrowserMoSWebGPUEngine {
   }
 
   public static async create(
-    baseUrl = '/webgpu/qwen0p5b',
+    baseUrl = '/webgpu/qwen3b',
     onProgress?: (p: EngineLoadProgress) => void
   ): Promise<BrowserMoSWebGPUEngine> {
     const navGpu = typeof navigator !== 'undefined' ? (navigator as any).gpu : undefined;
@@ -374,7 +473,7 @@ export class BrowserMoSWebGPUEngine {
     const device = await adapter.requestDevice();
 
     const cleanBase = baseUrl.replace(/\/$/, '');
-    report('manifest', 5, 'Carregando manifesto MoS + compilando 15 shaders WGSL 1.0...');
+    report('manifest', 5, 'Carregando manifesto MoS + compilando 20 shaders WGSL 1.0...');
     const manifestResp = await fetch(`${cleanBase}/webgpu_manifest.json`, { cache: 'no-cache' });
     if (!manifestResp.ok) {
       throw new Error(`HTTP ${manifestResp.status} ao carregar webgpu_manifest.json`);
@@ -401,8 +500,13 @@ export class BrowserMoSWebGPUEngine {
         : Promise.resolve(null),
     ]);
 
-    const shards: Array<{ shard_index: number; filename: string; byte_length: number; mib: number }> =
-      manifest.shards || [];
+    const shards: Array<{
+      shard_index: number;
+      filename: string;
+      byte_length: number;
+      mib: number;
+      mirror_url?: string;
+    }> = manifest.shards || [];
     const totalBytes: number = manifest.total_weights_bytes || 1;
     let loadedBytes = 0;
     let allCached = shards.length > 0;
@@ -413,11 +517,15 @@ export class BrowserMoSWebGPUEngine {
       report(
         'shards',
         Math.round(12 + (loadedBytes / totalBytes) * 82),
-        `Fatia MoS INT4+ASVD ${i + 1}/${shards.length}: ${s.filename} (${s.mib.toFixed(1)} MiB)...`,
+        `Fatia MoS VQ4-Scar ${i + 1}/${shards.length}: ${s.filename} (${s.mib.toFixed(1)} MiB)...`,
         loadedBytes,
         totalBytes
       );
-      const { response: sResp, fromCache } = await fetchWithPersistentCache(`${cleanBase}/${s.filename}`);
+      let sFetch = await fetchWithPersistentCache(`${cleanBase}/${s.filename}`);
+      if (!sFetch.response.ok && s.mirror_url) {
+        sFetch = await fetchWithPersistentCache(s.mirror_url);
+      }
+      const { response: sResp, fromCache } = sFetch;
       if (!sResp.ok) {
         throw new Error(`Falha ao carregar ${s.filename}: HTTP ${sResp.status}`);
       }
@@ -434,14 +542,14 @@ export class BrowserMoSWebGPUEngine {
       report(
         'shards',
         Math.round(12 + (loadedBytes / totalBytes) * 82),
-        `Fatia MoS INT4+ASVD ${i + 1}/${shards.length} alocada na GPU`,
+        `Fatia MoS VQ4-Scar ${i + 1}/${shards.length} alocada na GPU`,
         loadedBytes,
         totalBytes,
         allCached
       );
     }
 
-    report('compile', 96, 'Compilando 15 pipelines WGSL e alocando SCache O(1) constante...', loadedBytes, totalBytes, allCached);
+    report('compile', 95, 'Compilando 20 pipelines WGSL e alocando SCache O(1) constante...', loadedBytes, totalBytes, allCached);
     const engine = new BrowserMoSWebGPUEngine({
       device,
       adapterLabel,
@@ -452,8 +560,23 @@ export class BrowserMoSWebGPUEngine {
       shardBuffers,
       loadedFromCache: allCached,
     });
+    await engine.warmSystemPromptSnapshot((done, total) => {
+      const pct = Math.min(99, 96 + Math.floor((done / Math.max(1, total)) * 4));
+      report(
+        'compile',
+        pct,
+        `Aquecendo SCache O(1) do sistema (${done}/${total} tokens)...`,
+        loadedBytes,
+        totalBytes,
+        allCached
+      );
+    });
     report('ready', 100, 'Motor Nativo WebGPU / WGSL v4.0 pronto!', loadedBytes, totalBytes, allCached);
     return engine;
+  }
+
+  public get isDeviceLost(): boolean {
+    return this._deviceLostError !== null;
   }
 
   public get scacheGpuBytes(): number {
@@ -470,6 +593,12 @@ export class BrowserMoSWebGPUEngine {
       this.scacheKvBuf?.destroy?.();
       this.scacheWScarBuf?.destroy?.();
       this.scacheSalienceBuf?.destroy?.();
+      this.scacheKvSnapBuf?.destroy?.();
+      this.scacheWScarSnapBuf?.destroy?.();
+      this.scacheSalSnapBuf?.destroy?.();
+      this.scacheKvSysSnapBuf?.destroy?.();
+      this.scacheWScarSysSnapBuf?.destroy?.();
+      this.scacheSalSysSnapBuf?.destroy?.();
       this.device?.destroy?.();
     } catch (_) {
       // Ignore cleanup errors
@@ -518,6 +647,21 @@ export class BrowserMoSWebGPUEngine {
       size: this.scacheSalienceBuf.size,
       usage: U.COPY_DST | U.COPY_SRC,
     });
+    this.scacheKvSysSnapBuf = this.device.createBuffer({
+      label: 'scache_kv_sys_snap',
+      size: this.scacheKvBuf.size,
+      usage: U.COPY_DST | U.COPY_SRC,
+    });
+    this.scacheWScarSysSnapBuf = this.device.createBuffer({
+      label: 'scache_w_scar_sys_snap',
+      size: this.scacheWScarBuf.size,
+      usage: U.COPY_DST | U.COPY_SRC,
+    });
+    this.scacheSalSysSnapBuf = this.device.createBuffer({
+      label: 'scache_sal_sys_snap',
+      size: this.scacheSalienceBuf.size,
+      usage: U.COPY_DST | U.COPY_SRC,
+    });
     this.turnSuffixIds = this.tokenizer.encode('<|im_end|>\n');
     this.sessionPos = 0;
     this.turnCount = 0;
@@ -552,12 +696,24 @@ export class BrowserMoSWebGPUEngine {
     this.projOutBuf = this.device.createBuffer({ size: this.hiddenDim * 4, usage: U.STORAGE });
     this.gateBuf = this.device.createBuffer({ size: this.interDim * 4, usage: U.STORAGE });
     this.upBuf = this.device.createBuffer({ size: this.interDim * 4, usage: U.STORAGE });
-    this.asvdUBuf = this.device.createBuffer({ size: Math.max(64, this.mosRank) * 4, usage: U.STORAGE });
+    this.asvdUBuf = this.device.createBuffer({ size: Math.max(256, this.mosRank) * 4, usage: U.STORAGE });
+    const maxLinIn = Math.max(this.hiddenDim, qDim, this.interDim);
+    this.vq4XRotBuf = this.device.createBuffer({ size: maxLinIn * 4, usage: U.STORAGE });
+    this.vq4DummyBuf = this.device.createBuffer({ size: 16, usage: U.STORAGE });
     this.logitsBuf = this.device.createBuffer({ size: this.vocabSize * 4, usage: U.STORAGE | U.COPY_SRC });
     this.top2S1F32Buf = this.device.createBuffer({ size: 256 * 3 * 4, usage: U.STORAGE });
     this.top2S1U32Buf = this.device.createBuffer({ size: 256 * 4, usage: U.STORAGE });
     this.top2OutBuf = this.device.createBuffer({ size: 16, usage: U.STORAGE | U.COPY_SRC });
     this.readbackTop2Buf = this.device.createBuffer({ size: 16, usage: U.COPY_DST | U.MAP_READ });
+
+    const nMaskWords = Math.ceil(this.vocabSize / 32);
+    this.cjkBitmaskBuf = this.device.createBuffer({
+      size: Math.max(16, nMaskWords * 4),
+      usage: U.STORAGE | U.COPY_DST,
+    });
+    this.scriptGateUniform = this.device.createBuffer({ size: 64, usage: U.UNIFORM | U.COPY_DST });
+    this.cjkBitmaskReady = false;
+    this._setScriptGateGpu(false);
 
     const calF32 = this.scarStore
       ? this.scarStore.getCalibrationBufferF32()
@@ -617,6 +773,24 @@ export class BrowserMoSWebGPUEngine {
     });
   }
 
+  private _setScriptGateGpu(suppressCjk: boolean, penalty = 64.0): void {
+    const uBuf = packKernelParams(
+      {
+        p0: this.vocabSize,
+        p1: suppressCjk ? 1 : 0,
+      },
+      { f0: penalty }
+    );
+    this.device.queue.writeBuffer(this.scriptGateUniform, 0, uBuf);
+  }
+
+  private _ensureCjkBitmaskGpu(): void {
+    if (this.cjkBitmaskReady) return;
+    const maskU32 = buildCjkVocabBitmaskU32(this.tokenizer, this.vocabSize);
+    this.device.queue.writeBuffer(this.cjkBitmaskBuf, 0, maskU32);
+    this.cjkBitmaskReady = true;
+  }
+
   private _makeLinearOps(shardBuf: any, spec: any, xBuf: any, yBuf: any): DispatchOp[] {
     const ops: DispatchOp[] = [];
     const outDim = spec.out_dim;
@@ -634,6 +808,131 @@ export class BrowserMoSWebGPUEngine {
         })
       );
       ops.push(['fp16_gemv_bias', this._bg('fp16_gemv_bias', { 0: u, 1: shardBuf, 3: xBuf, 6: yBuf }), wgs]);
+    } else if (spec.mode === 'vq4_scar') {
+      const rank = spec.rank >>> 0;
+      const uEq = this._makeUniform(
+        packKernelParams({
+          p0: inDim,
+          p1: spec.d_eq_u32_off,
+        })
+      );
+      ops.push([
+        'vq4_equilibrate_fwht64',
+        this._bg('vq4_equilibrate_fwht64', { 0: uEq, 1: shardBuf, 3: xBuf, 6: this.vq4XRotBuf }),
+        inDim >>> 6,
+      ]);
+
+      if (rank > 0) {
+        const uA = this._makeUniform(
+          packKernelParams({
+            p0: rank,
+            p1: inDim,
+            p2: 0,
+            p3: spec.ascar_packed_u32_off,
+            p4: spec.ascar_scales_u32_off,
+          })
+        );
+        ops.push([
+          'mos_fused_int4_bscar_gemv',
+          this._bg('mos_fused_int4_bscar_gemv', {
+            0: uA,
+            1: shardBuf,
+            3: xBuf,
+            4: this.vq4DummyBuf,
+            6: this.asvdUBuf,
+          }),
+          Math.ceil(rank / 8),
+        ]);
+      }
+
+      const p7Bias = spec.has_bias ? (((1 << 31) | (spec.bias_u32_off >>> 0)) >>> 0) : 0;
+      const uVq = this._makeUniform(
+        packKernelParams({
+          p0: outDim,
+          p1: inDim,
+          p2: rank,
+          p3: spec.vq_codes_u32_off,
+          p4: spec.vq_scales_u32_off,
+          p5: spec.lut256_u32_off,
+          p6: spec.bscar_u32_off,
+          p7: p7Bias,
+        })
+      );
+      ops.push([
+        'mos_fused_vq4_int4scar_gemv',
+        this._bg('mos_fused_vq4_int4scar_gemv', {
+          0: uVq,
+          1: shardBuf,
+          3: this.vq4XRotBuf,
+          4: this.asvdUBuf,
+          6: yBuf,
+        }),
+        wgs,
+      ]);
+    } else if (spec.mode === 'prot_int4_scar') {
+      const rank = spec.rank >>> 0;
+      const hasDeq = Boolean(spec.has_d_eq);
+      const xBaseBuf = hasDeq ? this.vq4XRotBuf : xBuf;
+      if (hasDeq) {
+        const uEq = this._makeUniform(
+          packKernelParams({
+            p0: inDim,
+            p1: spec.d_eq_u32_off,
+          })
+        );
+        ops.push([
+          'vec_equilibrate_f16',
+          this._bg('vec_equilibrate_f16', { 0: uEq, 1: shardBuf, 3: xBuf, 6: this.vq4XRotBuf }),
+          (inDim + 255) >>> 8,
+        ]);
+      }
+
+      if (rank > 0) {
+        const uA = this._makeUniform(
+          packKernelParams({
+            p0: rank,
+            p1: inDim,
+            p2: 0,
+            p3: spec.ascar_packed_u32_off,
+            p4: spec.ascar_scales_u32_off,
+          })
+        );
+        ops.push([
+          'mos_fused_int4_bscar_gemv',
+          this._bg('mos_fused_int4_bscar_gemv', {
+            0: uA,
+            1: shardBuf,
+            3: xBuf,
+            4: this.vq4DummyBuf,
+            6: this.asvdUBuf,
+          }),
+          Math.ceil(rank / 8),
+        ]);
+      }
+
+      const uProt = this._makeUniform(
+        packKernelParams({
+          p0: outDim,
+          p1: inDim,
+          p2: rank,
+          p3: spec.packed_u32_off,
+          p4: spec.scales_u32_off,
+          p5: spec.bscar_u32_off,
+          p6: spec.bias_u32_off,
+          p7: spec.has_bias ? 1 : 0,
+        })
+      );
+      ops.push([
+        'mos_fused_prot_int4_int4scar_gemv',
+        this._bg('mos_fused_prot_int4_int4scar_gemv', {
+          0: uProt,
+          1: shardBuf,
+          3: xBaseBuf,
+          4: this.asvdUBuf,
+          6: yBuf,
+        }),
+        wgs,
+      ]);
     } else {
       const rank = spec.rank;
       const uDown = this._makeUniform(
@@ -878,6 +1177,15 @@ export class BrowserMoSWebGPUEngine {
     const uR1 = this._makeUniform(packKernelParams({ p0: this.vocabSize }));
     this.reduceOps = [
       [
+        'apply_script_subspace_gate',
+        this._bg('apply_script_subspace_gate', {
+          0: this.scriptGateUniform,
+          1: this.cjkBitmaskBuf,
+          6: this.logitsBuf,
+        }),
+        Math.ceil(this.vocabSize / 256),
+      ],
+      [
         'logits_top2_reduce_stage1',
         this._bg('logits_top2_reduce_stage1', {
           0: uR1,
@@ -993,18 +1301,126 @@ export class BrowserMoSWebGPUEngine {
     }
   }
 
-  private _submitPrefillSequence(
+  private async _waitQueueSafe(signal: AbortSignal | null = null): Promise<void> {
+    if (this._deviceLostError) throw this._deviceLostError;
+    if (signal?.aborted) throw createAbortError();
+    if (this.device?.queue && typeof this.device.queue.onSubmittedWorkDone === 'function') {
+      await Promise.race([this.device.queue.onSubmittedWorkDone(), this._deviceLostPromise]);
+    }
+    if (this._deviceLostError) throw this._deviceLostError;
+    if (signal?.aborted) throw createAbortError();
+  }
+
+  private async _mapReadSafe(buf: any, byteLength: number): Promise<ArrayBuffer> {
+    if (this._deviceLostError) throw this._deviceLostError;
+    await Promise.race([buf.mapAsync(GPU_MAP_READ, 0, byteLength), this._deviceLostPromise]);
+    const raw = buf.getMappedRange(0, byteLength).slice(0);
+    buf.unmap();
+    if (this._deviceLostError) throw this._deviceLostError;
+    return raw;
+  }
+
+  public async warmSystemPromptSnapshot(onProgress?: (done: number, total: number) => void): Promise<void> {
+    if (this._sysSnapReady) return;
+    const defaultSysTxt = this.scarStore ? this.scarStore.systemPrompt : PORTFOLIO_DEFAULT_SYSTEM_PROMPT;
+    const dummyProbe = this.tokenizer.applyChatTemplate(
+      [
+        { role: 'system', content: defaultSysTxt },
+        { role: 'user', content: 'oi' },
+      ],
+      true
+    );
+    const bounds = this.isGoldenSliceV4
+      ? extractUserContentBounds(
+          dummyProbe,
+          this.userTurnPrefixIds,
+          this.scarStore ? this.scarStore.userTurnSuffixIds : null
+        )
+      : {
+          qStart: Math.min(
+            findSubsequenceLastEnd(dummyProbe, this.userTurnPrefixIds),
+            Math.max(0, dummyProbe.length - 1)
+          ),
+          qEnd: dummyProbe.length,
+        };
+    const prefixLen = bounds.qStart;
+    if (prefixLen <= 0 || prefixLen >= this.numSink) {
+      return;
+    }
+    const sysIds = dummyProbe.slice(0, prefixLen);
+    this.resetSCache();
+
+    for (let batchStart = 0; batchStart < prefixLen; batchStart += PREFILL_BATCH_TOKENS) {
+      const batchEnd = Math.min(prefixLen, batchStart + PREFILL_BATCH_TOKENS);
+      const batchLen = batchEnd - batchStart;
+      const stepsU32 = new Uint32Array(batchLen * 4);
+      for (let i = 0; i < batchLen; i++) {
+        const pos = batchStart + i;
+        stepsU32[i * 4 + 0] = sysIds[pos];
+        stepsU32[i * 4 + 1] = pos;
+      }
+      this.device.queue.writeBuffer(this.prefillStepsBuf, 0, stepsU32);
+      const enc = this.device.createCommandEncoder();
+      for (let i = 0; i < batchLen; i++) {
+        enc.copyBufferToBuffer(this.prefillStepsBuf, i * 16, this.stepStateBuf, 0, 16);
+        const cpass = enc.beginComputePass();
+        this._recordOps(cpass, this.embedOps);
+        for (let l = 0; l < this.numLayers; l++) {
+          this._recordOps(cpass, this.layerOps[l]);
+        }
+        cpass.end();
+      }
+      this.device.queue.submit([enc.finish()]);
+      await this._waitQueueSafe(null);
+      if (onProgress) onProgress(batchEnd, prefixLen);
+    }
+
+    const encSnap = this.device.createCommandEncoder();
+    encSnap.copyBufferToBuffer(this.scacheKvBuf, 0, this.scacheKvSysSnapBuf, 0, this.scacheKvBuf.size);
+    encSnap.copyBufferToBuffer(this.scacheWScarBuf, 0, this.scacheWScarSysSnapBuf, 0, this.scacheWScarBuf.size);
+    encSnap.copyBufferToBuffer(this.scacheSalienceBuf, 0, this.scacheSalSysSnapBuf, 0, this.scacheSalienceBuf.size);
+    this.device.queue.submit([encSnap.finish()]);
+    await this._waitQueueSafe(null);
+
+    this._sysSnapTokenIds = sysIds;
+    this._sysSnapReady = true;
+    this.resetSCache();
+  }
+
+  private _matchesSysSnapPrefix(ids: number[]): boolean {
+    const snap = this._sysSnapTokenIds;
+    if (!this._sysSnapReady || snap.length === 0 || ids.length <= snap.length) {
+      return false;
+    }
+    for (let i = 0; i < snap.length; i++) {
+      if (ids[i] !== snap[i]) return false;
+    }
+    return true;
+  }
+
+  private _restoreSysSnapToActiveSCache(): void {
+    const enc = this.device.createCommandEncoder();
+    enc.copyBufferToBuffer(this.scacheKvSysSnapBuf, 0, this.scacheKvBuf, 0, this.scacheKvBuf.size);
+    enc.copyBufferToBuffer(this.scacheWScarSysSnapBuf, 0, this.scacheWScarBuf, 0, this.scacheWScarBuf.size);
+    enc.copyBufferToBuffer(this.scacheSalSysSnapBuf, 0, this.scacheSalienceBuf, 0, this.scacheSalienceBuf.size);
+    this.device.queue.submit([enc.finish()]);
+  }
+
+  private async _submitPrefillSequence(
     tokenIds: number[],
     basePos: number,
     qStart: number,
     captureXIn: boolean,
-    qEnd: number | null = null
-  ): void {
+    qEnd: number | null = null,
+    signal: AbortSignal | null = null,
+    onPrefillProgress?: (done: number, total: number) => void
+  ): Promise<void> {
     const lp = tokenIds.length;
     const effQEnd = qEnd === null ? lp : Math.min(lp, Math.max(qStart + 1, qEnd));
     const splitIdx = this.isGoldenSliceV4 ? this.midLayerIdx : this.numLayers - 2;
 
     for (let batchStart = 0; batchStart < lp; batchStart += PREFILL_BATCH_TOKENS) {
+      if (signal?.aborted) throw createAbortError();
       const batchEnd = Math.min(lp, batchStart + PREFILL_BATCH_TOKENS);
       const batchLen = batchEnd - batchStart;
       const stepsU32 = new Uint32Array(batchLen * 4);
@@ -1072,36 +1488,40 @@ export class BrowserMoSWebGPUEngine {
         }
       }
       this.device.queue.submit([enc.finish()]);
+      await this._waitQueueSafe(signal);
+      if (onPrefillProgress) onPrefillProgress(batchEnd, lp);
     }
   }
 
   private _flushClosingTokensToSCache(closingIds: number[], startPos: number): number {
     if (!closingIds || closingIds.length === 0) return startPos;
     const len = closingIds.length;
-    const stepsU32 = new Uint32Array(len * 4);
-    for (let i = 0; i < len; i++) {
-      stepsU32[i * 4 + 0] = closingIds[i];
-      stepsU32[i * 4 + 1] = startPos + i;
-    }
-    this.device.queue.writeBuffer(this.prefillStepsBuf, 0, stepsU32);
-    const enc = this.device.createCommandEncoder();
-    for (let i = 0; i < len; i++) {
-      enc.copyBufferToBuffer(this.prefillStepsBuf, i * 16, this.stepStateBuf, 0, 16);
-      const cpass = enc.beginComputePass();
-      this._recordOps(cpass, this.embedOps);
-      for (let l = 0; l < this.numLayers; l++) {
-        this._recordOps(cpass, this.layerOps[l]);
+    for (let batchStart = 0; batchStart < len; batchStart += PREFILL_BATCH_TOKENS) {
+      const batchEnd = Math.min(len, batchStart + PREFILL_BATCH_TOKENS);
+      const batchLen = batchEnd - batchStart;
+      const stepsU32 = new Uint32Array(batchLen * 4);
+      for (let i = 0; i < batchLen; i++) {
+        stepsU32[i * 4 + 0] = closingIds[batchStart + i];
+        stepsU32[i * 4 + 1] = startPos + batchStart + i;
       }
-      cpass.end();
+      this.device.queue.writeBuffer(this.prefillStepsBuf, 0, stepsU32);
+      const enc = this.device.createCommandEncoder();
+      for (let i = 0; i < batchLen; i++) {
+        enc.copyBufferToBuffer(this.prefillStepsBuf, i * 16, this.stepStateBuf, 0, 16);
+        const cpass = enc.beginComputePass();
+        this._recordOps(cpass, this.embedOps);
+        for (let l = 0; l < this.numLayers; l++) {
+          this._recordOps(cpass, this.layerOps[l]);
+        }
+        cpass.end();
+      }
+      this.device.queue.submit([enc.finish()]);
     }
-    this.device.queue.submit([enc.finish()]);
     return startPos + len;
   }
 
   private async _readTop2AndTelemetry(): Promise<{ top1Id: number; p1: number; margin: number }> {
-    await this.readbackTop2Buf.mapAsync(GPU_MAP_READ, 0, 16);
-    const raw = this.readbackTop2Buf.getMappedRange(0, 16).slice(0);
-    this.readbackTop2Buf.unmap();
+    const raw = await this._mapReadSafe(this.readbackTop2Buf, 16);
 
     const u32 = new Uint32Array(raw);
     const f32 = new Float32Array(raw);
@@ -1121,24 +1541,40 @@ export class BrowserMoSWebGPUEngine {
       enableScarStore?: boolean;
       resetCache?: boolean;
       systemPrompt?: string | null;
+      onPrefillProgress?: (done: number, total: number) => void;
       onToken?: (u: TokenStreamUpdate) => void;
-      onRouting?: (r: { active: ActiveCapsuleRuntime[]; turnBytesFetched: number; httpEvents: Http206Event[] }) => void;
+      onRouting?: (r: {
+        active: ActiveCapsuleRuntime[];
+        turnBytesFetched: number;
+        httpEvents: Http206Event[];
+        diagnostics?: GoldenSliceRoutingDiagnostics;
+      }) => void;
       signal?: AbortSignal | null;
     } = {}
   ): Promise<EngineGenerationResult> {
     const {
-      maxNewTokens = 260,
+      maxNewTokens = 148,
       enableScarStore = true,
       resetCache = false,
       systemPrompt = null,
+      onPrefillProgress,
       onToken,
       onRouting,
       signal = null,
     } = options;
 
+    if (this._deviceLostError) throw this._deviceLostError;
+    if (signal?.aborted) throw createAbortError();
+
     if (resetCache) {
       this.resetSCache();
     }
+
+    const suppressCjk = !hasCjkScript(userQuery);
+    if (suppressCjk) {
+      this._ensureCjkBitmaskGpu();
+    }
+    this._setScriptGateGpu(suppressCjk);
 
     const basePos = this.sessionPos;
     const sysTxt =
@@ -1179,65 +1615,120 @@ export class BrowserMoSWebGPUEngine {
     const lp = promptIds.length;
     const scacheBytesInitial = this.scacheGpuBytes;
 
+    // Save pre-turn SCache snapshot on Turn 2+ so mid-prefill AbortError restores exact conversational state
+    if (basePos > 0) {
+      const encSave = this.device.createCommandEncoder();
+      encSave.copyBufferToBuffer(this.scacheKvBuf, 0, this.scacheKvSnapBuf, 0, this.scacheKvBuf.size);
+      encSave.copyBufferToBuffer(this.scacheWScarBuf, 0, this.scacheWScarSnapBuf, 0, this.scacheWScarBuf.size);
+      encSave.copyBufferToBuffer(this.scacheSalienceBuf, 0, this.scacheSalSnapBuf, 0, this.scacheSalienceBuf.size);
+      this.device.queue.submit([encSave.finish()]);
+    }
+
+    const restorePreTurnSCache = () => {
+      if (basePos === 0) {
+        this.resetSCache();
+      } else {
+        const encRest = this.device.createCommandEncoder();
+        encRest.copyBufferToBuffer(this.scacheKvSnapBuf, 0, this.scacheKvBuf, 0, this.scacheKvBuf.size);
+        encRest.copyBufferToBuffer(this.scacheWScarSnapBuf, 0, this.scacheWScarBuf, 0, this.scacheWScarBuf.size);
+        encRest.copyBufferToBuffer(this.scacheSalSnapBuf, 0, this.scacheSalienceBuf, 0, this.scacheSalienceBuf.size);
+        this.device.queue.submit([encRest.finish()]);
+        this.sessionPos = basePos;
+      }
+    };
+
     const t0 = performance.now();
-    let routeResult: { active: ActiveCapsuleRuntime[]; turnBytesFetched: number; httpEvents: Http206Event[] } = {
+    let routeResult: {
+      active: ActiveCapsuleRuntime[];
+      turnBytesFetched: number;
+      httpEvents: Http206Event[];
+      diagnostics?: GoldenSliceRoutingDiagnostics;
+    } = {
       active: [],
       turnBytesFetched: 0,
       httpEvents: [],
     };
 
-    if (basePos === 0) {
-      this._submitPrefillSequence(
-        promptIds,
-        0,
-        qStartProbe,
-        Boolean(enableScarStore && this.scarStore),
-        qEndProbe
-      );
-      if (enableScarStore && this.scarStore) {
-        const readBytes = luProbe * this.hiddenDim * 4;
-        await this.prefillXInReadBuf.mapAsync(GPU_MAP_READ, 0, readBytes);
-        const xinRaw = this.prefillXInReadBuf.getMappedRange(0, readBytes).slice(0);
-        this.prefillXInReadBuf.unmap();
-        const xinF32 = new Float32Array(xinRaw);
-        routeResult = await this.scarStore.routeAndFetchActiveCapsules(xinF32, luProbe);
-        this._setActiveCapsulesGpu(routeResult.active, 1.0);
+    const canUseSysSnap = this._matchesSysSnapPrefix(cleanProbeIds) && qStartProbe >= this._sysSnapTokenIds.length;
+    const sysPrefixLen = canUseSysSnap ? this._sysSnapTokenIds.length : 0;
+
+    try {
+      if (basePos === 0) {
+        if (canUseSysSnap) {
+          this._restoreSysSnapToActiveSCache();
+          await this._submitPrefillSequence(
+            promptIds.slice(sysPrefixLen),
+            sysPrefixLen,
+            qStartProbe - sysPrefixLen,
+            Boolean(enableScarStore && this.scarStore),
+            qEndProbe - sysPrefixLen,
+            signal,
+            onPrefillProgress
+          );
+        } else {
+          await this._submitPrefillSequence(
+            promptIds,
+            0,
+            qStartProbe,
+            Boolean(enableScarStore && this.scarStore),
+            qEndProbe,
+            signal,
+            onPrefillProgress
+          );
+        }
+        if (enableScarStore && this.scarStore) {
+          const readBytes = luProbe * this.hiddenDim * 4;
+          const xinRaw = await this._mapReadSafe(this.prefillXInReadBuf, readBytes);
+          if (signal?.aborted) throw createAbortError();
+          const xinF32 = new Float32Array(xinRaw);
+          routeResult = await this.scarStore.routeAndFetchActiveCapsules(xinF32, luProbe);
+          if (signal?.aborted) throw createAbortError();
+          this._setActiveCapsulesGpu(routeResult.active, 1.0);
+        } else {
+          if (this.scarStore) this.scarStore.lastActiveGates.clear();
+          this._setActiveCapsulesGpu([]);
+        }
       } else {
-        if (this.scarStore) this.scarStore.lastActiveGates.clear();
-        this._setActiveCapsulesGpu([]);
+        if (enableScarStore && this.scarStore) {
+          if (canUseSysSnap) {
+            this._restoreSysSnapToActiveSCache();
+            await this._submitPrefillSequence(
+              cleanProbeIds.slice(sysPrefixLen),
+              sysPrefixLen,
+              qStartProbe - sysPrefixLen,
+              true,
+              qEndProbe - sysPrefixLen,
+              signal
+            );
+          } else {
+            this.device.queue.writeBuffer(this.scacheKvBuf, 0, this._zeroKvBytes);
+            this.device.queue.writeBuffer(this.scacheWScarBuf, 0, this._zeroWScarBytes);
+            this.device.queue.writeBuffer(this.scacheSalienceBuf, 0, this._zeroSalBytes);
+            await this._submitPrefillSequence(cleanProbeIds, 0, qStartProbe, true, qEndProbe, signal);
+          }
+
+          const encRestore = this.device.createCommandEncoder();
+          encRestore.copyBufferToBuffer(this.scacheKvSnapBuf, 0, this.scacheKvBuf, 0, this.scacheKvBuf.size);
+          encRestore.copyBufferToBuffer(this.scacheWScarSnapBuf, 0, this.scacheWScarBuf, 0, this.scacheWScarBuf.size);
+          encRestore.copyBufferToBuffer(this.scacheSalSnapBuf, 0, this.scacheSalienceBuf, 0, this.scacheSalienceBuf.size);
+          this.device.queue.submit([encRestore.finish()]);
+
+          const readBytes = luProbe * this.hiddenDim * 4;
+          const xinRaw = await this._mapReadSafe(this.prefillXInReadBuf, readBytes);
+          if (signal?.aborted) throw createAbortError();
+          const xinF32 = new Float32Array(xinRaw);
+          routeResult = await this.scarStore.routeAndFetchActiveCapsules(xinF32, luProbe);
+          if (signal?.aborted) throw createAbortError();
+          this._setActiveCapsulesGpu(routeResult.active, 1.0);
+        } else {
+          if (this.scarStore) this.scarStore.lastActiveGates.clear();
+          this._setActiveCapsulesGpu([]);
+        }
+        await this._submitPrefillSequence(promptIds, basePos, 0, false, null, signal, onPrefillProgress);
       }
-    } else {
-      if (enableScarStore && this.scarStore) {
-        const encSave = this.device.createCommandEncoder();
-        encSave.copyBufferToBuffer(this.scacheKvBuf, 0, this.scacheKvSnapBuf, 0, this.scacheKvBuf.size);
-        encSave.copyBufferToBuffer(this.scacheWScarBuf, 0, this.scacheWScarSnapBuf, 0, this.scacheWScarBuf.size);
-        encSave.copyBufferToBuffer(this.scacheSalienceBuf, 0, this.scacheSalSnapBuf, 0, this.scacheSalienceBuf.size);
-        this.device.queue.submit([encSave.finish()]);
-
-        this.device.queue.writeBuffer(this.scacheKvBuf, 0, this._zeroKvBytes);
-        this.device.queue.writeBuffer(this.scacheWScarBuf, 0, this._zeroWScarBytes);
-        this.device.queue.writeBuffer(this.scacheSalienceBuf, 0, this._zeroSalBytes);
-
-        this._submitPrefillSequence(cleanProbeIds, 0, qStartProbe, true, qEndProbe);
-
-        const encRestore = this.device.createCommandEncoder();
-        encRestore.copyBufferToBuffer(this.scacheKvSnapBuf, 0, this.scacheKvBuf, 0, this.scacheKvBuf.size);
-        encRestore.copyBufferToBuffer(this.scacheWScarSnapBuf, 0, this.scacheWScarBuf, 0, this.scacheWScarBuf.size);
-        encRestore.copyBufferToBuffer(this.scacheSalSnapBuf, 0, this.scacheSalienceBuf, 0, this.scacheSalienceBuf.size);
-        this.device.queue.submit([encRestore.finish()]);
-
-        const readBytes = luProbe * this.hiddenDim * 4;
-        await this.prefillXInReadBuf.mapAsync(GPU_MAP_READ, 0, readBytes);
-        const xinRaw = this.prefillXInReadBuf.getMappedRange(0, readBytes).slice(0);
-        this.prefillXInReadBuf.unmap();
-        const xinF32 = new Float32Array(xinRaw);
-        routeResult = await this.scarStore.routeAndFetchActiveCapsules(xinF32, luProbe);
-        this._setActiveCapsulesGpu(routeResult.active, 1.0);
-      } else {
-        if (this.scarStore) this.scarStore.lastActiveGates.clear();
-        this._setActiveCapsulesGpu([]);
-      }
-      this._submitPrefillSequence(promptIds, basePos, 0, false);
+    } catch (prefillErr) {
+      restorePreTurnSCache();
+      throw prefillErr;
     }
 
     if (onRouting) {
@@ -1261,6 +1752,10 @@ export class BrowserMoSWebGPUEngine {
     this.device.queue.submit([encTail.finish()]);
 
     const firstStep = await this._readTop2AndTelemetry();
+    if (signal?.aborted) {
+      restorePreTurnSCache();
+      throw createAbortError();
+    }
     const prefillMs = performance.now() - t0;
     const scacheBytesAfterPrefill = this.scacheGpuBytes;
 
@@ -1270,7 +1765,7 @@ export class BrowserMoSWebGPUEngine {
     let lastDecoded = '';
     let lastGenTokenFed = true;
 
-    if (!this.eosTokenIds.has(firstStep.top1Id)) {
+    if (!this.eosTokenIds.has(firstStep.top1Id) && !(signal && signal.aborted)) {
       generatedIds.push(firstStep.top1Id);
       lastGenTokenFed = false;
       confs.push(firstStep.p1);
@@ -1288,6 +1783,9 @@ export class BrowserMoSWebGPUEngine {
           scacheDeltaBytes: this.scacheGpuBytes - scacheBytesInitial,
           confidence: firstStep.p1,
           margin: firstStep.margin,
+          uncertainty: Math.max(0.0, 1.0 - firstStep.p1),
+          horizonScale: this.isGoldenSliceV4 && this.currentMActive > 0 ? 1.0 : 0.0,
+          top1TokenId: firstStep.top1Id,
         });
       }
     }
@@ -1340,6 +1838,7 @@ export class BrowserMoSWebGPUEngine {
       const stepOut = await this._readTop2AndTelemetry();
       curPos += 1;
       lastGenTokenFed = true;
+      if (signal?.aborted) break;
       if (this.eosTokenIds.has(stepOut.top1Id)) break;
 
       generatedIds.push(stepOut.top1Id);
@@ -1347,9 +1846,15 @@ export class BrowserMoSWebGPUEngine {
       confs.push(stepOut.p1);
       margins.push(stepOut.margin);
 
+      const previewText = this.tokenizer.decode(generatedIds, true);
       const repStart = findRepeatedSixGramStart(generatedIds);
-      if (repStart >= 0) {
-        generatedIds.length = repStart;
+      const hyphenDeg = repStart < 0 && hasCompoundHyphenDegeneration(previewText);
+      if (repStart >= 0 || hyphenDeg) {
+        if (repStart >= 0) {
+          generatedIds.length = repStart;
+        } else {
+          generatedIds.length = Math.max(1, generatedIds.length - 10);
+        }
         lastGenTokenFed = true;
         const trimmedText = this.tokenizer.decode(generatedIds, true);
         const lastBoundary = Math.max(
@@ -1357,10 +1862,14 @@ export class BrowserMoSWebGPUEngine {
           trimmedText.lastIndexOf('!'),
           trimmedText.lastIndexOf('?')
         );
-        const cleanOut = lastBoundary >= 24 ? trimmedText.slice(0, lastBoundary + 1) : trimmedText;
+        const cleanOut = lastBoundary >= 24 ? trimmedText.slice(0, lastBoundary + 1) : trimmedText.replace(/[,;:\-\s]+$/, '.');
         lastDecoded = cleanOut;
         const decElapsedS = Math.max((performance.now() - tDec0) / 1000.0, 1e-4);
         const liveTokS = Math.max(0, generatedIds.length - 1) / decElapsedS;
+        const curHw =
+          this.isGoldenSliceV4 && this.currentMActive > 0
+            ? computeHorizonScale(decStepIdx, this.seedHorizon, this.seedFadeSteps)
+            : 0.0;
         if (onToken) {
           onToken({
             text: cleanOut,
@@ -1371,17 +1880,24 @@ export class BrowserMoSWebGPUEngine {
             scacheDeltaBytes: this.scacheGpuBytes - scacheBytesInitial,
             confidence: stepOut.p1,
             margin: stepOut.margin,
+            uncertainty: Math.max(0.0, 1.0 - stepOut.p1),
+            horizonScale: curHw,
+            top1TokenId: stepOut.top1Id,
           });
         }
         break;
       }
 
-      const curText = this.tokenizer.decode(generatedIds, true);
+      const curText = previewText;
       const delta = curText.slice(lastDecoded.length);
       lastDecoded = curText;
 
       const decElapsedS = Math.max((performance.now() - tDec0) / 1000.0, 1e-4);
       const liveTokS = (generatedIds.length - 1) / decElapsedS;
+      const curHw =
+        this.isGoldenSliceV4 && this.currentMActive > 0
+          ? computeHorizonScale(decStepIdx, this.seedHorizon, this.seedFadeSteps)
+          : 0.0;
       if (onToken) {
         onToken({
           text: curText,
@@ -1392,6 +1908,9 @@ export class BrowserMoSWebGPUEngine {
           scacheDeltaBytes: this.scacheGpuBytes - scacheBytesInitial,
           confidence: stepOut.p1,
           margin: stepOut.margin,
+          uncertainty: Math.max(0.0, 1.0 - stepOut.p1),
+          horizonScale: curHw,
+          top1TokenId: stepOut.top1Id,
         });
       }
 
@@ -1409,6 +1928,9 @@ export class BrowserMoSWebGPUEngine {
     }
     this.sessionPos = this._flushClosingTokensToSCache(closingIds, curPos);
     this.turnCount += 1;
+    if (signal?.aborted) {
+      throw createAbortError();
+    }
 
     const decodeMs = performance.now() - tDec0;
     const scacheBytesFinal = this.scacheGpuBytes;
@@ -1440,6 +1962,7 @@ export class BrowserMoSWebGPUEngine {
         titlePt: a.meta?.metadata?.title_pt,
         category: a.meta?.metadata?.category,
       })),
+      routingDiagnostics: routeResult.diagnostics,
       turnHttp206Bytes: routeResult.turnBytesFetched,
       totalHttp206Bytes: this.scarStore ? this.scarStore.totalHttp206Bytes : 0,
       httpEvents: routeResult.httpEvents,
