@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import type { JarvisFaceState } from '../lib/jarvisNeuralController';
-import { buildJarvisFacePointCloudF32 } from './JarvisFaceRig';
+import { buildCanonicalFibonacciSphereF32 } from '../lib/pointScarFlowEngine';
 
 export interface JarvisFloatingPointStageProps {
   enabled: boolean;
@@ -10,6 +10,7 @@ export interface JarvisFloatingPointStageProps {
   isExpanded: boolean;
   activeCapsuleIds: string[];
   unlearnShockActive: boolean;
+  neuralFaceFinalF32?: Float32Array | null;
   pointScarMidF32: Float32Array | null;
   pointScarFinalF32: Float32Array | null;
   pointScarMs: number | null;
@@ -112,6 +113,7 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
   isExpanded,
   activeCapsuleIds,
   unlearnShockActive,
+  neuralFaceFinalF32 = null,
   pointScarMidF32,
   pointScarFinalF32,
   pointScarMs,
@@ -128,6 +130,7 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
     isExpanded,
     activeCapsuleIds,
     unlearnShockActive,
+    neuralFaceFinalF32,
     pointScarMidF32,
     pointScarFinalF32,
     pointScarMs,
@@ -142,6 +145,7 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
     isExpanded,
     activeCapsuleIds,
     unlearnShockActive,
+    neuralFaceFinalF32,
     pointScarMidF32,
     pointScarFinalF32,
     pointScarMs,
@@ -155,8 +159,8 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Exact 1,024-point 3D cranio-facial topology of JARVIS (`t = 0` morph origin & return target)
-    const faceCloudF32 = buildJarvisFacePointCloudF32(NUM_POINTS);
+    // GPU `PointScarFlow`-constructed 3D face of JARVIS (`X_0` Fibonacci sphere fallback prior to GPU synthesis)
+    const faceCloudF32 = new Float32Array(buildCanonicalFibonacciSphereF32(NUM_POINTS));
 
     // Active GPU PointScarFlow 3D manifolds (`[1024 * 4]`: `x, y, z, salience`)
     const sculptStartLocal = new Float32Array(faceCloudF32);
@@ -218,6 +222,10 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, vw, vh);
+
+      if (p.neuralFaceFinalF32 && p.neuralFaceFinalF32.length >= NUM_POINTS * 4) {
+        faceCloudF32.set(p.neuralFaceFinalF32.subarray(0, NUM_POINTS * 4));
+      }
 
       if (p.pointScarSeq === 0 && lastAppliedSeq !== 0) {
         lastAppliedSeq = 0;
@@ -281,11 +289,11 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
 
       const morphW = smoothstep(0.0, 1.0, morphProgress);
 
-      // Exact `JarvisFaceRig` camera at `morphW = 0` (`centerY = 0.555 * H`, `scale = 0.56 * minWH`)
-      // smoothly centered to head-box midpoint at `morphW = 1` (`centerY = 0.485 * H`, `scale = 0.40 * minWH`)
+      // Exact `JarvisFaceRig` camera at `morphW = 0` (`centerY = 0.50 * H`, `scale = 0.46 * minWH`)
+      // smoothly scaled to `0.40 * minWH` at `morphW = 1`
       const originX = localFaceLeft + faceW * 0.5;
-      const originY = localFaceTop + faceH * (0.555 - 0.070 * morphW);
-      const scalePx = minWH * (0.56 - 0.16 * morphW);
+      const originY = localFaceTop + faceH * 0.5;
+      const scalePx = minWH * (0.46 - 0.06 * morphW);
       const camZ = 3.62;
       const focal = 2.84;
 

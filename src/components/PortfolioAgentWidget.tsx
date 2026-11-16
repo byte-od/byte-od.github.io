@@ -25,12 +25,14 @@ import {
   BrowserMoSWebGPUEngine,
   checkMosShardsCached,
 } from '../lib/mosWebgpuEngine';
+import { BrowserPointScarFlowEngine } from '../lib/pointScarFlowEngine';
 import {
   BrowserScarStoreHTTP206,
   CapsuleDirectoryEntry,
   CapsuleLink,
   GoldenSliceRoutingDiagnostics,
   Http206Event,
+  isPureConversationalGreeting,
 } from '../lib/scarstoreHttp206Browser';
 import {
   advanceSessionAdaptation,
@@ -77,7 +79,22 @@ const LANG_BADGES: Record<PolyglotLang, { flag: string; code: string }> = {
 };
 
 const WEBGPU_BASE_URL = `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/webgpu/qwen3b`;
+const POINTSCAR_BASE_URL = `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/webgpu/pointscar_v1`;
 const DEFAULT_SCACHE_BYTES = 15345792; // 14986.1 KB (112 sinks + 32 Widrow-Hoff slots + 144 window across 36 Qwen2.5-3B layers)
+
+const JARVIS_FACE_CAPSULE_IDS = new Set([
+  'portfolio_agent_identity',
+  'portfolio_agent_capabilities',
+  'portfolio_jarvis_architecture',
+]);
+
+function isJarvisFaceManifoldTurn(query: string, activeIds: string[]): boolean {
+  if (isPureConversationalGreeting(query)) return true;
+  if (activeIds.length > 0 && activeIds.every((id) => JARVIS_FACE_CAPSULE_IDS.has(id))) {
+    return true;
+  }
+  return /\b(?:seu rosto|your face|tu rostro|votre visage)\b/i.test(query || '');
+}
 
 function formatScacheKb(bytes: number): string {
   return `${(bytes / 1024).toFixed(1)} KB`;
@@ -156,6 +173,17 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
   const [unlearnShockActive, setUnlearnShockActive] = useState<boolean>(false);
   const [voiceEnabled, setVoiceEnabled] = useState<boolean>(false);
   const [pointFieldEnabled, setPointFieldEnabled] = useState<boolean>(true);
+  const [neuralFaceState, setNeuralFaceState] = useState<{
+    midF32: Float32Array | null;
+    finalF32: Float32Array | null;
+    latencyMs: number | null;
+    seq: number;
+  }>({
+    midF32: null,
+    finalF32: null,
+    latencyMs: null,
+    seq: 0,
+  });
   const [pointScarState, setPointScarState] = useState<{
     midF32: Float32Array | null;
     finalF32: Float32Array | null;
@@ -321,6 +349,23 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       setShardsCached(true);
       if (eng.scarStore) {
         setCapsules(eng.scarStore.getCapsulesDirectory());
+        if (eng.pointScarFlow && eng.scarStore.zAnchorsFlat.length >= eng.hiddenDim) {
+          eng.pointScarFlow
+            .sampleEuler(eng.scarStore.zAnchorsFlat.subarray(0, eng.hiddenDim))
+            .then((bootSample) => {
+              setNeuralFaceState((prev) =>
+                prev.finalF32
+                  ? prev
+                  : {
+                      midF32: bootSample.midCloudF32,
+                      finalF32: bootSample.finalCloudF32,
+                      latencyMs: bootSample.latencyMs,
+                      seq: prev.seq + 1,
+                    }
+              );
+            })
+            .catch(() => {});
+        }
       }
       setEngineReady(true);
       setEngineLoading(false);
@@ -346,7 +391,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
 
       try {
         const res = await eng.generate(query, {
-          maxNewTokens: 148,
+          maxNewTokens: 96,
           enableScarStore: true,
           signal: abortCtrl.signal,
           onPrefillProgress: (done, total) => {
@@ -371,14 +416,30 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             }
             if (routeRes.pointScarSample) {
               const ps = routeRes.pointScarSample;
-              setPointScarState((prev) => ({
-                midF32: ps.midCloudF32,
-                finalF32: ps.finalCloudF32,
-                latencyMs: ps.latencyMs,
-                steps: ps.numSteps,
-                shardMiB: Math.round((ps.shardBytes / (1024 * 1024)) * 100) / 100,
-                seq: prev.seq + 1,
-              }));
+              if (isJarvisFaceManifoldTurn(query, activeIds)) {
+                setNeuralFaceState((prev) => ({
+                  midF32: ps.midCloudF32,
+                  finalF32: ps.finalCloudF32,
+                  latencyMs: ps.latencyMs,
+                  seq: prev.seq + 1,
+                }));
+                setPointScarState((prev) => ({
+                  ...prev,
+                  latencyMs: ps.latencyMs,
+                  steps: ps.numSteps,
+                  shardMiB: Math.round((ps.shardBytes / (1024 * 1024)) * 100) / 100,
+                  seq: 0,
+                }));
+              } else {
+                setPointScarState((prev) => ({
+                  midF32: ps.midCloudF32,
+                  finalF32: ps.finalCloudF32,
+                  latencyMs: ps.latencyMs,
+                  steps: ps.numSteps,
+                  shardMiB: Math.round((ps.shardBytes / (1024 * 1024)) * 100) / 100,
+                  seq: prev.seq + 1,
+                }));
+              }
             }
             turnFetchedBytes = routeRes.turnBytesFetched;
             setSpokenLinks(badges.flatMap((b) => b.links || []));
@@ -510,7 +571,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         type: 'generate',
         payload: {
           query,
-          maxNewTokens: 148,
+          maxNewTokens: 96,
           enableScarStore: true,
           msgId,
         },
@@ -577,6 +638,26 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                 payload: { baseUrl: WEBGPU_BASE_URL },
               });
             }
+          } else if (d.type === 'boot_face_cloud') {
+            if (d.pointScarFinalF32) {
+              const mid = d.pointScarMidF32 ? new Float32Array(d.pointScarMidF32) : null;
+              const fin = new Float32Array(d.pointScarFinalF32);
+              setNeuralFaceState((prev) => ({
+                midF32: mid,
+                finalF32: fin,
+                latencyMs: typeof d.pointScarMs === 'number' ? d.pointScarMs : prev.latencyMs,
+                seq: prev.seq + 1,
+              }));
+              setPointScarState((prev) => ({
+                ...prev,
+                latencyMs: typeof d.pointScarMs === 'number' ? d.pointScarMs : prev.latencyMs,
+                steps: typeof d.pointScarSteps === 'number' ? d.pointScarSteps : 4,
+                shardMiB:
+                  typeof d.pointScarShardBytes === 'number'
+                    ? Math.round((d.pointScarShardBytes / (1024 * 1024)) * 100) / 100
+                    : prev.shardMiB,
+              }));
+            }
           } else if (d.type === 'loading_start') {
             setEngineLoading(true);
             setErrorMessage(null);
@@ -622,17 +703,40 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
               setLiveRoutingDiag(d.routingDiagnostics);
             }
             if (d.pointScarFinalF32) {
-              setPointScarState((prev) => ({
-                midF32: d.pointScarMidF32 ? new Float32Array(d.pointScarMidF32) : null,
-                finalF32: new Float32Array(d.pointScarFinalF32),
-                latencyMs: typeof d.pointScarMs === 'number' ? d.pointScarMs : prev.latencyMs,
-                steps: typeof d.pointScarSteps === 'number' ? d.pointScarSteps : 4,
-                shardMiB:
-                  typeof d.pointScarShardBytes === 'number'
-                    ? Math.round((d.pointScarShardBytes / (1024 * 1024)) * 100) / 100
-                    : prev.shardMiB,
-                seq: prev.seq + 1,
-              }));
+              const mid = d.pointScarMidF32 ? new Float32Array(d.pointScarMidF32) : null;
+              const fin = new Float32Array(d.pointScarFinalF32);
+              const lat = typeof d.pointScarMs === 'number' ? d.pointScarMs : null;
+              const steps = typeof d.pointScarSteps === 'number' ? d.pointScarSteps : 4;
+              if (isJarvisFaceManifoldTurn(lastUserQueryRef.current, activeIds)) {
+                setNeuralFaceState((prev) => ({
+                  midF32: mid,
+                  finalF32: fin,
+                  latencyMs: lat ?? prev.latencyMs,
+                  seq: prev.seq + 1,
+                }));
+                setPointScarState((prev) => ({
+                  ...prev,
+                  latencyMs: lat ?? prev.latencyMs,
+                  steps,
+                  shardMiB:
+                    typeof d.pointScarShardBytes === 'number'
+                      ? Math.round((d.pointScarShardBytes / (1024 * 1024)) * 100) / 100
+                      : prev.shardMiB,
+                  seq: 0,
+                }));
+              } else {
+                setPointScarState((prev) => ({
+                  midF32: mid,
+                  finalF32: fin,
+                  latencyMs: lat ?? prev.latencyMs,
+                  steps,
+                  shardMiB:
+                    typeof d.pointScarShardBytes === 'number'
+                      ? Math.round((d.pointScarShardBytes / (1024 * 1024)) * 100) / 100
+                      : prev.shardMiB,
+                  seq: prev.seq + 1,
+                }));
+              }
             }
             setSpokenLinks(badges.flatMap((b) => b.links || []));
             if (Array.isArray(d.httpEvents) && d.httpEvents.length > 0) {
@@ -760,9 +864,23 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         return worker;
       } catch {
         BrowserScarStoreHTTP206.load(`${WEBGPU_BASE_URL}/scarstore_router.json`)
-          .then((r) => {
+          .then(async (r) => {
             mainThreadRouterRef.current = r;
             setCapsules(r.getCapsulesDirectory());
+            if (r.zAnchorsFlat.length >= r.hiddenDim) {
+              const bootFace = await BrowserPointScarFlowEngine.sampleStandaloneBootManifold(
+                r.zAnchorsFlat.subarray(0, r.hiddenDim),
+                POINTSCAR_BASE_URL
+              );
+              if (bootFace) {
+                setNeuralFaceState((prev) => ({
+                  midF32: bootFace.midCloudF32,
+                  finalF32: bootFace.finalCloudF32,
+                  latencyMs: bootFace.latencyMs,
+                  seq: prev.seq + 1,
+                }));
+              }
+            }
           })
           .catch(() => {});
         return null;
@@ -1064,7 +1182,11 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           className="group relative flex items-center justify-center p-1.5 rounded-full bg-slate-950/75 hover:bg-slate-900/90 backdrop-blur-md border border-sky-400/55 shadow-[0_0_18px_rgba(56,189,248,0.28)] transition-all duration-200 cursor-pointer hover:scale-105"
           title={currentLang === 'pt' ? 'Restaurar rosto flutuante JARVIS (Qwen)' : 'Restore floating JARVIS face (Qwen)'}
         >
-          <JarvisMiniFaceOrb face={jarvisFace} size={46} />
+          <JarvisMiniFaceOrb
+            face={jarvisFace}
+            neuralFaceFinalF32={neuralFaceState.finalF32}
+            size={46}
+          />
           <span
             className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full border border-black"
             style={{ backgroundColor: jarvisFace.primaryHex }}
@@ -1085,6 +1207,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         isExpanded={isExpanded}
         activeCapsuleIds={liveActiveCapsuleIds}
         unlearnShockActive={unlearnShockActive}
+        neuralFaceFinalF32={neuralFaceState.finalF32}
         pointScarMidF32={pointScarState.midF32}
         pointScarFinalF32={pointScarState.finalF32}
         pointScarMs={pointScarState.latencyMs}
@@ -1511,13 +1634,16 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           </button>
         </div>
 
-        {/* Modular 3D Holographic Human Constellation Face (`JarvisFaceRig`) */}
+        {/* GPU PointScarFlow-Constructed 3D Neural Face (`JarvisFaceRig`) */}
         <JarvisFaceRig
           face={jarvisFace}
           isSpeaking={isGenerating}
           isBooting={engineLoading}
           bootPercent={loadPercent}
           morphDimmed={isFaceMorphedToCloud}
+          neuralFaceMidF32={neuralFaceState.midF32}
+          neuralFaceFinalF32={neuralFaceState.finalF32}
+          neuralFaceSeq={neuralFaceState.seq}
           width={faceWidth}
           height={faceHeight}
           onClick={() => inputRef.current?.focus()}

@@ -41,7 +41,7 @@ import {
   type ScarNativeBPETokenizerJSON,
   type ScarNativeV6ManifestJSON,
 } from '../src/lib/scarNativeV6Engine';
-import { buildJarvisFacePointCloudF32 } from '../src/components/JarvisFaceRig';
+import { buildCanonicalFibonacciSphereF32 } from '../src/lib/pointScarFlowEngine';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -983,39 +983,63 @@ async function main() {
     );
   }
 
+  const faceRigRaw = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/components/JarvisFaceRig.tsx'), 'utf-8');
+  const faceRigCode = stripComments(faceRigRaw);
   const stageRaw = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/components/JarvisFloatingPointStage.tsx'), 'utf-8');
   const workerRaw = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/lib/llmWorker.ts'), 'utf-8');
+  const psfEngRaw = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/lib/pointScarFlowEngine.ts'), 'utf-8');
   assert(
-    stageRaw.includes('data-testid="jarvis-floating-point-stage"') &&
-      stageRaw.includes('buildJarvisFacePointCloudF32') &&
+    !faceRigCode.includes('evalCranioCervicalPoint') &&
+      !faceRigCode.includes('buildCranioFacialMesh') &&
+      !faceRigCode.includes('buildJarvisFacePointCloudF32'),
+    'Forbidden standardized/hardcoded procedural facial mesh detected in JarvisFaceRig.tsx — JARVIS face must be constructed by PointScarFlow!'
+  );
+  assert(
+    faceRigCode.includes('buildCanonicalFibonacciSphereF32') &&
+      faceRigCode.includes('analyzeNeuralManifold') &&
+      faceRigCode.includes('neuralFaceFinalF32') &&
+      psfEngRaw.includes('sampleStandaloneBootManifold') &&
+      workerRaw.includes('boot_face_cloud') &&
+      stageRaw.includes('data-testid="jarvis-floating-point-stage"') &&
+      stageRaw.includes('buildCanonicalFibonacciSphereF32') &&
+      stageRaw.includes('neuralFaceFinalF32') &&
       stageRaw.includes("width: '100vw'") &&
       stageRaw.includes('canvas.getBoundingClientRect()') &&
       !stageRaw.includes('desiredStageX') &&
       widgetCode.includes('jarvis-pointscar-toggle') &&
       widgetCode.includes('isFaceMorphedToCloud') &&
+      widgetCode.includes('isJarvisFaceManifoldTurn') &&
       engineCode.includes('BrowserPointScarFlowEngine') &&
       engineCode.includes('pointScarSample') &&
       workerRaw.includes('pointScarFinalF32'),
-    'Missing in-place Face-to-PointScarFlow morphing, Retina CSS viewport sizing, or WebGPU worker wiring!'
+    'Missing GPU PointScarFlow-constructed JARVIS face, Retina CSS viewport sizing, or WebGPU worker wiring!'
+  );
+  assert(
+    Boolean(psfEval.jarvis_face_neural_sculpt) &&
+      Number(psfEval.jarvis_face_neural_sculpt.boot_anchor0_chamfer_l2) < 0.05 &&
+      Number(psfEval.jarvis_face_neural_sculpt.held_out_polyglot_face_chamfer_l2) < 0.05 &&
+      Number(psfEval.jarvis_face_neural_sculpt.concept_replay_preservation_cosine) > 0.99,
+    `Neural JARVIS face sculpt audit failed quality thresholds: ${JSON.stringify(psfEval.jarvis_face_neural_sculpt)}`
   );
 
-  const faceCloudA = buildJarvisFacePointCloudF32(1024);
-  const faceCloudB = buildJarvisFacePointCloudF32(1024);
-  assert(faceCloudA.length === 4096, `Expected 4096 floats in JARVIS 3D face cloud, got ${faceCloudA.length}`);
-  for (let i = 0; i < faceCloudA.length; i++) {
+  const sphereA = buildCanonicalFibonacciSphereF32(1024);
+  const sphereB = buildCanonicalFibonacciSphereF32(1024);
+  assert(sphereA.length === 4096, `Expected 4096 floats in canonical X_0 sphere, got ${sphereA.length}`);
+  for (let i = 0; i < sphereA.length; i++) {
     assert(
-      Number.isFinite(faceCloudA[i]) && faceCloudA[i] === faceCloudB[i],
-      `Non-finite or non-deterministic float in buildJarvisFacePointCloudF32 at index ${i}`
+      Number.isFinite(sphereA[i]) && sphereA[i] === sphereB[i],
+      `Non-finite or non-deterministic float in buildCanonicalFibonacciSphereF32 at index ${i}`
     );
   }
   for (let pIdx = 0; pIdx < 1024; pIdx++) {
-    const px = faceCloudA[pIdx * 4 + 0];
-    const py = faceCloudA[pIdx * 4 + 1];
-    const pz = faceCloudA[pIdx * 4 + 2];
-    const psal = faceCloudA[pIdx * 4 + 3];
+    const px = sphereA[pIdx * 4 + 0];
+    const py = sphereA[pIdx * 4 + 1];
+    const pz = sphereA[pIdx * 4 + 2];
+    const psal = sphereA[pIdx * 4 + 3];
+    const rad = Math.hypot(px, py, pz);
     assert(
-      Math.abs(px) <= 0.75 && py >= -0.65 && py <= 1.05 && pz >= -0.85 && pz <= 1.08 && psal >= 0.30 && psal <= 1.0,
-      `Out-of-bounds cranio-facial point at ${pIdx}: (${px}, ${py}, ${pz}, sal=${psal})`
+      Math.abs(rad - 1.0) < 1e-5 && psal === 0.5,
+      `Invalid unit Fibonacci sphere X_0 point at ${pIdx}: r=${rad}, sal=${psal}`
     );
   }
   console.log(

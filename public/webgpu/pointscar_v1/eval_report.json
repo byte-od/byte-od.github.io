@@ -28,5 +28,11 @@
   "training_wall_seconds": 2621.64,
   "ptq_max_abs_shock": 0.0011557936668395996,
   "packed_vq4_scar_bytes": 4031656,
-  "shard_bytes": 4057768
+  "shard_bytes": 4057768,
+  "jarvis_face_neural_sculpt": {
+    "boot_anchor0_chamfer_l2": 0.031701,
+    "boot_anchor0_ot_rmse": 0.039256,
+    "held_out_polyglot_face_chamfer_l2": 0.032115,
+    "concept_replay_preservation_cosine": 0.999704
+  }
 }

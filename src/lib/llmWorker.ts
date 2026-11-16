@@ -12,6 +12,7 @@ import {
   BrowserMoSWebGPUEngine,
   checkMosShardsCached,
 } from './mosWebgpuEngine';
+import { BrowserPointScarFlowEngine } from './pointScarFlowEngine';
 import { BrowserScarStoreHTTP206 } from './scarstoreHttp206Browser';
 
 let engine: BrowserMoSWebGPUEngine | null = null;
@@ -39,6 +40,7 @@ self.onmessage = async (e: MessageEvent) => {
   const baseUrl: string = payload?.baseUrl || '/webgpu/qwen3b';
 
   // 1. Check Cache + Preload Lightweight Golden-Slice Router Index (`0 B` cartridge payload!)
+  //    + Physically construct JARVIS's 3D cranio-facial manifold on WebGPU via `PointScarFlow` (`12` WGSL shaders)
   if (type === 'init_router') {
     const [shardsCached, router] = await Promise.all([
       checkMosShardsCached(baseUrl),
@@ -52,6 +54,22 @@ self.onmessage = async (e: MessageEvent) => {
       kLang: router ? router.kLang : 14,
       midLayerIdx: router ? router.midLayerIdx : 23,
     });
+
+    if (router && router.zAnchorsFlat.length >= router.hiddenDim) {
+      const psfUrl = baseUrl.replace(/\/qwen3b\/?$/, '/pointscar_v1');
+      const zJarvis0 = router.zAnchorsFlat.subarray(0, router.hiddenDim);
+      const bootSample = await BrowserPointScarFlowEngine.sampleStandaloneBootManifold(zJarvis0, psfUrl);
+      if (bootSample) {
+        self.postMessage({
+          type: 'boot_face_cloud',
+          pointScarMidF32: bootSample.midCloudF32,
+          pointScarFinalF32: bootSample.finalCloudF32,
+          pointScarMs: bootSample.latencyMs,
+          pointScarSteps: bootSample.numSteps,
+          pointScarShardBytes: bootSample.shardBytes,
+        });
+      }
+    }
     return;
   }
 
@@ -146,7 +164,7 @@ self.onmessage = async (e: MessageEvent) => {
 
     const {
       query,
-      maxNewTokens = 148,
+      maxNewTokens = 96,
       enableScarStore = true,
       resetCache = false,
       msgId,

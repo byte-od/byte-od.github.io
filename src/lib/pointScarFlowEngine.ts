@@ -10,7 +10,6 @@
  *   `x, y, z, salience`) in a single `GPUCommandBuffer` submission (`0` extra LLM tokens, `Δ +0 B` `SCache O(1)`).
  */
 
-import pointScarWgslSource from './shaders/point_scar_flow.wgsl?raw';
 import { fetchWithPersistentCache } from './qwenBpeTokenizer';
 
 const GPU_BUF = {
@@ -141,6 +140,21 @@ function packPsfParams(
   return buf;
 }
 
+export function buildCanonicalFibonacciSphereF32(numPoints = 1024): Float32Array {
+  const out = new Float32Array(numPoints * 4);
+  const phi = Math.PI * (3.0 - Math.sqrt(5.0));
+  for (let i = 0; i < numPoints; i++) {
+    const y = 1.0 - (2.0 * (i + 0.5)) / numPoints;
+    const rad = Math.sqrt(Math.max(0.0, 1.0 - y * y));
+    const theta = i * phi;
+    out[i * 4 + 0] = rad * Math.cos(theta);
+    out[i * 4 + 1] = y;
+    out[i * 4 + 2] = rad * Math.sin(theta);
+    out[i * 4 + 3] = 0.5;
+  }
+  return out;
+}
+
 const PSF_ENTRY_POINTS = [
   'psf_build_point_features_f32',
   'psf_time_embed_64_f32',
@@ -218,7 +232,12 @@ export class BrowserPointScarFlowEngine {
   private activeLock: Promise<void> = Promise.resolve();
   private destroyed = false;
 
-  private constructor(device: any, manifest: PointScarManifest, shardArrayBuf: ArrayBuffer) {
+  private constructor(
+    device: any,
+    manifest: PointScarManifest,
+    shardArrayBuf: ArrayBuffer,
+    wgslCode: string
+  ) {
     this.device = device;
     this.manifest = manifest;
     this.cfg = manifest.config;
@@ -228,7 +247,7 @@ export class BrowserPointScarFlowEngine {
 
     this.shaderMod = this.device.createShaderModule({
       label: 'point_scar_flow_wgsl_v1',
-      code: pointScarWgslSource,
+      code: wgslCode,
     });
 
     for (const ep of PSF_ENTRY_POINTS) {
@@ -332,15 +351,63 @@ export class BrowserPointScarFlowEngine {
         return null;
       }
       const manifest: PointScarManifest = await manifestResp.json();
-      const { response: shardResp } = await fetchWithPersistentCache(`${cleanBase}/${manifest.shard_file}`);
+      const verTag = encodeURIComponent(manifest.version || '1.1.0');
+      const wgslMod = await import('./shaders/point_scar_flow.wgsl?raw').catch(() => null);
+      let wgslCode: string | null = (wgslMod as { default?: string } | null)?.default ?? null;
+      if (!wgslCode) {
+        const wgslResp = await fetch(
+          `${cleanBase}/${manifest.wgsl_shader || 'point_scar_flow.wgsl'}?v=${verTag}`
+        );
+        if (!wgslResp.ok) return null;
+        wgslCode = await wgslResp.text();
+      }
+      const { response: shardResp } = await fetchWithPersistentCache(
+        `${cleanBase}/${manifest.shard_file}?v=${verTag}`
+      );
       if (!shardResp.ok) {
         return null;
       }
       const shardBuf = await shardResp.arrayBuffer();
-      return new BrowserPointScarFlowEngine(device, manifest, shardBuf);
+      return new BrowserPointScarFlowEngine(device, manifest, shardBuf, wgslCode);
     } catch (err) {
       console.warn('[PointScarFlow] Optional 3D generator load skipped:', err);
       return null;
+    }
+  }
+
+  /**
+   * Boots a lightweight standalone WebGPU context (`3.87 MiB` `VQ4-Scar` + `12` WGSL shaders)
+   * on page open to physically construct JARVIS's 3D cranio-facial manifold from the canonical
+   * Fibonacci sphere `X_0 in S^2` conditioned on Qwen2.5-3B's `Layer-23` `z_anchors[0]` latent,
+   * then immediately releases the temporary device so zero extra VRAM is retained.
+   */
+  public static async sampleStandaloneBootManifold(
+    zAnchor0F32: Float32Array,
+    pointScarBaseUrl = '/webgpu/pointscar_v1'
+  ): Promise<PointScarSampleResult | null> {
+    const g = (globalThis as any).navigator?.gpu;
+    if (!g || typeof g.requestAdapter !== 'function') {
+      return null;
+    }
+    let tempDevice: any = null;
+    let tempPsf: BrowserPointScarFlowEngine | null = null;
+    try {
+      const adapter = await g.requestAdapter({ powerPreference: 'high-performance' });
+      if (!adapter) return null;
+      tempDevice = await adapter.requestDevice();
+      tempPsf = await BrowserPointScarFlowEngine.createOnDevice(tempDevice, pointScarBaseUrl);
+      if (!tempPsf) return null;
+      return await tempPsf.sampleEuler(zAnchor0F32);
+    } catch (err) {
+      console.warn('[PointScarFlow] Standalone boot manifold synthesis skipped:', err);
+      return null;
+    } finally {
+      try {
+        tempPsf?.destroy();
+        tempDevice?.destroy?.();
+      } catch {
+        // Ignore cleanup errors
+      }
     }
   }
 

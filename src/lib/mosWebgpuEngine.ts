@@ -235,12 +235,12 @@ function shouldStopAtSentenceBoundary(
   maxNewTokens: number
 ): boolean {
   if (epistemicMode === 'scar_grounded') {
-    return decStepIdx >= Math.max(25, seedHorizon - 10);
+    return decStepIdx >= Math.max(22, seedHorizon - 13);
   }
   if (epistemicMode === 'out_of_cone_guarded') {
-    return generatedCount >= 48;
+    return generatedCount >= 28;
   }
-  return generatedCount >= Math.max(96, maxNewTokens - 48);
+  return generatedCount >= Math.max(48, maxNewTokens - 48);
 }
 
 export class BrowserMoSWebGPUEngine {
@@ -1671,7 +1671,7 @@ export class BrowserMoSWebGPUEngine {
     } = {}
   ): Promise<EngineGenerationResult> {
     const {
-      maxNewTokens = 148,
+      maxNewTokens = 96,
       enableScarStore = true,
       enableEpistemicGuard,
       resetCache = false,
@@ -1857,7 +1857,31 @@ export class BrowserMoSWebGPUEngine {
               true
             );
             effectiveLp = guardedFullIds.length;
-            if (canUseSysSnap && this._matchesSysSnapPrefix(guardedFullIds)) {
+
+            // Check if `guardedFullIds[0..qEndProbe]` matches the already-prefilled `cleanProbeIds[0..qEndProbe]`
+            // so we avoid re-prefilling ~105 tokens and never inflate user-visible prefill token counts!
+            let sharesQueryPrefix = guardedFullIds.length > qEndProbe;
+            if (sharesQueryPrefix) {
+              for (let k = 0; k < qEndProbe; k++) {
+                if (guardedFullIds[k] !== cleanProbeIds[k]) {
+                  sharesQueryPrefix = false;
+                  break;
+                }
+              }
+            }
+
+            if (sharesQueryPrefix) {
+              await this._submitPrefillSequence(
+                guardedFullIds.slice(qEndProbe),
+                qEndProbe,
+                0,
+                false,
+                null,
+                signal,
+                onPrefillProgress ? () => onPrefillProgress(lpProbe, lpProbe) : undefined,
+                false
+              );
+            } else if (canUseSysSnap && this._matchesSysSnapPrefix(guardedFullIds)) {
               await this._restoreSysSnapToActiveSCache();
               await this._submitPrefillSequence(
                 guardedFullIds.slice(sysPrefixLen),
@@ -1866,14 +1890,23 @@ export class BrowserMoSWebGPUEngine {
                 false,
                 null,
                 signal,
-                onPrefillProgress ? (done) => onPrefillProgress(sysPrefixLen + done, effectiveLp) : undefined,
+                onPrefillProgress ? () => onPrefillProgress(lpProbe, lpProbe) : undefined,
                 false
               );
             } else {
               this.device.queue.writeBuffer(this.scacheKvBuf, 0, this._zeroKvBytes);
               this.device.queue.writeBuffer(this.scacheWScarBuf, 0, this._zeroWScarBytes);
               this.device.queue.writeBuffer(this.scacheSalienceBuf, 0, this._zeroSalBytes);
-              await this._submitPrefillSequence(guardedFullIds, 0, 0, false, null, signal, onPrefillProgress, false);
+              await this._submitPrefillSequence(
+                guardedFullIds,
+                0,
+                0,
+                false,
+                null,
+                signal,
+                onPrefillProgress ? () => onPrefillProgress(lpProbe, lpProbe) : undefined,
+                false
+              );
             }
           }
         } else {
@@ -1970,7 +2003,25 @@ export class BrowserMoSWebGPUEngine {
             enableScarStore && this.scarStore && routeResult.active.length > 0 ? 'scar_grounded' : 'base_trunk';
         }
         effectiveLp = turnPromptIds.length;
-        await this._submitPrefillSequence(turnPromptIds, basePos, 0, false, null, signal, onPrefillProgress);
+        const userVisibleTurnTokens = promptIds.length;
+        await this._submitPrefillSequence(
+          turnPromptIds,
+          basePos,
+          0,
+          false,
+          null,
+          signal,
+          onPrefillProgress
+            ? (done, tot) =>
+                onPrefillProgress(
+                  Math.min(
+                    userVisibleTurnTokens,
+                    Math.max(1, Math.round((done / Math.max(1, tot)) * userVisibleTurnTokens))
+                  ),
+                  userVisibleTurnTokens
+                )
+            : undefined
+        );
       }
     } catch (prefillErr) {
       await restorePreTurnSCache();
