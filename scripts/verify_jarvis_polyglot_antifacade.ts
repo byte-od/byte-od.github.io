@@ -1268,8 +1268,35 @@ async function main() {
   const physCodecRaw = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/lib/physicalScarCodec.ts'), 'utf-8');
   const physLabRaw = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/components/PhysicalScarLab.tsx'), 'utf-8');
   assert(
-    physLabRaw.includes('data-testid="physical-scar-forensic-scope"'),
-    'Missing data-testid="physical-scar-forensic-scope" epistemological scope banner in PhysicalScarLab.tsx!'
+    physLabRaw.includes('data-testid="physical-scar-forensic-scope"') &&
+      physLabRaw.includes('data-testid="physical-scar-public-archives"') &&
+      physLabRaw.includes('data-testid="tab-public-archives"'),
+    'Missing forensic scope or public-archives testid in PhysicalScarLab.tsx!'
+  );
+  const pubAuditSrc = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/data/scarCodecPublicAudit.json'), 'utf-8');
+  const pubAuditWeb = fs.readFileSync(
+    path.join(PORTFOLIO_ROOT, 'public/webgpu/scarcodec_public_datasets_v1_0_audit.json'),
+    'utf-8'
+  );
+  const pubAuditCanonPath = path.resolve(
+    PORTFOLIO_ROOT,
+    '../scar-cache/results/scar_codec_public_datasets_v1_0_audit.json'
+  );
+  assert(pubAuditSrc === pubAuditWeb, 'src/data/scarCodecPublicAudit.json != public/webgpu copy!');
+  if (fs.existsSync(pubAuditCanonPath)) {
+    assert(
+      pubAuditSrc === fs.readFileSync(pubAuditCanonPath, 'utf-8'),
+      'Portfolio scarCodecPublicAudit.json drifted from canonical scar-cache audit JSON!'
+    );
+  }
+  const pubJson = JSON.parse(pubAuditSrc);
+  assert(
+    pubJson.scar_codec_modified === false &&
+      pubJson.synthetic_data_used === false &&
+      pubJson.oracle_steering_used === false &&
+      Array.isArray(pubJson.provenance_manifest) &&
+      pubJson.provenance_manifest.length === 7,
+    'Invalid provenance or anti-oracle flags in scarCodecPublicAudit.json!'
   );
   assert(
     !/const\s+wgsl\s*=/.test(stripComments(physLabRaw)),
