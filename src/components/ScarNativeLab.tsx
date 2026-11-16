@@ -246,11 +246,20 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
 
   useEffect(() => {
     if (!engine) return;
-    void runPasskeyComparison(polyLang, passkeyCode, clauses, streamStages);
-    if (engine.cpuRef.manifest.cartridges.length > 0) {
-      void runCartridgeQuery(polyLang, engine.cpuRef.manifest.cartridges[0], streamStages);
+    let cancelled = false;
+    async function runInitialChecks() {
+      await runPasskeyComparison(polyLang, passkeyCode, clauses, streamStages);
+      if (cancelled || !engine) return;
+      if (engine.cpuRef.manifest.cartridges.length > 0) {
+        await runCartridgeQuery(polyLang, engine.cpuRef.manifest.cartridges[0], streamStages);
+      }
+      if (cancelled) return;
+      await runAbstainCheck(EPISTEMIC_PRESETS[0].lang, EPISTEMIC_PRESETS[0].query, streamStages);
     }
-    void runAbstainCheck(EPISTEMIC_PRESETS[0].lang, EPISTEMIC_PRESETS[0].query, streamStages);
+    void runInitialChecks();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engine]);
 

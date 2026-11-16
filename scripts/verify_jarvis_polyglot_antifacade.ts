@@ -1152,6 +1152,20 @@ async function main() {
     `Window-only no-DualTier ablation unexpectedly retained evicted passkey: "${v6PkNoDt.outputText}"`
   );
 
+  const sn6EngSrc = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/lib/scarNativeV6Engine.ts'), 'utf-8');
+  const sn5EngSrc = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/lib/scarNativeEngine.ts'), 'utf-8');
+  const snLabSrc = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/components/ScarNativeLab.tsx'), 'utf-8');
+  assert(
+    sn6EngSrc.includes('activeGpuLock') && sn5EngSrc.includes('activeGpuLock'),
+    'Missing activeGpuLock WebGPU mapAsync serialization mutex in scarNativeV6Engine.ts or scarNativeEngine.ts!'
+  );
+  assert(
+    snLabSrc.includes('async function runInitialChecks()') &&
+      snLabSrc.includes('await runPasskeyComparison(') &&
+      snLabSrc.includes('await runAbstainCheck('),
+    'Unawaited concurrent WebGPU warmup detected in ScarNativeLab.tsx!'
+  );
+
   // 2) Sequential Stage-Streaming (`streamStages: true`) Bit-Exact Logit Parity & VRAM Reduction
   const v6PkStream = sn6Exec.generate(v6PkPrompt, {
     maxNewTokens: 18,

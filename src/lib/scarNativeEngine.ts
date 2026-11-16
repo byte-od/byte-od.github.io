@@ -1050,6 +1050,8 @@ export class ScarNativeWebGpuBrowserEngine {
     this.cpuRef = cpuRef;
   }
 
+  private activeGpuLock: Promise<void> = Promise.resolve();
+
   async initWebGpuIfAvailable(): Promise<boolean> {
     const nav = typeof navigator !== 'undefined' ? (navigator as any) : null;
     if (!nav?.gpu) return false;
@@ -1467,82 +1469,93 @@ export class ScarNativeWebGpuBrowserEngine {
       return this.cpuRef.generate(prompt, opts);
     }
 
-    const t0 = performance.now();
-    this.resetGpuSCache();
-    const scacheInit = Number(this.scacheKvBuf.size + this.scacheWScarBuf.size);
-    const pIds = this.cpuRef.tokenizer.encode(prompt, true, false);
-    const maxNew = opts.maxNewTokens ?? 20;
-    const suppressCjk = opts.suppressCjk ?? true;
-    const useScarStore = opts.useScarStore ?? true;
+    let releaseLock!: () => void;
+    const prevLock = this.activeGpuLock;
+    this.activeGpuLock = new Promise<void>((res) => {
+      releaseLock = res;
+    });
+    await prevLock;
 
-    let lastLogits: Float32Array<ArrayBufferLike> = new Float32Array(this.cpuRef.cfg.vocab_size);
-    let routedId: string | null = null;
-    let routedCos = -1.0;
+    try {
+      const t0 = performance.now();
+      this.resetGpuSCache();
+      const scacheInit = Number(this.scacheKvBuf.size + this.scacheWScarBuf.size);
+      const pIds = this.cpuRef.tokenizer.encode(prompt, true, false);
+      const maxNew = opts.maxNewTokens ?? 20;
+      const suppressCjk = opts.suppressCjk ?? true;
+      const useScarStore = opts.useScarStore ?? true;
 
-    for (let i = 0; i < pIds.length; i++) {
-      const isLast = i === pIds.length - 1;
-      const res = await this.stepTokenGpu(pIds[i], i, isLast, suppressCjk, useScarStore);
-      lastLogits = res.logits;
-      if (isLast) {
-        routedId = res.routedCartridgeId;
-        routedCos = res.routedCosine;
-      }
-    }
+      let lastLogits: Float32Array<ArrayBufferLike> = new Float32Array(this.cpuRef.cfg.vocab_size);
+      let routedId: string | null = null;
+      let routedCos = -1.0;
 
-    const firstTokenLogits = new Float32Array(lastLogits);
-    const outIds: number[] = [];
-    let firstConf = 0.0;
-    let firstMargin = 0.0;
-    let posT = pIds.length;
-
-    for (let step = 0; step < maxNew; step++) {
-      let max1 = -1e30;
-      let max2 = -1e30;
-      let arg1 = 0;
-      for (let v = 0; v < lastLogits.length; v++) {
-        const val = lastLogits[v];
-        if (val > max1) {
-          max2 = max1;
-          max1 = val;
-          arg1 = v;
-        } else if (val > max2) {
-          max2 = val;
+      for (let i = 0; i < pIds.length; i++) {
+        const isLast = i === pIds.length - 1;
+        const res = await this.stepTokenGpu(pIds[i], i, isLast, suppressCjk, useScarStore);
+        lastLogits = res.logits;
+        if (isLast) {
+          routedId = res.routedCartridgeId;
+          routedCos = res.routedCosine;
         }
       }
-      if (step === 0) {
-        let sumExp = 0.0;
-        for (let v = 0; v < lastLogits.length; v++) sumExp += Math.exp(lastLogits[v] - max1);
-        const p1 = 1.0 / sumExp;
-        const p2 = Math.exp(max2 - max1) / sumExp;
-        firstConf = p1;
-        firstMargin = p1 - p2;
-      }
-      if (arg1 === this.cpuRef.tokenizer.eosId) break;
-      outIds.push(arg1);
-      const res = await this.stepTokenGpu(arg1, posT, false, suppressCjk, useScarStore);
-      lastLogits = res.logits;
-      posT++;
-    }
 
-    const elapsedMs = Math.max(0.1, performance.now() - t0);
-    const scacheFinal = Number(this.scacheKvBuf.size + this.scacheWScarBuf.size);
-    return {
-      prompt,
-      outputText: this.cpuRef.tokenizer.decode(outIds, true),
-      outputTokenIds: outIds,
-      prefillTokens: pIds.length,
-      generatedTokens: outIds.length,
-      elapsedMs,
-      tokPerSec: ((pIds.length + outIds.length) / elapsedMs) * 1000.0,
-      routedCartridgeId: routedId,
-      routedCosine: routedCos,
-      firstTokenConfidence: firstConf,
-      firstTokenMargin: firstMargin,
-      scacheBytesInitial: scacheInit,
-      scacheBytesFinal: scacheFinal,
-      scacheDeltaBytes: scacheFinal - scacheInit,
-      backend: 'webgpu_wgsl_22',
-      firstTokenLogits,
-    };
+      const firstTokenLogits = new Float32Array(lastLogits);
+      const outIds: number[] = [];
+      let firstConf = 0.0;
+      let firstMargin = 0.0;
+      let posT = pIds.length;
+
+      for (let step = 0; step < maxNew; step++) {
+        let max1 = -1e30;
+        let max2 = -1e30;
+        let arg1 = 0;
+        for (let v = 0; v < lastLogits.length; v++) {
+          const val = lastLogits[v];
+          if (val > max1) {
+            max2 = max1;
+            max1 = val;
+            arg1 = v;
+          } else if (val > max2) {
+            max2 = val;
+          }
+        }
+        if (step === 0) {
+          let sumExp = 0.0;
+          for (let v = 0; v < lastLogits.length; v++) sumExp += Math.exp(lastLogits[v] - max1);
+          const p1 = 1.0 / sumExp;
+          const p2 = Math.exp(max2 - max1) / sumExp;
+          firstConf = p1;
+          firstMargin = p1 - p2;
+        }
+        if (arg1 === this.cpuRef.tokenizer.eosId) break;
+        outIds.push(arg1);
+        const res = await this.stepTokenGpu(arg1, posT, false, suppressCjk, useScarStore);
+        lastLogits = res.logits;
+        posT++;
+      }
+
+      const elapsedMs = Math.max(0.1, performance.now() - t0);
+      const scacheFinal = Number(this.scacheKvBuf.size + this.scacheWScarBuf.size);
+      return {
+        prompt,
+        outputText: this.cpuRef.tokenizer.decode(outIds, true),
+        outputTokenIds: outIds,
+        prefillTokens: pIds.length,
+        generatedTokens: outIds.length,
+        elapsedMs,
+        tokPerSec: ((pIds.length + outIds.length) / elapsedMs) * 1000.0,
+        routedCartridgeId: routedId,
+        routedCosine: routedCos,
+        firstTokenConfidence: firstConf,
+        firstTokenMargin: firstMargin,
+        scacheBytesInitial: scacheInit,
+        scacheBytesFinal: scacheFinal,
+        scacheDeltaBytes: scacheFinal - scacheInit,
+        backend: 'webgpu_wgsl_22',
+        firstTokenLogits,
+      };
+    } finally {
+      releaseLock();
+    }
   }
 }

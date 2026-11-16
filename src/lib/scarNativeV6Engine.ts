@@ -1913,6 +1913,7 @@ export class ScarNativeV6WebGpuBrowserEngine {
   private countsU32Total = 0;
   private activeCartridgeId: string | null = null;
   private activeDocId: string | null = null;
+  private activeGpuLock: Promise<void> = Promise.resolve();
   webgpuReady = false;
   liveParityCosine: number | null = null;
   stageStreamingMaxDiff: number | null = null;
@@ -2647,129 +2648,140 @@ export class ScarNativeV6WebGpuBrowserEngine {
       return this.cpuRef.generate(prompt, opts);
     }
 
-    const t0 = performance.now();
-    this.resetGpuSCache();
-    const scacheInit = Number(this.scacheKvBuf.size + this.scacheWScarBuf.size + this.scachePageScoresBuf.size);
-    const pIds = this.cpuRef.tokenizer.encode(prompt, true, false);
-    const maxNew = opts.maxNewTokens ?? 20;
-    const suppressCjk = opts.suppressCjk ?? true;
-    const useScarStore = opts.useScarStore ?? true;
-    const streamStages = opts.streamStages ?? false;
+    let releaseLock!: () => void;
+    const prevLock = this.activeGpuLock;
+    this.activeGpuLock = new Promise<void>((res) => {
+      releaseLock = res;
+    });
+    await prevLock;
 
-    let lastLogits: Float32Array<ArrayBufferLike> = new Float32Array(this.cpuRef.cfg.vocab_size);
-    let routedId: string | null = null;
-    let routedDoc: string | null = null;
-    let routedCos = -1.0;
-    let resolvedLangIdx = this.cpuRef.resolveLangIdx(opts.queryLang);
-    let lastExperts: number[][] = [];
+    try {
+      const t0 = performance.now();
+      this.resetGpuSCache();
+      const scacheInit = Number(this.scacheKvBuf.size + this.scacheWScarBuf.size + this.scachePageScoresBuf.size);
+      const pIds = this.cpuRef.tokenizer.encode(prompt, true, false);
+      const maxNew = opts.maxNewTokens ?? 20;
+      const suppressCjk = opts.suppressCjk ?? true;
+      const useScarStore = opts.useScarStore ?? true;
+      const streamStages = opts.streamStages ?? false;
 
-    for (let i = 0; i < pIds.length; i++) {
-      const isLast = i === pIds.length - 1;
-      const res = await this.stepTokenGpu(pIds[i], i, {
-        routeOnGolden: isLast,
-        suppressCjk,
-        useScarStore,
-        streamStages,
-        queryLang: opts.queryLang,
-        enableWidrowHoff: opts.enableWidrowHoff,
-        enableMicroPages: opts.enableMicroPages,
-        recordExperts: isLast,
-      });
-      lastLogits = res.logits;
-      if (isLast) {
-        routedId = res.routedCartridgeId;
-        routedDoc = res.routedDocId;
-        routedCos = res.routedCosine;
-        resolvedLangIdx = res.resolvedLangIdx;
-        lastExperts = res.selectedExpertsByLayer;
-      }
-    }
+      let lastLogits: Float32Array<ArrayBufferLike> = new Float32Array(this.cpuRef.cfg.vocab_size);
+      let routedId: string | null = null;
+      let routedDoc: string | null = null;
+      let routedCos = -1.0;
+      let resolvedLangIdx = this.cpuRef.resolveLangIdx(opts.queryLang);
+      let lastExperts: number[][] = [];
 
-    const firstTokenLogits = new Float32Array(lastLogits);
-    const outIds: number[] = [];
-    let firstConf = 0.0;
-    let firstMargin = 0.0;
-    let posT = pIds.length;
-
-    for (let step = 0; step < maxNew; step++) {
-      let max1 = -1e30;
-      let max2 = -1e30;
-      let arg1 = 0;
-      for (let v = 0; v < lastLogits.length; v++) {
-        const val = lastLogits[v];
-        if (val > max1) {
-          max2 = max1;
-          max1 = val;
-          arg1 = v;
-        } else if (val > max2) {
-          max2 = val;
+      for (let i = 0; i < pIds.length; i++) {
+        const isLast = i === pIds.length - 1;
+        const res = await this.stepTokenGpu(pIds[i], i, {
+          routeOnGolden: isLast,
+          suppressCjk,
+          useScarStore,
+          streamStages,
+          queryLang: opts.queryLang,
+          enableWidrowHoff: opts.enableWidrowHoff,
+          enableMicroPages: opts.enableMicroPages,
+          recordExperts: isLast,
+        });
+        lastLogits = res.logits;
+        if (isLast) {
+          routedId = res.routedCartridgeId;
+          routedDoc = res.routedDocId;
+          routedCos = res.routedCosine;
+          resolvedLangIdx = res.resolvedLangIdx;
+          lastExperts = res.selectedExpertsByLayer;
         }
       }
-      if (step === 0) {
-        let sumExp = 0.0;
-        for (let v = 0; v < lastLogits.length; v++) sumExp += Math.exp(lastLogits[v] - max1);
-        const p1 = 1.0 / sumExp;
-        const p2 = Math.exp(max2 - max1) / sumExp;
-        firstConf = p1;
-        firstMargin = p1 - p2;
+
+      const firstTokenLogits = new Float32Array(lastLogits);
+      const outIds: number[] = [];
+      let firstConf = 0.0;
+      let firstMargin = 0.0;
+      let posT = pIds.length;
+
+      for (let step = 0; step < maxNew; step++) {
+        let max1 = -1e30;
+        let max2 = -1e30;
+        let arg1 = 0;
+        for (let v = 0; v < lastLogits.length; v++) {
+          const val = lastLogits[v];
+          if (val > max1) {
+            max2 = max1;
+            max1 = val;
+            arg1 = v;
+          } else if (val > max2) {
+            max2 = val;
+          }
+        }
+        if (step === 0) {
+          let sumExp = 0.0;
+          for (let v = 0; v < lastLogits.length; v++) sumExp += Math.exp(lastLogits[v] - max1);
+          const p1 = 1.0 / sumExp;
+          const p2 = Math.exp(max2 - max1) / sumExp;
+          firstConf = p1;
+          firstMargin = p1 - p2;
+        }
+        if (arg1 === this.cpuRef.tokenizer.eosId) break;
+        outIds.push(arg1);
+        const res = await this.stepTokenGpu(arg1, posT, {
+          routeOnGolden: false,
+          suppressCjk,
+          useScarStore,
+          streamStages,
+          queryLang: opts.queryLang,
+          enableWidrowHoff: opts.enableWidrowHoff,
+          enableMicroPages: opts.enableMicroPages,
+          recordExperts: false,
+        });
+        lastLogits = res.logits;
+        posT++;
       }
-      if (arg1 === this.cpuRef.tokenizer.eosId) break;
-      outIds.push(arg1);
-      const res = await this.stepTokenGpu(arg1, posT, {
-        routeOnGolden: false,
-        suppressCjk,
-        useScarStore,
+
+      // Read GPU micro-page promotion counts (`counts[gh * 4 + 3]`)
+      const encC = this.device.createCommandEncoder();
+      encC.copyBufferToBuffer(this.scacheKvBuf, 0, this.countsReadBuf, 0, this.countsU32Total * 4);
+      this.device.queue.submit([encC.finish()]);
+      const cntArr = await this.readU32(this.countsReadBuf, this.countsU32Total);
+      let promotedPages = 0;
+      for (let gh = 0; gh * 4 + 3 < cntArr.length; gh++) {
+        promotedPages += cntArr[gh * 4 + 3];
+      }
+
+      const elapsedMs = Math.max(0.1, performance.now() - t0);
+      const scacheFinal = Number(this.scacheKvBuf.size + this.scacheWScarBuf.size + this.scachePageScoresBuf.size);
+      const activeWeights = streamStages
+        ? Number(this.headTailBuf.size + this.stageWindowBuf.size)
+        : Number(this.shardBuf.size);
+
+      return {
+        prompt,
+        outputText: this.cpuRef.tokenizer.decode(outIds, true).trim(),
+        outputTextWithTags: this.cpuRef.tokenizer.decode(outIds, false).trim(),
+        outputTokenIds: outIds,
+        abstained: outIds.includes(this.cpuRef.tokenizer.abstainId),
+        prefillTokens: pIds.length,
+        generatedTokens: outIds.length,
+        elapsedMs,
+        tokPerSec: ((pIds.length + outIds.length) / elapsedMs) * 1000.0,
+        routedCartridgeId: routedId,
+        routedDocId: routedDoc,
+        routedCosine: routedCos,
+        resolvedLang: V6_LANGS[resolvedLangIdx] ?? 'en',
+        firstTokenConfidence: firstConf,
+        firstTokenMargin: firstMargin,
+        scacheBytesInitial: scacheInit,
+        scacheBytesFinal: scacheFinal,
+        scacheDeltaBytes: scacheFinal - scacheInit,
+        activeWeightGpuBytes: activeWeights,
         streamStages,
-        queryLang: opts.queryLang,
-        enableWidrowHoff: opts.enableWidrowHoff,
-        enableMicroPages: opts.enableMicroPages,
-        recordExperts: false,
-      });
-      lastLogits = res.logits;
-      posT++;
+        promotedMicroPagesTotal: promotedPages,
+        selectedExpertsByLayer: lastExperts,
+        backend: streamStages ? 'webgpu_wgsl_26_stream' : 'webgpu_wgsl_26',
+        firstTokenLogits,
+      };
+    } finally {
+      releaseLock();
     }
-
-    // Read GPU micro-page promotion counts (`counts[gh * 4 + 3]`)
-    const encC = this.device.createCommandEncoder();
-    encC.copyBufferToBuffer(this.scacheKvBuf, 0, this.countsReadBuf, 0, this.countsU32Total * 4);
-    this.device.queue.submit([encC.finish()]);
-    const cntArr = await this.readU32(this.countsReadBuf, this.countsU32Total);
-    let promotedPages = 0;
-    for (let gh = 0; gh * 4 + 3 < cntArr.length; gh++) {
-      promotedPages += cntArr[gh * 4 + 3];
-    }
-
-    const elapsedMs = Math.max(0.1, performance.now() - t0);
-    const scacheFinal = Number(this.scacheKvBuf.size + this.scacheWScarBuf.size + this.scachePageScoresBuf.size);
-    const activeWeights = streamStages
-      ? Number(this.headTailBuf.size + this.stageWindowBuf.size)
-      : Number(this.shardBuf.size);
-
-    return {
-      prompt,
-      outputText: this.cpuRef.tokenizer.decode(outIds, true).trim(),
-      outputTextWithTags: this.cpuRef.tokenizer.decode(outIds, false).trim(),
-      outputTokenIds: outIds,
-      abstained: outIds.includes(this.cpuRef.tokenizer.abstainId),
-      prefillTokens: pIds.length,
-      generatedTokens: outIds.length,
-      elapsedMs,
-      tokPerSec: ((pIds.length + outIds.length) / elapsedMs) * 1000.0,
-      routedCartridgeId: routedId,
-      routedDocId: routedDoc,
-      routedCosine: routedCos,
-      resolvedLang: V6_LANGS[resolvedLangIdx] ?? 'en',
-      firstTokenConfidence: firstConf,
-      firstTokenMargin: firstMargin,
-      scacheBytesInitial: scacheInit,
-      scacheBytesFinal: scacheFinal,
-      scacheDeltaBytes: scacheFinal - scacheInit,
-      activeWeightGpuBytes: activeWeights,
-      streamStages,
-      promotedMicroPagesTotal: promotedPages,
-      selectedExpertsByLayer: lastExperts,
-      backend: streamStages ? 'webgpu_wgsl_26_stream' : 'webgpu_wgsl_26',
-      firstTokenLogits,
-    };
   }
 }
