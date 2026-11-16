@@ -74,7 +74,7 @@
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
-      "tau": 0.52,
+      "tau": 0.58,
       "ramp": 0.04,
       "parent_capsules": [],
       "metadata": {
@@ -113,8 +113,8 @@
         "architecture": "GoldenSliceV4",
         "mid_layer_idx": 23,
         "k_lang": 14,
-        "surprise_steps": 153,
-        "total_seed_steps": 360
+        "surprise_steps": 303,
+        "total_seed_steps": 720
       }
     },
     {
@@ -163,8 +163,8 @@
         "architecture": "GoldenSliceV4",
         "mid_layer_idx": 23,
         "k_lang": 14,
-        "surprise_steps": 264,
-        "total_seed_steps": 354
+        "surprise_steps": 393,
+        "total_seed_steps": 522
       }
     },
     {
@@ -213,74 +213,19 @@
         "architecture": "GoldenSliceV4",
         "mid_layer_idx": 23,
         "k_lang": 14,
-        "surprise_steps": 264,
-        "total_seed_steps": 340
+        "surprise_steps": 394,
+        "total_seed_steps": 506
       }
     },
     {
       "index": 3,
-      "capsule_id": "portfolio_julio_bio_career",
+      "capsule_id": "portfolio_mos_scache_72b",
       "slot_idx": 3,
       "coord": [
         3,
         3
       ],
       "byte_offset": 18173952,
-      "record_bytes": 143360,
-      "record_kb": 140.0,
-      "local_store_has_bytes": true,
-      "tau": 0.54,
-      "ramp": 0.04,
-      "parent_capsules": [],
-      "metadata": {
-        "title": "Julio Reis — Senior Systems Architect & LLM Engineer (8+ Years)",
-        "title_pt": "Julio Reis — Arquiteto de Sistemas Sênior & Engenheiro de LLMs (8+ Anos)",
-        "category": "Portfolio Dossier",
-        "summary": "Julio Cesar da Costa Reis Filho (@byte-od): 8+ years across Causal Transformers, PyTorch DDP, Go, C++/Rust, and Flutter (Asapp, Opah IT, Arlequim, Grupo Data, GFT).",
-        "links": [
-          {
-            "label": "LinkedIn Julio Reis",
-            "url": "https://linkedin.com/in/juliocrfilho",
-            "icon": "ext"
-          },
-          {
-            "label": "GitHub @byte-od",
-            "url": "https://github.com/byte-od",
-            "icon": "github"
-          }
-        ],
-        "example_prompt": "Quem é o Julio Reis e qual é a experiência e trajetória profissional dele?",
-        "prompts_polyglot": {
-          "pt": "Quem é o Julio Reis e qual é a experiência e trajetória profissional dele?",
-          "en": "Who is Julio Reis and what is his professional background and career?",
-          "es": "¿Quién es Julio Reis y cuál es su trayectoria y experiencia profesional?",
-          "fr": "Qui est Julio Reis et quel est son parcours professionnel et son expérience ?"
-        },
-        "anchor_language": "en_only_p_perp_lang",
-        "supported_languages": [
-          "pt",
-          "en",
-          "es",
-          "fr"
-        ],
-        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Qwen2.5-3B Track 2.5 ProtectedInt4Scar)",
-        "teacher_reference": "Julio Reis is a Senior Systems Architect and LLM Engineer with 8+ years of experience across Asapp Desenvolvimento, Opah IT, Arlequim, and enterprise banking.",
-        "architecture": "GoldenSliceV4",
-        "mid_layer_idx": 23,
-        "k_lang": 14,
-        "surprise_steps": 265,
-        "total_seed_steps": 354
-      }
-    },
-    {
-      "index": 4,
-      "capsule_id": "portfolio_mos_scache_72b",
-      "slot_idx": 4,
-      "coord": [
-        4,
-        4
-      ],
-      "byte_offset": 18317312,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -319,23 +264,23 @@
           "fr"
         ],
         "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Qwen2.5-3B Track 2.5 ProtectedInt4Scar)",
-        "teacher_reference": "MoS runs a 72B LLM in 2.40 GB VRAM via INT4+ASVD, while SCache O(1) replaces linear KV Cache with fixed memory.",
+        "teacher_reference": "MoS runs 72B LLMs in 2.40 GB VRAM via INT4+ASVD, while SCache O(1) replaces linear KV Cache.",
         "architecture": "GoldenSliceV4",
         "mid_layer_idx": 23,
         "k_lang": 14,
-        "surprise_steps": 294,
-        "total_seed_steps": 372
+        "surprise_steps": 668,
+        "total_seed_steps": 842
       }
     },
     {
-      "index": 5,
+      "index": 4,
       "capsule_id": "portfolio_browser_webgpu_wgsl",
-      "slot_idx": 5,
+      "slot_idx": 4,
       "coord": [
-        5,
-        5
+        4,
+        4
       ],
-      "byte_offset": 18460672,
+      "byte_offset": 18317312,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -373,19 +318,19 @@
         "architecture": "GoldenSliceV4",
         "mid_layer_idx": 23,
         "k_lang": 14,
-        "surprise_steps": 245,
-        "total_seed_steps": 342
+        "surprise_steps": 382,
+        "total_seed_steps": 504
       }
     },
     {
-      "index": 6,
+      "index": 5,
       "capsule_id": "portfolio_aura_system_one",
-      "slot_idx": 6,
+      "slot_idx": 5,
       "coord": [
-        6,
-        6
+        5,
+        5
       ],
-      "byte_offset": 18604032,
+      "byte_offset": 18460672,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -423,19 +368,19 @@
         "architecture": "GoldenSliceV4",
         "mid_layer_idx": 23,
         "k_lang": 14,
-        "surprise_steps": 264,
-        "total_seed_steps": 326
+        "surprise_steps": 627,
+        "total_seed_steps": 736
       }
     },
     {
-      "index": 7,
+      "index": 6,
       "capsule_id": "portfolio_tricompass_scouts",
-      "slot_idx": 7,
+      "slot_idx": 6,
       "coord": [
-        7,
-        7
+        6,
+        6
       ],
-      "byte_offset": 18747392,
+      "byte_offset": 18604032,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -478,124 +423,19 @@
         "architecture": "GoldenSliceV4",
         "mid_layer_idx": 23,
         "k_lang": 14,
-        "surprise_steps": 255,
-        "total_seed_steps": 344
+        "surprise_steps": 536,
+        "total_seed_steps": 688
       }
     },
     {
-      "index": 8,
-      "capsule_id": "portfolio_cir_engine_503m",
-      "slot_idx": 8,
-      "coord": [
-        8,
-        8
-      ],
-      "byte_offset": 18890752,
-      "record_bytes": 143360,
-      "record_kb": 140.0,
-      "local_store_has_bytes": true,
-      "tau": 0.48,
-      "ramp": 0.05,
-      "parent_capsules": [],
-      "metadata": {
-        "title": "CIR-Engine & Cir-Jev — 503M Causal Transformer Trained from Scratch",
-        "title_pt": "CIR-Engine & Cir-Jev — Transformer Causal de 503M Treinado do Zero",
-        "category": "Causal Transformers",
-        "summary": "503M-parameter 16-layer causal Transformer trained from scratch in PyTorch DDP (~6,200 tok/s, RoPE, RMSNorm, GQA, FlashAttention) with O(1) deterministic [OP:CALC] tool interception.",
-        "links": [
-          {
-            "label": "GitHub cir-jev (503M)",
-            "url": "https://github.com/byte-od/cir-jev",
-            "icon": "github"
-          }
-        ],
-        "example_prompt": "O que é o CIR-Engine 503M (Cir-Jev) treinado do zero em PyTorch DDP?",
-        "prompts_polyglot": {
-          "pt": "O que é o CIR-Engine 503M (Cir-Jev) treinado do zero em PyTorch DDP?",
-          "en": "What is CIR-Engine 503M (Cir-Jev), the causal Transformer trained from scratch?",
-          "es": "¿Qué es CIR-Engine 503M (Cir-Jev), el Transformer causal entrenado desde cero?",
-          "fr": "Qu'est-ce que CIR-Engine 503M (Cir-Jev), le Transformer causal entraîné de zéro ?"
-        },
-        "anchor_language": "en_only_p_perp_lang",
-        "supported_languages": [
-          "pt",
-          "en",
-          "es",
-          "fr"
-        ],
-        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Qwen2.5-3B Track 2.5 ProtectedInt4Scar)",
-        "teacher_reference": "CIR-Engine is Julio Reis's 503M causal Transformer trained from scratch in PyTorch DDP at 6.2k tok/s with [OP:CALC] verification.",
-        "architecture": "GoldenSliceV4",
-        "mid_layer_idx": 23,
-        "k_lang": 14,
-        "surprise_steps": 261,
-        "total_seed_steps": 360
-      }
-    },
-    {
-      "index": 9,
-      "capsule_id": "portfolio_devtools_fullstack",
-      "slot_idx": 9,
-      "coord": [
-        9,
-        9
-      ],
-      "byte_offset": 19034112,
-      "record_bytes": 143360,
-      "record_kb": 140.0,
-      "local_store_has_bytes": true,
-      "tau": 0.48,
-      "ramp": 0.05,
-      "parent_capsules": [],
-      "metadata": {
-        "title": "Open-Source & Full-Stack Systems (mddd-cli, MAD-cli, flutter_scene, Register-red)",
-        "title_pt": "Ferramentas Open-Source & Full-Stack (mddd-cli, MAD-cli, flutter_scene, Register-red)",
-        "category": "Developer Tooling & Graphics",
-        "summary": "Spec-Driven Dev via Mermaid ASTs on npm (mddd-cli), living docs (MAD-cli), 3D Metal/Vulkan shaders (flutter_scene), Go telemetry (GitTrack), and Register-red Apple Numbers daemon.",
-        "links": [
-          {
-            "label": "NPM mddd-cli",
-            "url": "https://www.npmjs.com/package/mddd-cli",
-            "icon": "ext"
-          },
-          {
-            "label": "GitHub Register-red",
-            "url": "https://github.com/byte-od/Register-red",
-            "icon": "github"
-          }
-        ],
-        "example_prompt": "Quais ferramentas open-source e sistemas full-stack o Julio criou (mddd-cli, MAD-cli, Register-red)?",
-        "prompts_polyglot": {
-          "pt": "Quais ferramentas open-source e sistemas full-stack o Julio criou (mddd-cli, MAD-cli, Register-red)?",
-          "en": "What open-source tools and full-stack systems did Julio build (mddd-cli, MAD-cli, Register-red)?",
-          "es": "¿Qué herramientas open-source y sistemas full-stack creó Julio (mddd-cli, MAD-cli, Register-red)?",
-          "fr": "Quels outils open-source et systèmes full-stack Julio a-t-il créés (mddd-cli, MAD-cli, Register-red) ?"
-        },
-        "anchor_language": "en_only_p_perp_lang",
-        "supported_languages": [
-          "pt",
-          "en",
-          "es",
-          "fr"
-        ],
-        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Qwen2.5-3B Track 2.5 ProtectedInt4Scar)",
-        "teacher_reference": "Julio built mddd-cli on npm (Clean Architecture from Mermaid ASTs), MAD-cli, 3D Metal/Vulkan shaders in flutter_scene, GitTrack in Go, and Register-red.",
-        "architecture": "GoldenSliceV4",
-        "mid_layer_idx": 23,
-        "k_lang": 14,
-        "surprise_steps": 258,
-        "total_seed_steps": 312
-      }
-    },
-    {
-      "index": 10,
+      "index": 7,
       "capsule_id": "portfolio_contact_hire",
-      "slot_idx": 10,
+      "slot_idx": 7,
       "coord": [
-        10,
-        10
+        7,
+        7
       ],
-      "byte_offset": 19177472,
+      "byte_offset": 18747392,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -643,19 +483,19 @@
         "architecture": "GoldenSliceV4",
         "mid_layer_idx": 23,
         "k_lang": 14,
-        "surprise_steps": 246,
-        "total_seed_steps": 354
+        "surprise_steps": 378,
+        "total_seed_steps": 528
       }
     },
     {
-      "index": 11,
+      "index": 8,
       "capsule_id": "concept_landauer_principle",
-      "slot_idx": 11,
+      "slot_idx": 8,
       "coord": [
-        11,
-        11
+        8,
+        8
       ],
-      "byte_offset": 19320832,
+      "byte_offset": 18890752,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -692,14 +532,14 @@
       }
     },
     {
-      "index": 12,
+      "index": 9,
       "capsule_id": "concept_immerman_szelepcsenyi",
-      "slot_idx": 12,
+      "slot_idx": 9,
       "coord": [
-        12,
-        12
+        9,
+        9
       ],
-      "byte_offset": 19464192,
+      "byte_offset": 19034112,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -736,14 +576,14 @@
       }
     },
     {
-      "index": 13,
+      "index": 10,
       "capsule_id": "concept_boltzmann_constant",
-      "slot_idx": 13,
+      "slot_idx": 10,
       "coord": [
-        13,
-        13
+        10,
+        10
       ],
-      "byte_offset": 19607552,
+      "byte_offset": 19177472,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -820,14 +660,14 @@
       }
     },
     {
-      "index": 14,
+      "index": 11,
       "capsule_id": "concept_fischer_lynch_paterson",
-      "slot_idx": 14,
+      "slot_idx": 11,
       "coord": [
-        14,
-        14
+        11,
+        11
       ],
-      "byte_offset": 19750912,
+      "byte_offset": 19320832,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -904,14 +744,14 @@
       }
     },
     {
-      "index": 15,
+      "index": 12,
       "capsule_id": "concept_chaitin_incompleteness",
-      "slot_idx": 15,
+      "slot_idx": 12,
       "coord": [
-        15,
-        15
+        12,
+        12
       ],
-      "byte_offset": 19894272,
+      "byte_offset": 19464192,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -988,14 +828,14 @@
       }
     },
     {
-      "index": 16,
+      "index": 13,
       "capsule_id": "concept_marchenko_pastur_law",
-      "slot_idx": 16,
+      "slot_idx": 13,
       "coord": [
-        16,
-        16
+        13,
+        13
       ],
-      "byte_offset": 20037632,
+      "byte_offset": 19607552,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -1072,14 +912,14 @@
       }
     },
     {
-      "index": 17,
+      "index": 14,
       "capsule_id": "concept_kabatiansky_levenshtein",
-      "slot_idx": 17,
+      "slot_idx": 14,
       "coord": [
-        17,
-        17
+        14,
+        14
       ],
-      "byte_offset": 20180992,
+      "byte_offset": 19750912,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -1156,14 +996,14 @@
       }
     },
     {
-      "index": 18,
+      "index": 15,
       "capsule_id": "concept_regev_lwe_lattice",
-      "slot_idx": 18,
+      "slot_idx": 15,
       "coord": [
-        18,
-        18
+        15,
+        15
       ],
-      "byte_offset": 20324352,
+      "byte_offset": 19894272,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -1240,14 +1080,14 @@
       }
     },
     {
-      "index": 19,
+      "index": 16,
       "capsule_id": "concept_shannon_hartley_capacity",
-      "slot_idx": 19,
+      "slot_idx": 16,
       "coord": [
-        19,
-        19
+        16,
+        16
       ],
-      "byte_offset": 20467712,
+      "byte_offset": 20037632,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -1324,14 +1164,14 @@
       }
     },
     {
-      "index": 20,
+      "index": 17,
       "capsule_id": "concept_brazil_lc150_domestic_law",
-      "slot_idx": 20,
+      "slot_idx": 17,
       "coord": [
-        20,
-        20
+        17,
+        17
       ],
-      "byte_offset": 20611072,
+      "byte_offset": 20180992,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -1408,19 +1248,19 @@
       }
     },
     {
-      "index": 21,
+      "index": 18,
       "capsule_id": "ow_quantum_applied_theorems",
-      "slot_idx": 21,
+      "slot_idx": 18,
       "coord": [
-        21,
-        21
+        18,
+        18
       ],
-      "byte_offset": 20754432,
+      "byte_offset": 20324352,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
-      "tau": 0.46,
-      "ramp": 0.04,
+      "tau": 0.39,
+      "ramp": 0.05,
       "parent_capsules": [],
       "metadata": {
         "title": "Applied Theorems of Quantum Physics & Quantum Information (No-Cloning, Bell-CHSH, Holevo)",
@@ -1492,14 +1332,14 @@
       }
     },
     {
-      "index": 22,
+      "index": 19,
       "capsule_id": "ow_quantum_no_cloning_wootters_zurek",
-      "slot_idx": 22,
+      "slot_idx": 19,
       "coord": [
-        22,
-        22
+        19,
+        19
       ],
-      "byte_offset": 20897792,
+      "byte_offset": 20467712,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -1576,14 +1416,14 @@
       }
     },
     {
-      "index": 23,
+      "index": 20,
       "capsule_id": "ow_quantum_bell_chsh_tsirelson",
-      "slot_idx": 23,
+      "slot_idx": 20,
       "coord": [
-        23,
-        23
+        20,
+        20
       ],
-      "byte_offset": 21041152,
+      "byte_offset": 20611072,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -1660,14 +1500,14 @@
       }
     },
     {
-      "index": 24,
+      "index": 21,
       "capsule_id": "ow_quantum_holevo_bound",
-      "slot_idx": 24,
+      "slot_idx": 21,
       "coord": [
-        24,
-        24
+        21,
+        21
       ],
-      "byte_offset": 21184512,
+      "byte_offset": 20754432,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -1744,14 +1584,14 @@
       }
     },
     {
-      "index": 25,
+      "index": 22,
       "capsule_id": "ow_quantum_knill_laflamme_qec",
-      "slot_idx": 25,
+      "slot_idx": 22,
       "coord": [
-        25,
-        25
+        22,
+        22
       ],
-      "byte_offset": 21327872,
+      "byte_offset": 20897792,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -1828,14 +1668,14 @@
       }
     },
     {
-      "index": 26,
+      "index": 23,
       "capsule_id": "ow_systems_roofline_model",
-      "slot_idx": 26,
+      "slot_idx": 23,
       "coord": [
-        26,
-        26
+        23,
+        23
       ],
-      "byte_offset": 21471232,
+      "byte_offset": 21041152,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -1912,14 +1752,14 @@
       }
     },
     {
-      "index": 27,
+      "index": 24,
       "capsule_id": "ow_systems_cap_pacelc",
-      "slot_idx": 27,
+      "slot_idx": 24,
       "coord": [
-        27,
-        27
+        24,
+        24
       ],
-      "byte_offset": 21614592,
+      "byte_offset": 21184512,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -1996,14 +1836,14 @@
       }
     },
     {
-      "index": 28,
+      "index": 25,
       "capsule_id": "ow_crypto_zk_snarks_groth16",
-      "slot_idx": 28,
+      "slot_idx": 25,
       "coord": [
-        28,
-        28
+        25,
+        25
       ],
-      "byte_offset": 21757952,
+      "byte_offset": 21327872,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -2080,14 +1920,14 @@
       }
     },
     {
-      "index": 29,
+      "index": 26,
       "capsule_id": "ow_compilers_ssa_dominance",
-      "slot_idx": 29,
+      "slot_idx": 26,
       "coord": [
-        29,
-        29
+        26,
+        26
       ],
-      "byte_offset": 21901312,
+      "byte_offset": 21471232,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -2164,14 +2004,14 @@
       }
     },
     {
-      "index": 30,
+      "index": 27,
       "capsule_id": "ow_astro_bekenstein_hawking",
-      "slot_idx": 30,
+      "slot_idx": 27,
       "coord": [
-        30,
-        30
+        27,
+        27
       ],
-      "byte_offset": 22044672,
+      "byte_offset": 21614592,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -2248,14 +2088,14 @@
       }
     },
     {
-      "index": 31,
+      "index": 28,
       "capsule_id": "ow_astro_chandrasekhar_limit",
-      "slot_idx": 31,
+      "slot_idx": 28,
       "coord": [
-        31,
-        31
+        28,
+        28
       ],
-      "byte_offset": 22188032,
+      "byte_offset": 21757952,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -2332,14 +2172,14 @@
       }
     },
     {
-      "index": 32,
+      "index": 29,
       "capsule_id": "ow_physics_jarzynski_equality",
-      "slot_idx": 32,
+      "slot_idx": 29,
       "coord": [
-        32,
-        32
+        29,
+        29
       ],
-      "byte_offset": 22331392,
+      "byte_offset": 21901312,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -2416,14 +2256,14 @@
       }
     },
     {
-      "index": 33,
+      "index": 30,
       "capsule_id": "ow_math_ito_lemma_black_scholes",
-      "slot_idx": 33,
+      "slot_idx": 30,
       "coord": [
-        33,
-        33
+        30,
+        30
       ],
-      "byte_offset": 22474752,
+      "byte_offset": 22044672,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -2500,14 +2340,14 @@
       }
     },
     {
-      "index": 34,
+      "index": 31,
       "capsule_id": "ow_math_cramer_rao_fisher",
-      "slot_idx": 34,
+      "slot_idx": 31,
       "coord": [
-        34,
-        34
+        31,
+        31
       ],
-      "byte_offset": 22618112,
+      "byte_offset": 22188032,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -2584,14 +2424,14 @@
       }
     },
     {
-      "index": 35,
+      "index": 32,
       "capsule_id": "ow_math_godel_incompleteness",
-      "slot_idx": 35,
+      "slot_idx": 32,
       "coord": [
-        35,
-        35
+        32,
+        32
       ],
-      "byte_offset": 22761472,
+      "byte_offset": 22331392,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -2668,14 +2508,14 @@
       }
     },
     {
-      "index": 36,
+      "index": 33,
       "capsule_id": "ow_bio_crispr_cas9_pam",
-      "slot_idx": 36,
+      "slot_idx": 33,
       "coord": [
-        36,
-        36
+        33,
+        33
       ],
-      "byte_offset": 22904832,
+      "byte_offset": 22474752,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -2752,14 +2592,14 @@
       }
     },
     {
-      "index": 37,
+      "index": 34,
       "capsule_id": "ow_neuro_friston_free_energy",
-      "slot_idx": 37,
+      "slot_idx": 34,
       "coord": [
-        37,
-        37
+        34,
+        34
       ],
-      "byte_offset": 23048192,
+      "byte_offset": 22618112,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -2836,14 +2676,14 @@
       }
     },
     {
-      "index": 38,
+      "index": 35,
       "capsule_id": "ow_econ_arrow_impossibility",
-      "slot_idx": 38,
+      "slot_idx": 35,
       "coord": [
-        38,
-        38
+        35,
+        35
       ],
-      "byte_offset": 23191552,
+      "byte_offset": 22761472,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -2920,14 +2760,14 @@
       }
     },
     {
-      "index": 39,
+      "index": 36,
       "capsule_id": "ow_law_brazil_lgpd_13709",
-      "slot_idx": 39,
+      "slot_idx": 36,
       "coord": [
-        39,
-        39
+        36,
+        36
       ],
-      "byte_offset": 23334912,
+      "byte_offset": 22904832,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -3004,14 +2844,14 @@
       }
     },
     {
-      "index": 40,
+      "index": 37,
       "capsule_id": "bridge_landauer_immerman",
-      "slot_idx": 40,
+      "slot_idx": 37,
       "coord": [
-        40,
-        40
+        37,
+        37
       ],
-      "byte_offset": 23478272,
+      "byte_offset": 23048192,
       "record_bytes": 143360,
       "record_kb": 140.0,
       "local_store_has_bytes": true,
@@ -3048,6 +2888,161 @@
         "k_lang": 14,
         "surprise_steps": 227,
         "total_seed_steps": 356
+      }
+    },
+    {
+      "index": 38,
+      "capsule_id": "portfolio_julio_scar_research",
+      "slot_idx": 38,
+      "coord": [
+        38,
+        38
+      ],
+      "byte_offset": 23191552,
+      "record_bytes": 143360,
+      "record_kb": 140.0,
+      "local_store_has_bytes": true,
+      "tau": 0.48,
+      "ramp": 0.04,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "Julio Reis (@byte-od) — Creator of Mixture of Scars, SCache O(1), ScarNative & PointScarFlow",
+        "title_pt": "Julio Reis (@byte-od) — Criador de Mixture of Scars, SCache O(1), ScarNative & PointScarFlow",
+        "category": "Scar Research & Author",
+        "summary": "Julio Cesar da Costa Reis Filho (@byte-od): AI & Systems Researcher and creator of the Scar Ecosystem — Mixture of Scars (72B in 2.40 GB VRAM), SCache O(1), D4-LUT256 VQ4-Scar, ScarCodec, ScarNativeLM, PointScarFlow 3D, and AURA.",
+        "links": [
+          {
+            "label": "GitHub @byte-od",
+            "url": "https://github.com/byte-od",
+            "icon": "github"
+          },
+          {
+            "label": "LinkedIn Julio Reis",
+            "url": "https://linkedin.com/in/juliocrfilho",
+            "icon": "ext"
+          }
+        ],
+        "example_prompt": "Quem é o Julio Reis?",
+        "prompts_polyglot": {
+          "pt": "Quem é o Julio Reis?",
+          "en": "Who is Julio Reis?",
+          "es": "¿Quién es Julio Reis?",
+          "fr": "Qui est Julio Reis ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Qwen2.5-3B Track 2.5 ProtectedInt4Scar)",
+        "teacher_reference": "Julio Reis is an AI Systems Researcher who created Mixture of Scars, SCache O(1), VQ4-Scar, ScarNative, PointScarFlow, and AURA.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 23,
+        "k_lang": 14,
+        "surprise_steps": 690,
+        "total_seed_steps": 882
+      }
+    },
+    {
+      "index": 39,
+      "capsule_id": "portfolio_scarnative_vq4",
+      "slot_idx": 39,
+      "coord": [
+        39,
+        39
+      ],
+      "byte_offset": 23334912,
+      "record_bytes": 143360,
+      "record_kb": 140.0,
+      "local_store_has_bytes": true,
+      "tau": 0.48,
+      "ramp": 0.04,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "ScarNativeLM v5/v6, D4-LUT256 VQ4-Scar, ScarCodec & mos-digest",
+        "title_pt": "ScarNativeLM v5/v6, D4-LUT256 VQ4-Scar, ScarCodec & mos-digest",
+        "category": "Tabula-Rasa Scar Foundation",
+        "summary": "Tabula-Rasa foundation architecture trained from t = 0 with zero nn.Linear layers: Shared-Stage D4-LUT256 VQ4-Scar, Chunkwise WY Dual-Tier O(1) SCache, Procrustes P_perp_lang mos-digest 12 KB cartridges, and ScarCodec.",
+        "links": [
+          {
+            "label": "GitHub mixture-of-scars",
+            "url": "https://github.com/byte-od/mixture-of-scars",
+            "icon": "github"
+          }
+        ],
+        "example_prompt": "O que é o ScarNative v6.0?",
+        "prompts_polyglot": {
+          "pt": "O que é o ScarNative v6.0?",
+          "en": "What is ScarNative v6.0?",
+          "es": "¿Qué es ScarNative v6.0?",
+          "fr": "Qu'est-ce que ScarNative v6.0 ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Qwen2.5-3B Track 2.5 ProtectedInt4Scar)",
+        "teacher_reference": "ScarNative v6.0 uses VQ4-Scar, Chunkwise WY, Dual-Tier SCache O(1), and 12 KB mos-digest without dense layers.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 23,
+        "k_lang": 14,
+        "surprise_steps": 492,
+        "total_seed_steps": 664
+      }
+    },
+    {
+      "index": 40,
+      "capsule_id": "portfolio_pointscar_flow_3d",
+      "slot_idx": 40,
+      "coord": [
+        40,
+        40
+      ],
+      "byte_offset": 23478272,
+      "record_bytes": 143360,
+      "record_kb": 140.0,
+      "local_store_has_bytes": true,
+      "tau": 0.48,
+      "ramp": 0.04,
+      "parent_capsules": [],
+      "metadata": {
+        "title": "PointScarFlow v1.0 — Continuous 3D Point-Cloud OT Rectified Flow in 12 WGSL Shaders",
+        "title_pt": "PointScarFlow v1.0 — Geração 3D Contínua por Fluxo Retificado OT em 12 Shaders WGSL",
+        "category": "Continuous 3D Scar Flow",
+        "summary": "Tabula-Rasa 3D continuous point-cloud generator (1,024 3D points + normals in 4 Euler steps, 3.87 MiB VQ4-Scar + INT4-STE, zero primitive catalog) conditioned directly on Qwen Layer-23 h_23 via 12 WebGPU WGSL shaders.",
+        "links": [
+          {
+            "label": "GitHub mixture-of-scars",
+            "url": "https://github.com/byte-od/mixture-of-scars",
+            "icon": "github"
+          }
+        ],
+        "example_prompt": "O que é o PointScarFlow e como funcionam os pontos 3D flutuantes do JARVIS?",
+        "prompts_polyglot": {
+          "pt": "O que é o PointScarFlow e como funcionam os pontos 3D flutuantes do JARVIS?",
+          "en": "What is PointScarFlow?",
+          "es": "¿Qué es PointScarFlow?",
+          "fr": "Qu'est-ce que PointScarFlow ?"
+        },
+        "anchor_language": "en_only_p_perp_lang",
+        "supported_languages": [
+          "pt",
+          "en",
+          "es",
+          "fr"
+        ],
+        "teacher_model": "Golden-Slice v4.0 Closed-Form RRR + Cutting-Plane Rosetta (Qwen2.5-3B Track 2.5 ProtectedInt4Scar)",
+        "teacher_reference": "PointScarFlow v1.0 generates 1,024 continuous 3D points in 4 Euler flow steps via 12 WebGPU WGSL shaders conditioned on Qwen Layer-23.",
+        "architecture": "GoldenSliceV4",
+        "mid_layer_idx": 23,
+        "k_lang": 14,
+        "surprise_steps": 736,
+        "total_seed_steps": 924
       }
     }
   ],

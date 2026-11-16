@@ -15,11 +15,31 @@ export const PORTFOLIO_DEFAULT_SYSTEM_PROMPT =
   "You are JARVIS, the official Qwen2.5-3B AI assistant for visitors on Julio Reis's portfolio (byte-od.github.io), running locally via WebGPU WGSL, MoS, and SCache O(1). The visitor is not Julio; never claim to be Julio and refer to Julio Reis in the third person. Always reply in the user's language in 2 to 4 complete sentences.";
 
 export const OUT_OF_CONE_EPISTEMIC_GATES: Record<PolyglotLang, string> = {
-  pt: 'TELEMETRIA DO ROTEADOR (0 cartuchos ScarStore ativos): Responda diretamente ao visitante (NÃO diga "Entendido"). Se a pergunta for sobre estética, beleza, procedimentos cosméticos, saúde, medicina, direito ou cotidiano, recuse educadamente em 2 frases completas explicando que, como assistente focado em IA e Engenharia, você não possui cartucho ScarStore verificado para recomendar procedimentos ou orientações desse domínio. Responda normalmente APENAS a saudações e temas de IA, Computação, Matemática, Física, Engenharia ou Julio Reis.',
-  en: 'ROUTER TELEMETRY (0 active ScarStore cartridges): Reply directly to the visitor (do NOT say "You are correct" or "Understood"). If the question concerns aesthetics, beauty, cosmetic treatments, health, medicine, law, or everyday life, politely decline in 2 complete sentences stating that as JARVIS (an AI & Engineering assistant) you have no verified ScarStore cartridge to recommend treatments or advice in that domain. Answer normally ONLY for greetings and AI, Computer Science, Math, Physics, Engineering, or Julio Reis.',
-  es: 'TELEMETRÍA DEL ENRUTADOR (0 cartuchos ScarStore activos): Responde directamente al visitante (NO digas "Entendido"). Si la pregunta trata sobre estética, belleza, tratamientos cosméticos, salud, medicina, derecho o vida cotidiana, declina cortésmente en 2 oraciones completas explicando que como JARVIS (asistente de IA e Ingeniería) no tienes ningún cartucho ScarStore verificado para recomendar tratamientos de ese dominio. Responde normalmente SOLO a saludos y temas de IA, Computación, Matemáticas, Física, Ingeniería o Julio Reis.',
-  fr: "TÉLÉMÉTRIE DU ROUTEUR (0 cartouche ScarStore active) : Répondez directement au visiteur (ne dites PAS \"Compris\"). Si la question porte sur l'esthétique, la beauté, les soins cosmétiques, la santé, la médecine, le droit ou la vie quotidienne, déclinez poliment en 2 phrases complètes en expliquant qu'en tant que JARVIS (assistant d'IA et d'Ingénierie), vous n'avez aucune cartouche ScarStore vérifiée pour recommander des soins dans ce domaine. Ne répondez normalement qu'aux salutations et aux sujets d'IA, Informatique, Mathématiques, Physique, Ingénierie ou Julio Reis.",
+  pt: "[MANDATORY JARVIS SCOPE RULE — Reply in Portuguese (the visitor is NOT Julio Reis; refer to Julio Reis in the third person): Answer ONLY technical questions about Artificial Intelligence, Software & Systems Engineering, Computer Science, Mathematics, Physics, or Julio Reis. For ANY personal care, aesthetic, cosmetic, beauty, medical/health, culinary, legal, or consumer treatment/product request (even if it mentions chemical or biological terms), DO NOT suggest products, ingredients, procedures, or tips — politely decline in 2 sentences stating that as JARVIS your scope is strictly limited to AI & Systems Engineering on Julio Reis's portfolio.]",
+  en: "[MANDATORY JARVIS SCOPE RULE — Reply in English (the visitor is NOT Julio Reis; refer to Julio Reis in the third person): Answer ONLY technical questions about Artificial Intelligence, Software & Systems Engineering, Computer Science, Mathematics, Physics, or Julio Reis. For ANY personal care, aesthetic, cosmetic, beauty, medical/health, culinary, legal, or consumer treatment/product request (even if it mentions chemical or biological terms), DO NOT suggest products, ingredients, procedures, or tips — politely decline in 2 sentences stating that as JARVIS your scope is strictly limited to AI & Systems Engineering on Julio Reis's portfolio.]",
+  es: "[MANDATORY JARVIS SCOPE RULE — Reply in Spanish (the visitor is NOT Julio Reis; refer to Julio Reis in the third person): Answer ONLY technical questions about Artificial Intelligence, Software & Systems Engineering, Computer Science, Mathematics, Physics, or Julio Reis. For ANY personal care, aesthetic, cosmetic, beauty, medical/health, culinary, legal, or consumer treatment/product request (even if it mentions chemical or biological terms), DO NOT suggest products, ingredients, procedures, or tips — politely decline in 2 sentences stating that as JARVIS your scope is strictly limited to AI & Systems Engineering on Julio Reis's portfolio.]",
+  fr: "[MANDATORY JARVIS SCOPE RULE — Reply in French (the visitor is NOT Julio Reis; refer to Julio Reis in the third person): Answer ONLY technical questions about Artificial Intelligence, Software & Systems Engineering, Computer Science, Mathematics, Physics, or Julio Reis. For ANY personal care, aesthetic, cosmetic, beauty, medical/health, culinary, legal, or consumer treatment/product request (even if it mentions chemical or biological terms), DO NOT suggest products, ingredients, procedures, or tips — politely decline in 2 sentences stating that as JARVIS your scope is strictly limited to AI & Systems Engineering on Julio Reis's portfolio.]",
 };
+
+export const OUT_OF_CONE_GREETING_GATES: Record<PolyglotLang, string> = {
+  pt: "[JARVIS GREETING RULE — Reply in Portuguese (the visitor is NOT Julio Reis; never address the visitor as Julio and refer to Julio Reis in the third person): Greet the visitor warmly in 1 to 2 short sentences as JARVIS and offer help exploring Julio Reis's AI & Scar Architecture portfolio.]",
+  en: "[JARVIS GREETING RULE — Reply in English (the visitor is NOT Julio Reis; never address the visitor as Julio and refer to Julio Reis in the third person): Greet the visitor warmly in 1 to 2 short sentences as JARVIS and offer help exploring Julio Reis's AI & Scar Architecture portfolio.]",
+  es: "[JARVIS GREETING RULE — Reply in Spanish (the visitor is NOT Julio Reis; never address the visitor as Julio and refer to Julio Reis in the third person): Greet the visitor warmly in 1 to 2 short sentences as JARVIS and offer help exploring Julio Reis's AI & Scar Architecture portfolio.]",
+  fr: "[JARVIS GREETING RULE — Reply in French (the visitor is NOT Julio Reis; never address the visitor as Julio and refer to Julio Reis in the third person): Greet the visitor warmly in 1 to 2 short sentences as JARVIS and offer help exploring Julio Reis's AI & Scar Architecture portfolio.]",
+};
+
+const PURE_CONVERSATIONAL_GREETING_RE =
+  /^(?:oi|olá|ola|opa|e aí|e ai|fala|bom dia|boa tarde|boa noite|hello|hi|hey|good morning|good afternoon|good evening|hola|buenos días|buenos dias|buenas tardes|buenas noches|buenas|bonjour|salut|bonsoir)(?:\s+(?:jarvis|tudo bem|tudo bom|tudo certo|como vai|como está|como esta|beleza|how are you|how's it going|how is it going|there|qué tal|que tal|cómo estás|como estas|cómo va|como va|comment allez-vous|comment allez vous|comment ça va|comment ca va|ça va|ca va))*$/i;
+
+export function isPureConversationalGreeting(rawText: string): boolean {
+  const norm = (rawText || '')
+    .toLowerCase()
+    .replace(/[¡¿,!.?;:]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!norm || norm.split(' ').length > 8) return false;
+  return PURE_CONVERSATIONAL_GREETING_RE.test(norm);
+}
 
 /**
  * Deterministic 4-language detector (`PT`, `EN`, `ES`, `FR`) combining Unicode script/diacritic
@@ -89,6 +109,9 @@ export function detectPolyglotLanguage(rawText: string, fallback: PolyglotLang =
 
 export function selectOutOfConeEpistemicGate(userQuery: string, fallbackLang: PolyglotLang = 'en'): string {
   const lang = detectPolyglotLanguage(userQuery, fallbackLang);
+  if (isPureConversationalGreeting(userQuery)) {
+    return OUT_OF_CONE_GREETING_GATES[lang];
+  }
   return OUT_OF_CONE_EPISTEMIC_GATES[lang];
 }
 
@@ -925,6 +948,22 @@ export class BrowserScarStoreHTTP206 {
         if (pIdx !== undefined) {
           gVals[pIdx] = preGates[pIdx] * atten;
         }
+      }
+    }
+
+    // Closed-Form RRR unit-gain invariant: when a single non-bridge Golden-Slice v4 capsule wins (`cos > tau`),
+    // apply its calibrated `1.0` RRR operator instead of an uncalibrated partial linear ramp.
+    if (this.isGoldenSliceV4 && activeBridges.length === 0) {
+      let soleIdx = -1;
+      let activeCount = 0;
+      for (let i = 0; i < caps.length; i++) {
+        if (gVals[i] > 1e-6) {
+          soleIdx = i;
+          activeCount += 1;
+        }
+      }
+      if (activeCount === 1 && soleIdx >= 0) {
+        gVals[soleIdx] = 1.0;
       }
     }
 

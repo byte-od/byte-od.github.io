@@ -223,6 +223,26 @@ function endsWithCompleteSentence(text: string): boolean {
   return /[.!?]["'”)]?$/.test(t) && !/\b(?:Dr|Sr|Sra|Mr|Ms|Prof|etc|ex|vs|v\d)\.$/.test(t);
 }
 
+function startsNewSentenceOrParagraph(piece: string): boolean {
+  return /^(?:\s*\n|\s+["'“([¡¿]*[A-ZÀ-ÖØ-Þ])/.test(piece);
+}
+
+function shouldStopAtSentenceBoundary(
+  epistemicMode: 'scar_grounded' | 'out_of_cone_guarded' | 'base_trunk',
+  generatedCount: number,
+  decStepIdx: number,
+  seedHorizon: number,
+  maxNewTokens: number
+): boolean {
+  if (epistemicMode === 'scar_grounded') {
+    return decStepIdx >= Math.max(25, seedHorizon - 10);
+  }
+  if (epistemicMode === 'out_of_cone_guarded') {
+    return generatedCount >= 48;
+  }
+  return generatedCount >= Math.max(96, maxNewTokens - 48);
+}
+
 export class BrowserMoSWebGPUEngine {
   public readonly device: any;
   public readonly adapterLabel: string;
@@ -1681,6 +1701,8 @@ export class BrowserMoSWebGPUEngine {
 
     const canUseSysSnap = this._matchesSysSnapPrefix(cleanProbeIds) && qStartProbe >= this._sysSnapTokenIds.length;
     const sysPrefixLen = canUseSysSnap ? this._sysSnapTokenIds.length : 0;
+    let guardedCleanRollbackPos: number | null = null;
+    let guardedCleanPrefixIds: number[] | null = null;
 
     try {
       if (basePos === 0) {
@@ -1725,28 +1747,58 @@ export class BrowserMoSWebGPUEngine {
           if (signal?.aborted) throw createAbortError();
           this._setActiveCapsulesGpu(routeResult.active, 1.0);
 
-          let tailIds: number[];
           if (routeResult.active.length > 0 || !useEpistemicGuard) {
             epistemicMode = routeResult.active.length > 0 ? 'scar_grounded' : 'base_trunk';
-            tailIds = cleanProbeIds.slice(qEndProbe);
+            const tailIds = cleanProbeIds.slice(qEndProbe);
+            effectiveLp = qEndProbe + tailIds.length;
+            await this._submitPrefillSequence(
+              tailIds,
+              qEndProbe,
+              0,
+              false,
+              null,
+              signal,
+              onPrefillProgress ? (done) => onPrefillProgress(qEndProbe + done, effectiveLp) : undefined,
+              false
+            );
           } else {
             epistemicMode = 'out_of_cone_guarded';
+            const encSnapQ = this.device.createCommandEncoder();
+            encSnapQ.copyBufferToBuffer(this.scacheKvBuf, 0, this.scacheKvSnapBuf, 0, this.scacheKvBuf.size);
+            encSnapQ.copyBufferToBuffer(this.scacheWScarBuf, 0, this.scacheWScarSnapBuf, 0, this.scacheWScarBuf.size);
+            encSnapQ.copyBufferToBuffer(this.scacheSalienceBuf, 0, this.scacheSalSnapBuf, 0, this.scacheSalienceBuf.size);
+            this.device.queue.submit([encSnapQ.finish()]);
+            guardedCleanRollbackPos = qEndProbe;
+            guardedCleanPrefixIds = cleanProbeIds.slice(qEndProbe);
+
             const gateTxt = selectOutOfConeEpistemicGate(userQuery);
-            tailIds = this.tokenizer.encode(
-              `<|im_end|>\n<|im_start|>system\n${gateTxt}<|im_end|>\n<|im_start|>assistant\n`
+            const guardedFullIds = this.tokenizer.applyChatTemplate(
+              [
+                { role: 'system', content: sysTxt },
+                { role: 'user', content: `${userQuery}\n\n${gateTxt}` },
+              ],
+              true
             );
+            effectiveLp = guardedFullIds.length;
+            if (canUseSysSnap && this._matchesSysSnapPrefix(guardedFullIds)) {
+              this._restoreSysSnapToActiveSCache();
+              await this._submitPrefillSequence(
+                guardedFullIds.slice(sysPrefixLen),
+                sysPrefixLen,
+                0,
+                false,
+                null,
+                signal,
+                onPrefillProgress ? (done) => onPrefillProgress(sysPrefixLen + done, effectiveLp) : undefined,
+                false
+              );
+            } else {
+              this.device.queue.writeBuffer(this.scacheKvBuf, 0, this._zeroKvBytes);
+              this.device.queue.writeBuffer(this.scacheWScarBuf, 0, this._zeroWScarBytes);
+              this.device.queue.writeBuffer(this.scacheSalienceBuf, 0, this._zeroSalBytes);
+              await this._submitPrefillSequence(guardedFullIds, 0, 0, false, null, signal, onPrefillProgress, false);
+            }
           }
-          effectiveLp = qEndProbe + tailIds.length;
-          await this._submitPrefillSequence(
-            tailIds,
-            qEndProbe,
-            0,
-            false,
-            null,
-            signal,
-            onPrefillProgress ? (done) => onPrefillProgress(qEndProbe + done, effectiveLp) : undefined,
-            false
-          );
         } else {
           if (canUseSysSnap) {
             this._restoreSysSnapToActiveSCache();
@@ -1829,9 +1881,11 @@ export class BrowserMoSWebGPUEngine {
         let turnPromptIds = promptIds;
         if (enableScarStore && this.scarStore && routeResult.active.length === 0 && useEpistemicGuard) {
           epistemicMode = 'out_of_cone_guarded';
+          guardedCleanRollbackPos = basePos;
+          guardedCleanPrefixIds = promptIds;
           const gateTxt = selectOutOfConeEpistemicGate(userQuery);
           turnPromptIds = this.tokenizer.encode(
-            `<|im_start|>user\n${userQuery}<|im_end|>\n<|im_start|>system\n${gateTxt}<|im_end|>\n<|im_start|>assistant\n`
+            `<|im_start|>user\n${userQuery}\n\n${gateTxt}<|im_end|>\n<|im_start|>assistant\n`
           );
         } else {
           epistemicMode =
@@ -1970,6 +2024,15 @@ export class BrowserMoSWebGPUEngine {
       lastGenTokenFed = true;
       if (signal?.aborted) break;
       if (this.eosTokenIds.has(stepOut.top1Id)) break;
+      if (
+        shouldStopAtSentenceBoundary(epistemicMode, generatedIds.length, decStepIdx, this.seedHorizon, maxNewTokens) &&
+        endsWithCompleteSentence(lastDecoded)
+      ) {
+        const nextPiece = this.tokenizer.decode([stepOut.top1Id], true);
+        if (startsNewSentenceOrParagraph(nextPiece)) {
+          break;
+        }
+      }
 
       generatedIds.push(stepOut.top1Id);
       lastGenTokenFed = false;
@@ -2018,7 +2081,11 @@ export class BrowserMoSWebGPUEngine {
         break;
       }
 
-      const curText = previewText;
+      const hasTrailingSentenceNewline =
+        shouldStopAtSentenceBoundary(epistemicMode, generatedIds.length, decStepIdx, this.seedHorizon, maxNewTokens) &&
+        /\n\s*$/.test(previewText) &&
+        endsWithCompleteSentence(previewText);
+      const curText = hasTrailingSentenceNewline ? previewText.trimEnd() : previewText;
       const delta = curText.slice(lastDecoded.length);
       lastDecoded = curText;
 
@@ -2044,23 +2111,59 @@ export class BrowserMoSWebGPUEngine {
         });
       }
 
-      if (generatedIds.length >= Math.max(96, maxNewTokens - 48) && endsWithCompleteSentence(curText)) {
+      if (hasTrailingSentenceNewline) {
         break;
       }
     }
 
-    const closingIds: number[] = [];
-    if (generatedIds.length > 0 && !lastGenTokenFed) {
-      closingIds.push(generatedIds[generatedIds.length - 1]);
-    }
-    for (let i = 0; i < this.turnSuffixIds.length; i++) {
-      closingIds.push(this.turnSuffixIds[i]);
-    }
-    this.sessionPos = this._flushClosingTokensToSCache(closingIds, curPos);
-    this.turnCount += 1;
+    this._setActiveCapsulesGpu([]);
     if (signal?.aborted) {
+      if (guardedCleanRollbackPos !== null) {
+        restorePreTurnSCache();
+      } else {
+        const closingAbortIds: number[] = [];
+        if (generatedIds.length > 0 && !lastGenTokenFed) {
+          closingAbortIds.push(generatedIds[generatedIds.length - 1]);
+        }
+        for (let i = 0; i < this.turnSuffixIds.length; i++) {
+          closingAbortIds.push(this.turnSuffixIds[i]);
+        }
+        this.sessionPos = this._flushClosingTokensToSCache(closingAbortIds, curPos);
+        this.turnCount += 1;
+      }
       throw createAbortError();
     }
+
+    if (guardedCleanRollbackPos !== null && guardedCleanPrefixIds !== null) {
+      const encCleanRest = this.device.createCommandEncoder();
+      encCleanRest.copyBufferToBuffer(this.scacheKvSnapBuf, 0, this.scacheKvBuf, 0, this.scacheKvBuf.size);
+      encCleanRest.copyBufferToBuffer(this.scacheWScarSnapBuf, 0, this.scacheWScarBuf, 0, this.scacheWScarBuf.size);
+      encCleanRest.copyBufferToBuffer(this.scacheSalSnapBuf, 0, this.scacheSalienceBuf, 0, this.scacheSalienceBuf.size);
+      this.device.queue.submit([encCleanRest.finish()]);
+
+      const cleanFlushIds = [...guardedCleanPrefixIds, ...generatedIds, ...this.turnSuffixIds];
+      await this._submitPrefillSequence(
+        cleanFlushIds,
+        guardedCleanRollbackPos,
+        0,
+        false,
+        null,
+        undefined,
+        undefined,
+        true
+      );
+      this.sessionPos = guardedCleanRollbackPos + cleanFlushIds.length;
+    } else {
+      const closingIds: number[] = [];
+      if (generatedIds.length > 0 && !lastGenTokenFed) {
+        closingIds.push(generatedIds[generatedIds.length - 1]);
+      }
+      for (let i = 0; i < this.turnSuffixIds.length; i++) {
+        closingIds.push(this.turnSuffixIds[i]);
+      }
+      this.sessionPos = this._flushClosingTokensToSCache(closingIds, curPos);
+    }
+    this.turnCount += 1;
 
     const decodeMs = performance.now() - tDec0;
     const scacheBytesFinal = this.scacheGpuBytes;

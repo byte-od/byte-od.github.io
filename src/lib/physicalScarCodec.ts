@@ -817,6 +817,75 @@ export class OrthogonalSubspaceProjectorTS {
     }
   }
 
+  /**
+   * Blind empirical covariance subspace estimator (`0` oracle steering access):
+   * Fits top-`rank` orthonormal interference eigenvectors directly from noisy calibration snapshots
+   * `Y_cal in R^{channels x samples}` via deflated power iteration on `Sigma_hat = (1/T) Y_cal Y_cal^T`.
+   */
+  static fitFromCalibration(
+    calSignal: Float32Array,
+    channels: number,
+    samples: number,
+    rank: number
+  ): OrthogonalSubspaceProjectorTS {
+    const cov = new Float64Array(channels * channels);
+    const invT = 1.0 / Math.max(1, samples);
+    for (let i = 0; i < channels; i++) {
+      const rowI = i * samples;
+      for (let j = i; j < channels; j++) {
+        const rowJ = j * samples;
+        let acc = 0;
+        for (let t = 0; t < samples; t++) {
+          acc += calSignal[rowI + t] * calSignal[rowJ + t];
+        }
+        const v = acc * invT;
+        cov[i * channels + j] = v;
+        cov[j * channels + i] = v;
+      }
+    }
+
+    const basisCols = new Float32Array(channels * rank);
+    const prng = new DeterministicPRNG(20260911 + channels * 13 + rank);
+    const vec = new Float64Array(channels);
+    const nxt = new Float64Array(channels);
+
+    for (let k = 0; k < rank; k++) {
+      let n2 = 0;
+      for (let c = 0; c < channels; c++) {
+        const g = prng.nextGaussian();
+        vec[c] = g;
+        n2 += g * g;
+      }
+      const inv0 = 1.0 / Math.sqrt(Math.max(1e-12, n2));
+      for (let c = 0; c < channels; c++) vec[c] *= inv0;
+
+      let eig = 0;
+      for (let it = 0; it < 24; it++) {
+        let m2 = 0;
+        for (let i = 0; i < channels; i++) {
+          let s = 0;
+          const off = i * channels;
+          for (let j = 0; j < channels; j++) s += cov[off + j] * vec[j];
+          nxt[i] = s;
+          m2 += s * s;
+        }
+        eig = Math.sqrt(Math.max(1e-18, m2));
+        const inv = 1.0 / eig;
+        for (let i = 0; i < channels; i++) vec[i] = nxt[i] * inv;
+      }
+
+      for (let i = 0; i < channels; i++) {
+        basisCols[i * rank + k] = vec[i];
+        const off = i * channels;
+        for (let j = 0; j < channels; j++) {
+          cov[off + j] -= eig * vec[i] * vec[j];
+        }
+      }
+    }
+
+    return new OrthogonalSubspaceProjectorTS(basisCols, channels, rank);
+  }
+
   projectClean(arraySignal: Float32Array, channels: number, samples: number): Float32Array {
     const out = new Float32Array(arraySignal);
     const coeff = new Float64Array(this.rank);
@@ -1111,10 +1180,42 @@ export function runRadioTelescopeRfiProof(rfiRatio = 1000): RadioRfiProofResult 
   }
   for (let a = 0; a < nAnt; a++) astroVec[a] /= Math.sqrt(an2);
 
-  const proj = new OrthogonalSubspaceProjectorTS(rfiSteering, nAnt, 3);
+  // Blind off-pulse calibration window (`0` oracle access to `rfiSteering`):
+  // Estimates `U_hat_RFI` strictly from noisy antenna voltages `Y_cal = RFI_cal + Thermal_cal`.
+  const yCal = new Float32Array(nAnt * nSamples);
+  for (let s = 0; s < nSamples; s++) {
+    const t = s / nSamples;
+    const cal0 = Math.sin(2.0 * Math.PI * 37.0 * t - 0.7) * rfiRatio;
+    const cal1 = Math.cos(2.0 * Math.PI * 79.0 * t + 1.2) * rfiRatio;
+    const cal2 = Math.sin(2.0 * Math.PI * (113.0 * t + 28.0 * t * t) - 0.5) * rfiRatio;
+    for (let a = 0; a < nAnt; a++) {
+      const rfi =
+        rfiSteering[a * 3] * cal0 +
+        rfiSteering[a * 3 + 1] * cal1 +
+        rfiSteering[a * 3 + 2] * cal2;
+      yCal[a * nSamples + s] = rfi + 0.035 * prng.nextGaussian();
+    }
+  }
+  const proj = OrthogonalSubspaceProjectorTS.fitFromCalibration(yCal, nAnt, nSamples, 3);
 
   const cleanAstro = new Float32Array(nAnt * nSamples);
   const yRaw = new Float32Array(nAnt * nSamples);
+  const yInSubspaceStress = new Float32Array(nAnt * nSamples);
+  const orthoCleanRef = proj.projectClean(
+    (() => {
+      const tmp = new Float32Array(nAnt * nSamples);
+      for (let s = 0; s < nSamples; s++) {
+        const t = s / nSamples;
+        const phase = (t * 6.0) % 1.0;
+        const pulse = Math.exp(-0.5 * Math.pow((phase - 0.5) / 0.024, 2));
+        for (let a = 0; a < nAnt; a++) tmp[a * nSamples + s] = astroVec[a] * pulse;
+      }
+      return tmp;
+    })(),
+    nAnt,
+    nSamples
+  );
+
   for (let s = 0; s < nSamples; s++) {
     const t = s / nSamples;
     const phase = (t * 6.0) % 1.0;
@@ -1130,17 +1231,21 @@ export function runRadioTelescopeRfiProof(rfiRatio = 1000): RadioRfiProofResult 
         rfiSteering[a * 3] * rfi0 +
         rfiSteering[a * 3 + 1] * rfi1 +
         rfiSteering[a * 3 + 2] * rfi2;
+      const uHatBurst =
+        (proj.basisU[a * 3] * rfi0 +
+          proj.basisU[a * 3 + 1] * rfi1 +
+          proj.basisU[a * 3 + 2] * rfi2);
+      yInSubspaceStress[a * nSamples + s] = orthoCleanRef[a * nSamples + s] + uHatBurst;
       const thermal = 0.035 * prng.nextGaussian();
       yRaw[a * nSamples + s] = clean + rfi + thermal;
     }
   }
 
-  // Verify exact out-of-subspace zero collateral distortion
-  const orthoClean = proj.projectClean(cleanAstro, nAnt, nSamples);
-  const orthoTwice = proj.projectClean(orthoClean, nAnt, nSamples);
+  // Genuine dynamic-range nulling invariance test: `P_perp(x_perp + 1000 * U_hat * c) - x_perp`
+  const stressedProjected = proj.projectClean(yInSubspaceStress, nAnt, nSamples);
   let outOfConeMaxErr = 0;
-  for (let i = 0; i < orthoClean.length; i++) {
-    const err = Math.abs(orthoTwice[i] - orthoClean[i]);
+  for (let i = 0; i < orthoCleanRef.length; i++) {
+    const err = Math.abs(stressedProjected[i] - orthoCleanRef[i]);
     if (err > outOfConeMaxErr) outOfConeMaxErr = err;
   }
 
@@ -1225,6 +1330,7 @@ export interface BlackBoxSCacheProofResult {
   scacheRetainedFaults: number[];
   ringRetainedFaults: number[];
   associativeMeanCosine: number;
+  maskedChannelsMeanCosine: number;
   surpriseTimelineDownsampled: Float32Array;
   trueFirstFaultSig: Float32Array;
   recalledFirstFaultSig: Float32Array;
@@ -1233,12 +1339,17 @@ export interface BlackBoxSCacheProofResult {
 export function runBlackBoxSCacheProof(totalFrames = 8000): BlackBoxSCacheProofResult {
   const prng = new DeterministicPRNG(20260402);
   const faultTimestamps = [120, 290, 470, 680, 910].filter((t) => t < totalFrames - 50);
+  const sensorHarmonics = [1.0, 0.82, -0.74, 1.15, -0.68, 0.91];
   const faultSigs = new Map<number, Float32Array>();
+  const faultStarts = new Map<number, number>();
   faultTimestamps.forEach((ts, idx) => {
     const sig = new Float32Array(64);
     const start = (idx * 11) % 56;
-    for (let c = start; c < start + 6; c++) {
-      sig[c] = (idx % 2 === 0 ? 1 : -1) * (9.5 + idx * 0.8);
+    faultStarts.set(ts, start);
+    const pol = idx % 2 === 0 ? 1 : -1;
+    const baseAmp = 9.5 + idx * 0.8;
+    for (let k = 0; k < 6; k++) {
+      sig[start + k] = pol * baseAmp * sensorHarmonics[k];
     }
     faultSigs.set(ts, sig);
   });
@@ -1271,16 +1382,36 @@ export function runBlackBoxSCacheProof(totalFrames = 8000): BlackBoxSCacheProofR
   const scacheRetainedFaults = faultTimestamps.filter((t) => scacheSet.has(t));
   const ringRetainedFaults = faultTimestamps.filter((t) => ringSet.has(t));
 
+  // Blind partial-cue hetero-associative recall (`0` oracle full-signature self-querying):
+  // Query `W_scar` with ONLY 2 triggered alarm channels (`4` of `6` fault channels masked to `0.0`!),
+  // and verify reconstruction across both all 64 channels and the 4 completely unobserved channels.
   let cosSum = 0;
+  let maskedCosSum = 0;
   let firstTrue: Float32Array = new Float32Array(64);
   let firstRec: Float32Array = new Float32Array(64);
   faultTimestamps.forEach((ts, i) => {
     const sig = faultSigs.get(ts)!;
-    const rec = scache.queryAssociative(sig);
-    cosSum += cosineSimilarityF32(rec, sig);
+    const start = faultStarts.get(ts)!;
+    const partialCue = new Float32Array(64);
+    partialCue[start] = sig[start];
+    partialCue[start + 1] = sig[start + 1];
+    const rec = scache.queryAssociative(partialCue);
+
+    // Rescale recalled vector to match observed 2-channel cue amplitude for visual overlay
+    const cueScale =
+      (partialCue[start] * rec[start] + partialCue[start + 1] * rec[start + 1]) /
+      Math.max(1e-12, rec[start] * rec[start] + rec[start + 1] * rec[start + 1]);
+    const recScaled = new Float32Array(64);
+    for (let c = 0; c < 64; c++) recScaled[c] = rec[c] * cueScale;
+
+    cosSum += cosineSimilarityF32(recScaled, sig);
+    maskedCosSum += cosineSimilarityF32(
+      recScaled.subarray(start + 2, start + 6),
+      sig.subarray(start + 2, start + 6)
+    );
     if (i === 0) {
       firstTrue = sig;
-      firstRec = rec;
+      firstRec = recScaled;
     }
   });
 
@@ -1296,6 +1427,7 @@ export function runBlackBoxSCacheProof(totalFrames = 8000): BlackBoxSCacheProofR
     scacheRetainedFaults,
     ringRetainedFaults,
     associativeMeanCosine: cosSum / Math.max(1, faultTimestamps.length),
+    maskedChannelsMeanCosine: maskedCosSum / Math.max(1, faultTimestamps.length),
     surpriseTimelineDownsampled,
     trueFirstFaultSig: firstTrue,
     recalledFirstFaultSig: firstRec,
@@ -1308,6 +1440,8 @@ export interface CfdHdrFieldProofState {
   vacuumRows: number;
   rawBytes: number;
   scarBytes: number;
+  spectralBytes: number;
+  spectralModesK: number;
   compressionRatio: number;
   scarRmse: number;
   spectralRmse: number;
@@ -1323,39 +1457,154 @@ export interface CfdHdrFieldProofState {
   spikeCoords: Array<[number, number]>;
 }
 
-/** Matched-byte row-wise low-pass DCT/Fourier spectral truncation baseline (exhibits Gibbs ringing). */
-function computeMatchedByteSpectralTruncation(
+/**
+ * Byte-matched 2D Orthonormal DCT-II spectral truncation baseline in IEEE-754 `FP16` (`2 bytes/coeff`):
+ * Retains `kSide x kSide` 2D frequency modes (`2 * kSide^2 <= targetBytes`, matching `scarBytes` byte-for-byte),
+ * demonstrating true Gibbs ringing across PDE Rankine-Hugoniot shocks and `500x` impulses without under-budgeting.
+ */
+function computeMatchedByte2dDctFp16(
   field: Float32Array,
   rows: number,
   cols: number,
   targetBytes: number
-): Float32Array {
-  // Each retained FP32 DCT coefficient costs 4 bytes; distribute budget evenly across rows
-  const coeffsPerRow = Math.max(4, Math.min(cols, Math.floor(targetBytes / (rows * 4))));
-  const out = new Float32Array(rows * cols);
-  const cosTable = new Float32Array(coeffsPerRow * cols);
-  for (let k = 0; k < coeffsPerRow; k++) {
-    const scale = k === 0 ? Math.sqrt(1.0 / cols) : Math.sqrt(2.0 / cols);
-    for (let n = 0; n < cols; n++) {
-      cosTable[k * cols + n] = scale * Math.cos((Math.PI * (2 * n + 1) * k) / (2 * cols));
+): { reconstructed: Float32Array; spectralBytes: number; kSide: number } {
+  const maxCoeffsFp16 = Math.max(16, Math.floor(targetBytes / 2));
+  const kRow = Math.min(rows, Math.max(4, Math.floor(Math.sqrt(maxCoeffsFp16))));
+  const kCol = Math.min(cols, Math.max(4, Math.floor(maxCoeffsFp16 / kRow)));
+
+  const cosR = new Float32Array(kRow * rows);
+  for (let kr = 0; kr < kRow; kr++) {
+    const sc = kr === 0 ? Math.sqrt(1.0 / rows) : Math.sqrt(2.0 / rows);
+    for (let r = 0; r < rows; r++) {
+      cosR[kr * rows + r] = sc * Math.cos((Math.PI * (2 * r + 1) * kr) / (2 * rows));
     }
   }
-  const cBuf = new Float32Array(coeffsPerRow);
+  const cosC = new Float32Array(kCol * cols);
+  for (let kc = 0; kc < kCol; kc++) {
+    const sc = kc === 0 ? Math.sqrt(1.0 / cols) : Math.sqrt(2.0 / cols);
+    for (let c = 0; c < cols; c++) {
+      cosC[kc * cols + c] = sc * Math.cos((Math.PI * (2 * c + 1) * kc) / (2 * cols));
+    }
+  }
+
+  // Forward 2D DCT: `temp[r, kc] = sum_c field[r, c] * cosC[kc, c]`
+  const temp = new Float32Array(rows * kCol);
   for (let r = 0; r < rows; r++) {
-    const rowOff = r * cols;
-    for (let k = 0; k < coeffsPerRow; k++) {
-      let sum = 0;
-      const kOff = k * cols;
-      for (let n = 0; n < cols; n++) sum += field[rowOff + n] * cosTable[kOff + n];
-      cBuf[k] = sum;
-    }
-    for (let n = 0; n < cols; n++) {
-      let rec = 0;
-      for (let k = 0; k < coeffsPerRow; k++) rec += cBuf[k] * cosTable[k * cols + n];
-      out[rowOff + n] = rec;
+    const rOff = r * cols;
+    for (let kc = 0; kc < kCol; kc++) {
+      let s = 0;
+      const cOff = kc * cols;
+      for (let c = 0; c < cols; c++) s += field[rOff + c] * cosC[cOff + c];
+      temp[r * kCol + kc] = s;
     }
   }
-  return out;
+
+  // `coeffF16[kr, kc] = float16(sum_r cosR[kr, r] * temp[r, kc])`
+  const coeffF32 = new Float32Array(kRow * kCol);
+  for (let kr = 0; kr < kRow; kr++) {
+    const krOff = kr * rows;
+    for (let kc = 0; kc < kCol; kc++) {
+      let s = 0;
+      for (let r = 0; r < rows; r++) s += cosR[krOff + r] * temp[r * kCol + kc];
+      coeffF32[kr * kCol + kc] = float16BitsToFloat32(float32ToFloat16Bits(s));
+    }
+  }
+
+  // Inverse 2D DCT from exact FP16-quantized 2D coefficients
+  const invR = new Float32Array(rows * kCol);
+  for (let r = 0; r < rows; r++) {
+    for (let kc = 0; kc < kCol; kc++) {
+      let s = 0;
+      for (let kr = 0; kr < kRow; kr++) s += cosR[kr * rows + r] * coeffF32[kr * kCol + kc];
+      invR[r * kCol + kc] = s;
+    }
+  }
+
+  const out = new Float32Array(rows * cols);
+  for (let r = 0; r < rows; r++) {
+    const rOff = r * cols;
+    const irOff = r * kCol;
+    for (let c = 0; c < cols; c++) {
+      let s = 0;
+      for (let kc = 0; kc < kCol; kc++) s += invR[irOff + kc] * cosC[kc * cols + c];
+      out[rOff + c] = s;
+    }
+  }
+
+  return { reconstructed: out, spectralBytes: kRow * kCol * 2, kSide: kRow };
+}
+
+/**
+ * Integrates the 2D nonlinear inviscid Burgers conservation law PDE
+ *   du/dt + d/dx (0.5 * u^2) + c_y * du/dy = 0
+ * via conservative Rusanov (Local Lax-Friedrichs) finite-volume fluxes from smooth Riemann-like initial data,
+ * dynamically steepening into a genuine Rankine-Hugoniot shockwave bounded by an outer-space vacuum domain (`u = 0`).
+ */
+function integrateRusanovBurgersShockPde(
+  rows: number,
+  cols: number,
+  vacuumRows: number,
+  nSteps = 44
+): Float32Array {
+  const activeRows = rows - vacuumRows;
+  let u = new Float32Array(activeRows * cols);
+  let uNext = new Float32Array(activeRows * cols);
+
+  for (let ar = 0; ar < activeRows; ar++) {
+    const y = (ar / Math.max(1, activeRows - 1)) * 2.0 - 1.0;
+    const xFront = 0.08 + 0.28 * y;
+    for (let c = 0; c < cols; c++) {
+      const x = (c / Math.max(1, cols - 1)) * 2.0 - 1.0;
+      // Smooth compressive tanh ramp (`u_L = +4.4` -> `u_R = -1.1`) + smooth acoustic waves:
+      // Because `u_L > u_R`, characteristics converge and form a genuine Rankine-Hugoniot shock (`s = 0.5*(u_L+u_R)`).
+      const ramp = 1.65 - 2.75 * Math.tanh((x - xFront) / 0.22);
+      const wave = 0.85 * Math.sin(2.2 * Math.PI * x) * Math.cos(1.6 * Math.PI * y);
+      u[ar * cols + c] = ramp + wave;
+    }
+  }
+
+  const dx = 2.0 / Math.max(1, cols - 1);
+  const dy = 2.0 / Math.max(1, activeRows - 1);
+  const cy = 0.35;
+
+  for (let step = 0; step < nSteps; step++) {
+    let maxSpeedX = 1.0;
+    for (let i = 0; i < u.length; i++) {
+      const av = Math.abs(u[i]);
+      if (av > maxSpeedX) maxSpeedX = av;
+    }
+    const dt = 0.36 / (maxSpeedX / dx + Math.abs(cy) / dy);
+
+    for (let ar = 0; ar < activeRows; ar++) {
+      const arUp = ar > 0 ? ar - 1 : 0;
+      const rOff = ar * cols;
+      const rUpOff = arUp * cols;
+      for (let c = 0; c < cols; c++) {
+        const cL = c > 0 ? c - 1 : 0;
+        const cR = c + 1 < cols ? c + 1 : cols - 1;
+        const uL = u[rOff + cL];
+        const uC = u[rOff + c];
+        const uR = u[rOff + cR];
+
+        // Rusanov numerical flux `F(u_a, u_b) = 0.5*(0.5*u_a^2 + 0.5*u_b^2) - 0.5*alpha*(u_b - u_a)`
+        const alphaR = Math.max(Math.abs(uC), Math.abs(uR));
+        const fluxR = 0.25 * (uC * uC + uR * uR) - 0.5 * alphaR * (uR - uC);
+        const alphaL = Math.max(Math.abs(uL), Math.abs(uC));
+        const fluxL = 0.25 * (uL * uL + uC * uC) - 0.5 * alphaL * (uC - uL);
+
+        // Upwind transverse advection `cy * du/dy` (`cy > 0`)
+        const advY = cy * ((uC - u[rUpOff + c]) / dy);
+        uNext[rOff + c] = uC - (dt / dx) * (fluxR - fluxL) - dt * advY;
+      }
+    }
+    const swap = u;
+    u = uNext;
+    uNext = swap;
+  }
+
+  const full = new Float32Array(rows * cols);
+  full.set(u, vacuumRows * cols);
+  return full;
 }
 
 export function buildCfdHdrShockFieldProof(): CfdHdrFieldProofState {
@@ -1363,18 +1612,11 @@ export function buildCfdHdrShockFieldProof(): CfdHdrFieldProofState {
   const cols = 128;
   const vacuumRows = Math.floor(0.375 * rows); // Top 48 rows = exact outer-space vacuum `0.000000`
   const prng = new DeterministicPRNG(20260403);
-  const groundTruth = new Float32Array(rows * cols);
+  const groundTruth = integrateRusanovBurgersShockPde(rows, cols, vacuumRows, 44);
 
   for (let r = vacuumRows; r < rows; r++) {
-    const y = (r / (rows - 1)) * 2.0 - 1.0;
     for (let c = 0; c < cols; c++) {
-      const x = (c / (cols - 1)) * 2.0 - 1.0;
-      const smooth =
-        1.4 * Math.sin(2.5 * Math.PI * x) * Math.cos(1.8 * Math.PI * y) +
-        0.6 * Math.cos(3.2 * (x + y));
-      const shock = x - 0.35 * y > 0.12 ? 4.5 : -1.2;
-      const turb = 0.035 * prng.nextGaussian();
-      groundTruth[r * cols + c] = smooth + shock + turb;
+      groundTruth[r * cols + c] += 0.035 * prng.nextGaussian();
     }
   }
 
@@ -1397,17 +1639,16 @@ export function buildCfdHdrShockFieldProof(): CfdHdrFieldProofState {
   const scarReconstructed = codec.decodeFull(pkg);
   const scarBytes = getPhysicalPackageBytes(pkg);
 
-  // Also inject a tiny vertical coupling pass so spectral baseline reflects 2D ringing into vacuum
-  const colSmoothed = computeMatchedByteSpectralTruncation(groundTruth, rows, cols, scarBytes);
-  const transposed = new Float32Array(cols * rows);
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) transposed[c * rows + r] = colSmoothed[r * cols + c];
-  }
-  const transTrunc = computeMatchedByteSpectralTruncation(transposed, cols, rows, scarBytes * 2);
-  const spectralTruncated = new Float32Array(rows * cols);
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) spectralTruncated[r * cols + c] = transTrunc[c * rows + r];
-  }
+  const {
+    reconstructed: spectralTruncated,
+    spectralBytes,
+    kSide: spectralModesK,
+  } = computeMatchedByte2dDctFp16(
+    groundTruth,
+    rows,
+    cols,
+    scarBytes
+  );
 
   let err2Scar = 0;
   let err2Spec = 0;
@@ -1444,6 +1685,8 @@ export function buildCfdHdrShockFieldProof(): CfdHdrFieldProofState {
     vacuumRows,
     rawBytes,
     scarBytes,
+    spectralBytes,
+    spectralModesK,
     compressionRatio: rawBytes / scarBytes,
     scarRmse: Math.sqrt(err2Scar / groundTruth.length),
     spectralRmse: Math.sqrt(err2Spec / groundTruth.length),

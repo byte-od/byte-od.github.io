@@ -3,6 +3,7 @@ import type { JarvisFaceState } from '../lib/jarvisNeuralController';
 
 export interface JarvisFloatingPointStageProps {
   enabled: boolean;
+  stageActive?: boolean;
   face: JarvisFaceState;
   isGenerating: boolean;
   isExpanded: boolean;
@@ -123,6 +124,7 @@ function resolveRelevantDomSectionId(capsuleIds: string[]): string | null {
 
 export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> = ({
   enabled,
+  stageActive = true,
   face,
   isGenerating,
   isExpanded,
@@ -138,6 +140,7 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
 
   const propsRef = useRef({
     enabled,
+    stageActive,
     face,
     isGenerating,
     isExpanded,
@@ -151,6 +154,7 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
   });
   propsRef.current = {
     enabled,
+    stageActive,
     face,
     isGenerating,
     isExpanded,
@@ -208,6 +212,7 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
     let initializedPositions = false;
     let stageAnchorX = 0;
     let stageAnchorY = 0;
+    let stageVisibility = 0.0;
     let prevTimeMs = performance.now();
     let turntableAngle = 0.0;
     let rafId = 0;
@@ -231,8 +236,15 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
       ctx.clearRect(0, 0, vw, vh);
 
       if (!p.enabled) {
+        stageVisibility = 0.0;
         rafId = window.requestAnimationFrame(render);
         return;
+      }
+
+      if (p.pointScarSeq === 0 && lastAppliedSeq !== 0) {
+        lastAppliedSeq = 0;
+        hasActiveSculpture = false;
+        curLocal.set(canonicalSphere);
       }
 
       // Check if a new GPU-synthesized PointScarFlow 3D manifold arrived
@@ -250,6 +262,14 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
         edgeGraph = computeNearest2Edges(targetLocal, NUM_POINTS);
         morphStartMs = nowMs;
         hasActiveSculpture = true;
+      }
+
+      const targetVis = hasActiveSculpture && p.stageActive ? 1.0 : p.isExpanded ? 0.35 : 0.0;
+      stageVisibility += (targetVis - stageVisibility) * (1.0 - Math.exp(-dt * 6.5));
+      if (stageVisibility < 0.012) {
+        initializedPositions = false;
+        rafId = window.requestAnimationFrame(render);
+        return;
       }
 
       // Locate JARVIS's live 3D face rig in viewport coordinates
@@ -427,6 +447,9 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
       }
       initializedPositions = true;
 
+      ctx.save();
+      ctx.globalAlpha = clamp(stageVisibility, 0.0, 1.0);
+
       // Pass 1: Synaptic umbilical stream connecting JARVIS's cranial constellation to the 3D Point-Scar Stage
       if (hasActiveSculpture) {
         const grad = ctx.createLinearGradient(faceCx, faceCy, stageAnchorX, stageAnchorY);
@@ -579,6 +602,7 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
         ctx.fillText(tag, stageAnchorX, labelY);
       }
 
+      ctx.restore();
       rafId = window.requestAnimationFrame(render);
     };
 

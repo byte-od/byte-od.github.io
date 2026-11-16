@@ -35,6 +35,12 @@ import {
   ScarNativeCpuExecutor,
   type ScarNativeManifestJSON,
 } from '../src/lib/scarNativeEngine';
+import {
+  ScarNativeV6CpuExecutor,
+  computeFrontierV6ByteBudget,
+  type ScarNativeBPETokenizerJSON,
+  type ScarNativeV6ManifestJSON,
+} from '../src/lib/scarNativeV6Engine';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -621,20 +627,24 @@ async function main() {
     'mos_fused_prot_int4_int4scar_gemv',
     'scarnative_widrow_hoff_evict_update',
     'scarnative_o1_hybrid_gqa_attention',
+    'scarnative_v6_mos_router_topk_relu',
+    'scarnative_v6_mos_bscar_accumulate',
+    'scarnative_v6_hierarchical_evict_update',
+    'scarnative_v6_hierarchical_o1_gqa_attention',
   ];
 
   const computeMatches = [...wgslSrc.matchAll(/@compute\s+@workgroup_size\([^)]+\)\s*fn\s+([a-zA-Z0-9_]+)/g)].map(
     (m) => m[1]
   );
   assert(
-    computeMatches.length === 22,
-    `Expected exactly 22 @compute WGSL entrypoints, found ${computeMatches.length}: ${computeMatches.join(', ')}`
+    computeMatches.length === 26,
+    `Expected exactly 26 @compute WGSL entrypoints, found ${computeMatches.length}: ${computeMatches.join(', ')}`
   );
   for (const mustHave of expectedEntrypoints) {
     assert(computeMatches.includes(mustHave), `Missing required WGSL entrypoint: ${mustHave}`);
   }
   console.log(
-    `[PASS 7/9] 22/22 WGSL 1.0 Compute Shaders Byte-Identical across all Native/HF/Web copies (${wgslSrc.length} B)`
+    `[PASS 7/13] 26/26 WGSL 1.0 Compute Shaders Byte-Identical across all Native/HF/Web copies (${wgslSrc.length} B)`
   );
 
   // ---------------------------------------------------------------------------
@@ -648,10 +658,10 @@ async function main() {
   }
 
   const p1 = runRadioTelescopeRfiProof(1000);
-  assert(p1.outOfConeMaxErr < 1e-5, `Expected near-zero out-of-cone P_perp error, got ${p1.outOfConeMaxErr}`);
-  assert(p1.vlbi2BitCosine < 0.25, `Expected naive 2-bit VLBI to saturate under 1,000x RFI, got ${p1.vlbi2BitCosine}`);
-  assert(p1.scarCodecCosine > 0.96, `Expected ScarCodec RFI pulsar recovery cos > 0.96, got ${p1.scarCodecCosine}`);
-  assert(p1.compressionRatio > 5.5, `Expected > 5.5x array compression, got ${p1.compressionRatio}`);
+  assert(p1.outOfConeMaxErr < 1e-4, `Expected < 1e-4 blind-calibrated out-of-cone P_perp error under 1,000x stress, got ${p1.outOfConeMaxErr}`);
+  assert(p1.vlbi2BitCosine < 0.15, `Expected naive 2-bit VLBI to saturate under 1,000x RFI, got ${p1.vlbi2BitCosine}`);
+  assert(p1.scarCodecCosine > 0.97, `Expected blind ScarCodec RFI pulsar recovery cos > 0.97, got ${p1.scarCodecCosine}`);
+  assert(p1.compressionRatio > 6.0, `Expected > 6.0x array compression, got ${p1.compressionRatio}`);
 
   const p2 = runBlackBoxSCacheProof(8000);
   assert(
@@ -1013,6 +1023,7 @@ async function main() {
     path.join(PORTFOLIO_ROOT, 'public/ai-index.json'),
     path.join(PORTFOLIO_ROOT, 'public/schema.json'),
     path.join(PORTFOLIO_ROOT, 'public/og-image.svg'),
+    path.join(PORTFOLIO_ROOT, 'public/webgpu/qwen3b/scarstore_router.json'),
   ];
   for (const absPath of auditedPurityPaths) {
     const txt = fs.readFileSync(absPath, 'utf-8');
@@ -1031,15 +1042,23 @@ async function main() {
   const liveRouter = new BrowserScarStoreHTTP206(routerJson, routerBinBuf, './public/webgpu/qwen3b');
   const visibleCapsules = liveRouter.getCapsulesDirectory();
   for (const retiredId of ['portfolio_cir_engine_503m', 'portfolio_devtools_fullstack', 'portfolio_julio_bio_career']) {
-    assert(liveRouter.unlearnedIds.has(retiredId), `Expected ${retiredId} to be 0x00-unlearned at boot!`);
+    assert(
+      !routerJson.capsules.some((c: any) => c.capsule_id === retiredId),
+      `Expected ${retiredId} to be physically purged from scarstore_router.json!`
+    );
     assert(
       !visibleCapsules.some((c) => c.capsule_id === retiredId),
       `Expected ${retiredId} to be excluded from visible ScarStore directory!`
     );
   }
   for (const scarId of [
+    'portfolio_agent_identity',
+    'portfolio_agent_capabilities',
     'portfolio_mos_scache_72b',
     'portfolio_jarvis_architecture',
+    'portfolio_julio_scar_research',
+    'portfolio_scarnative_vq4',
+    'portfolio_pointscar_flow_3d',
     'portfolio_browser_webgpu_wgsl',
     'portfolio_aura_system_one',
     'portfolio_tricompass_scouts',
@@ -1051,11 +1070,245 @@ async function main() {
     );
   }
   console.log(
-    `[PASS 12/12] Scar-Only Portfolio Purity (${auditedPurityPaths.length} files clean · 10 legacy modules purged · ${visibleCapsules.length} active ScarStore cartridges)`
+    `[PASS 12/13] Scar-Only Portfolio Purity (${auditedPurityPaths.length} files clean · 10 legacy modules purged · ${visibleCapsules.length} active ScarStore cartridges)`
+  );
+
+  // ---------------------------------------------------------------------------
+  // TEST 13: ScarNative v6.0 Shared-Stage MoS, Dual-Tier O(1) SCache, `mos-digest` 24 Cartridges,
+  //          Sequential Stage-Streaming, Document-Level `0x00` GDPR & Native `<abstain>`
+  // ---------------------------------------------------------------------------
+  for (const rel of ['src/lib/scarNativeV6Engine.ts', 'src/components/ScarNativeLab.tsx']) {
+    const raw = fs.readFileSync(path.join(PORTFOLIO_ROOT, rel), 'utf-8');
+    const clean = stripComments(raw);
+    assert(!/Math\.random\s*\(/.test(clean), `Forbidden Math.random() detected in ${rel}!`);
+  }
+  assert(
+    !bannedDomainCheatRegex.test(fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/lib/scarNativeV6Engine.ts'), 'utf-8')),
+    'Forbidden domain cheat word found in src/lib/scarNativeV6Engine.ts!'
+  );
+
+  const sn6Dir = path.join(PORTFOLIO_ROOT, 'public/webgpu/scarnative_v6');
+  const sn6ManifestPath = path.join(sn6Dir, 'scarnative_manifest.json');
+  assert(fs.existsSync(sn6ManifestPath), 'Missing public/webgpu/scarnative_v6/scarnative_manifest.json!');
+  const sn6Manifest = JSON.parse(fs.readFileSync(sn6ManifestPath, 'utf-8')) as ScarNativeV6ManifestJSON;
+  const sn6TokJson = JSON.parse(
+    fs.readFileSync(path.join(sn6Dir, 'tokenizer.json'), 'utf-8')
+  ) as ScarNativeBPETokenizerJSON;
+  const sn6Wgsl = fs.readFileSync(path.join(sn6Dir, 'mos_scache_kernels.wgsl'), 'utf-8');
+  assert(sn6Wgsl === wgslSrc, 'public/webgpu/scarnative_v6/mos_scache_kernels.wgsl != canonical mos_scache.wgsl');
+
+  const toAb = (buf: Buffer): ArrayBuffer => {
+    const ab = new ArrayBuffer(buf.byteLength);
+    new Uint8Array(ab).set(buf);
+    return ab;
+  };
+
+  const sn6ShardAb = toAb(fs.readFileSync(path.join(sn6Dir, sn6Manifest.shard_file)));
+  const sn6ProcAb = toAb(fs.readFileSync(path.join(sn6Dir, sn6Manifest.procrustes_file)));
+  const sn6ScarAb = toAb(fs.readFileSync(path.join(sn6Dir, sn6Manifest.scarstore_file)));
+
+  const sn6Exec = new ScarNativeV6CpuExecutor(sn6Manifest, sn6ShardAb, sn6TokJson, sn6ProcAb, sn6ScarAb);
+  assert(
+    sn6Exec.cartridges.size === 24 && sn6Manifest.cartridges.every((c) => c.record_bytes === 12288),
+    `Expected 24 mos-digest 12,288 B (3x4KB) cartridges in v6.0 bundle, got ${sn6Exec.cartridges.size}`
+  );
+  const docSet = new Set(sn6Manifest.cartridges.map((c) => c.doc_id));
+  assert(docSet.size === 4, `Expected 4 mos-digest documents, got ${docSet.size}`);
+
+  // 1) Long-Horizon Dual-Tier O(1) Passkey Recall (`T >> S+W=20`, `ΔSCache = 0 B`) vs `no-DualTier` ablation
+  const fillerPtV6 = Array.from(
+    { length: 8 },
+    () => 'o sistema analisa o fluxo de telemetria com memória constante e zero ruído no vácuo .'
+  ).join(' ');
+  const v6PkPrompt = `<lang:pt> <user> Chave secreta <passkey> alpha = 7, beta = 4, gamma = 2 </passkey>. ${fillerPtV6} Qual é a chave secreta? <assistant>`;
+  const v6PkFull = sn6Exec.generate(v6PkPrompt, {
+    maxNewTokens: 18,
+    useScarStore: false,
+    streamStages: false,
+    enableWidrowHoff: true,
+    enableMicroPages: true,
+  });
+  assert(v6PkFull.prefillTokens >= 120, `Expected v6 overflow prefill >= 120 BPE tokens, got ${v6PkFull.prefillTokens}`);
+  assert(v6PkFull.scacheDeltaBytes === 0, `Dual-Tier O(1) SCache violated: Δ=${v6PkFull.scacheDeltaBytes}`);
+  assert(
+    v6PkFull.outputText.includes('alpha = 7, beta = 4, gamma = 2'),
+    `Expected exact 3-slot passkey recall from ScarNativeLM v6.0, got "${v6PkFull.outputText}"`
+  );
+  assert(
+    v6PkFull.selectedExpertsByLayer.length === sn6Manifest.config.num_layers &&
+      v6PkFull.selectedExpertsByLayer.every((ex) => ex.length === sn6Manifest.config.mos_top_k),
+    `Expected ${sn6Manifest.config.num_layers} layers x Top-${sn6Manifest.config.mos_top_k} MoS experts!`
+  );
+
+  const v6PkNoDt = sn6Exec.generate(v6PkPrompt, {
+    maxNewTokens: 18,
+    useScarStore: false,
+    streamStages: false,
+    enableWidrowHoff: false,
+    enableMicroPages: false,
+  });
+  assert(
+    !v6PkNoDt.outputText.includes('alpha = 7, beta = 4, gamma = 2'),
+    `Window-only no-DualTier ablation unexpectedly retained evicted passkey: "${v6PkNoDt.outputText}"`
+  );
+
+  // 2) Sequential Stage-Streaming (`streamStages: true`) Bit-Exact Logit Parity & VRAM Reduction
+  const v6PkStream = sn6Exec.generate(v6PkPrompt, {
+    maxNewTokens: 18,
+    useScarStore: false,
+    streamStages: true,
+    enableWidrowHoff: true,
+    enableMicroPages: true,
+  });
+  assert(
+    v6PkStream.activeWeightGpuBytes < sn6Manifest.shard_bytes * 0.55,
+    `Expected Stage-Streaming active weight window < 55% of full shard, got ${v6PkStream.activeWeightGpuBytes} vs ${sn6Manifest.shard_bytes}`
+  );
+  let maxStreamDiff = 0.0;
+  for (let i = 0; i < v6PkFull.firstTokenLogits.length; i++) {
+    maxStreamDiff = Math.max(
+      maxStreamDiff,
+      Math.abs(v6PkFull.firstTokenLogits[i] - v6PkStream.firstTokenLogits[i])
+    );
+  }
+  assert(maxStreamDiff === 0, `Expected exact 0.00000000 Stage-Streaming logit diff, got ${maxStreamDiff}`);
+
+  // 3) Cross-Lingual `PT / EN / ES / FR` `mos-digest` Procrustes Routing (`queryLang: null` auto-detection!)
+  const v6OrionPrompts: Record<PolyglotLang, string> = {
+    pt: '<lang:pt> <user> <fact> Qual é o valor exato de órbita do módulo orion? <assistant>',
+    en: '<lang:en> <user> <fact> What is the exact orbit value of module orion? <assistant>',
+    es: '<lang:es> <user> <fact> ¿Cuál es el valor exacto de órbita del módulo orion? <assistant>',
+    fr: '<lang:fr> <user> <fact> Quelle est la valeur exacte de orbite du module orion ? <assistant>',
+  };
+  for (const lg of ['pt', 'en', 'es', 'fr'] as const) {
+    const r = sn6Exec.generate(v6OrionPrompts[lg], { maxNewTokens: 16, useScarStore: true, queryLang: null });
+    assert(r.routedCartridgeId === 'ent_orion', `Expected ent_orion route in ${lg}, got ${r.routedCartridgeId}`);
+    assert(r.resolvedLang === lg, `Expected auto-resolved Procrustes lang=${lg}, got ${r.resolvedLang}`);
+    assert(
+      r.outputText.includes('516') && r.outputText.includes('km'),
+      `Expected 516 km in ${lg} from EN-minted mos-digest cartridge, got "${r.outputText}"`
+    );
+  }
+
+  // 4) Held-Out Out-of-Domain Ungrounded Query -> Native `<abstain>` (`id=14`, Zero Hallucination)
+  const v6HairAbstain = sn6Exec.generate(
+    '<lang:pt> <user> Para um cabelo já liso e descolorido, qual progressiva química você recomenda? <assistant>',
+    { maxNewTokens: 18, useScarStore: true, queryLang: null }
+  );
+  assert(v6HairAbstain.routedCartridgeId === null, `Unexpected cartridge route on cosmetic query: ${v6HairAbstain.routedCartridgeId}`);
+  assert(
+    v6HairAbstain.abstained && v6HairAbstain.outputTextWithTags.includes('<abstain>'),
+    `Expected native <abstain> token on ungrounded bleached-hair chemical query, got "${v6HairAbstain.outputTextWithTags}"`
+  );
+
+  // 5) Full-Document Cryptographic `0x00` GDPR Wipe (`doc_00_orbital` -> 6 cartridges) & Exact Restoration
+  const v6UnroutedTrunkRef = sn6Exec.generate(v6OrionPrompts.pt, { maxNewTokens: 1, useScarStore: false });
+  const wipedDocCount = sn6Exec.gdprWipeDocument('doc_00_orbital');
+  assert(wipedDocCount === 6, `Expected 6 cartridges wiped in doc_00_orbital, got ${wipedDocCount}`);
+  const v6PostDocWipe = sn6Exec.generate(v6OrionPrompts.pt, { maxNewTokens: 16, useScarStore: true });
+  assert(v6PostDocWipe.routedCartridgeId === null, `Wiped document still routed: ${v6PostDocWipe.routedCartridgeId}`);
+  assert(
+    v6PostDocWipe.abstained && !v6PostDocWipe.outputText.includes('516'),
+    `Expected <abstain> and zero 516 leak after doc_00_orbital GDPR wipe, got "${v6PostDocWipe.outputTextWithTags}"`
+  );
+  let maxDocGdprDiff = 0.0;
+  for (let i = 0; i < v6UnroutedTrunkRef.firstTokenLogits.length; i++) {
+    maxDocGdprDiff = Math.max(
+      maxDocGdprDiff,
+      Math.abs(v6UnroutedTrunkRef.firstTokenLogits[i] - v6PostDocWipe.firstTokenLogits[i])
+    );
+  }
+  assert(maxDocGdprDiff === 0, `Expected exact 0.00000000 Document GDPR logit diff, got ${maxDocGdprDiff}`);
+  const restoredDocCount = sn6Exec.restoreDocument('doc_00_orbital');
+  assert(restoredDocCount === 6, `Expected 6 cartridges restored in doc_00_orbital, got ${restoredDocCount}`);
+
+  // 6) Verify `v6-Frontier` (`96L, d=8192`) Scaling Law Numbers
+  const frontierBudget = computeFrontierV6ByteBudget(
+    {
+      ...sn6Manifest.config,
+      vocab_size: 32768,
+      embed_rank: 512,
+      hidden_size: 8192,
+      intermediate_size: 28672,
+      num_layers: 96,
+      num_stages: 16,
+      num_q_heads: 64,
+      num_kv_heads: 8,
+      head_dim: 128,
+      id_scar_rank: 32,
+      head_scar_rank: 128,
+      num_mos_experts: 16,
+      mos_top_k: 2,
+      mos_expert_rank: 64,
+      num_sink: 4,
+      slide_len: 128,
+      num_micro_pages: 64,
+      cartridge_rank: 64,
+    },
+    4,
+    2,
+    131072,
+    true
+  );
+  assert(
+    frontierBudget.total_lru_resident_gib < 4.45 &&
+      frontierBudget.stage_streaming_peak_gib < 1.0 &&
+      frontierBudget.total_vram_reduction_vs_dense_128k > 46.0,
+    `Unexpected v6-Frontier budget: ${JSON.stringify(frontierBudget)}`
+  );
+
+  console.log(
+    `[PASS 13/14] ScarNative v6.0 (${(sn6Manifest.shard_bytes / (1024 * 1024)).toFixed(2)} MiB Shared-Stage MoS · Stream ${(v6PkStream.activeWeightGpuBytes / (1024 * 1024)).toFixed(2)} MiB Δ=0 · SCache ${v6PkFull.scacheBytesFinal} B Δ=0 B · 24 mos-digest PT/EN/ES/FR · Doc 0x00 GDPR · <abstain> · Frontier ${frontierBudget.total_lru_resident_gib.toFixed(2)} GiB / ${frontierBudget.stage_streaming_peak_gib.toFixed(2)} GiB)`
+  );
+
+  // ---------------------------------------------------------------------------
+  // TEST 14: PhysicalScarLab Forensic Scientific Audit (Anti-Oracle, Partial-Cue Recall,
+  //          Conservative Burgers PDE, Byte-Matched FP16 2D-DCT & Epistemological Scope)
+  // ---------------------------------------------------------------------------
+  const physCodecRaw = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/lib/physicalScarCodec.ts'), 'utf-8');
+  const physLabRaw = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/components/PhysicalScarLab.tsx'), 'utf-8');
+  assert(
+    physLabRaw.includes('data-testid="physical-scar-forensic-scope"'),
+    'Missing data-testid="physical-scar-forensic-scope" epistemological scope banner in PhysicalScarLab.tsx!'
+  );
+  assert(
+    !/const\s+wgsl\s*=/.test(stripComments(physLabRaw)),
+    'Dead unused wgsl draft shader still present in PhysicalScarLab.tsx!'
+  );
+  assert(
+    physCodecRaw.includes('fitFromCalibration') &&
+      !stripComments(physCodecRaw).includes('new OrthogonalSubspaceProjectorTS(rfiSteering'),
+    'Oracle RFI steering leak detected in physicalScarCodec.ts — must use blind empirical covariance fitFromCalibration!'
+  );
+  assert(
+    p2.maskedChannelsMeanCosine > 0.995,
+    `Expected blind 2/6 partial-cue recall on 4 unseen masked channels cos > 0.995, got ${p2.maskedChannelsMeanCosine}`
+  );
+  assert(
+    p3.spectralBytes >= Math.floor(p3.scarBytes * 0.98) && p3.spectralBytes <= p3.scarBytes,
+    `Unfair spectral baseline byte budget: spectralBytes=${p3.spectralBytes} vs scarBytes=${p3.scarBytes}`
+  );
+  assert(
+    p3.scarRmse < p3.spectralRmse / 100.0,
+    `Expected > 100x RMSE improvement over byte-matched FP16 2D-DCT on Burgers shockwave PDE, got ${p3.scarRmse} vs ${p3.spectralRmse}`
+  );
+
+  const stalePhysicalRegex = /\b(?:0\.9923|5\.75x)\b/;
+  for (const absPath of auditedPurityPaths) {
+    const txt = fs.readFileSync(absPath, 'utf-8');
+    const hit = txt.match(stalePhysicalRegex);
+    assert(
+      !hit,
+      `Stale pre-forensic physical metric "${hit?.[0]}" found in ${path.relative(PORTFOLIO_ROOT, absPath)}!`
+    );
+  }
+
+  console.log(
+    `[PASS 14/14] PhysicalScarLab Forensic Scientific Audit (Blind SVD cos=${p1.scarCodecCosine.toFixed(4)} · Partial-Cue Masked cos=${p2.maskedChannelsMeanCosine.toFixed(4)} · Burgers PDE ${p3.scarBytes}B vs 2D-DCT ${p3.spectralBytes}B ${(p3.spectralRmse / p3.scarRmse).toFixed(1)}x RMSE Gain · Zero Stale Claims)`
   );
 
   console.log('\n================================================================================');
-  console.log('ALL 12/12 SCAR ARCHITECTURE ECOSYSTEM + JARVIS + POINTSCARFLOW v1.0 SUITES PASSED!');
+  console.log('ALL 14/14 SCAR ARCHITECTURE ECOSYSTEM + SCARNATIVE v6.0 + PHYSICAL FORENSIC + JARVIS + POINTSCARFLOW SUITES PASSED!');
   console.log('================================================================================');
 }
 

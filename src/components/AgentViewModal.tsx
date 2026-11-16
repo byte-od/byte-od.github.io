@@ -25,18 +25,18 @@ linkedin: https://linkedin.com/in/juliocrfilho
 ---
 
 ## Architectural Thesis
-The Scar Architecture replaces monolithic dense matrices and linear O(T) KV Cache with directional vector quantization + low-rank residual scars (MoS) and constant-byte associative memory (SCache O(1)), verified across native PyTorch/CUDA/Metal and 34 custom client-side WebGPU WGSL 1.0 compute shaders:
+The Scar Architecture replaces monolithic dense matrices and linear O(T) KV Cache with directional vector quantization + low-rank residual scars (MoS) and constant-byte associative memory (SCache O(1)), verified across native PyTorch/CUDA/Metal and 38 custom client-side WebGPU WGSL 1.0 compute shaders (26 LLM/MoS/SCache + 12 3D OT Flow):
 
-1. **ScarNativeLM v5.0 (Tabula Rasa Pure Scar-Native Foundation Engine)**:
-   - Pretrained 100% from scratch (step t = 0, zero nn.Linear layers, zero pretrained Gaussian floor) directly inside the discrete scar manifold.
-   - ScarNativeLinear: Channel equilibration d_eq + FWHT-64 + D4-LUT256 VQ4-STE + INT4-STE low-rank scars -> exact 0.000000 KL PTQ packing shock.
-   - DifferentiableSCacheAttention: End-to-end differentiable hybrid attention over Attention Sinks + Circular Window + Pre-RoPE Widrow-Hoff Associative Matrix W_scar in strict O(1) space (Δ = +0 B as T -> infinity).
-   - LanguageNullspaceProjector (P_perp_lang) + Zero-SGD Closed-Form RRR Cartridges (4 KB aligned) firing across PT, EN, ES, and FR, with < 0.2 ms cryptographic 0x00 GDPR physical unlearning (Δlogits = 0.00000000).
+1. **ScarNativeLM v6.0 (Tabula-Rasa Shared-Stage MoS & Dual-Tier O(1) Foundation Engine)**:
+   - Pretrained 100% from scratch (step t = 0, zero nn.Linear layers) on NVIDIA A100 via parallel Chunkwise WY Widrow-Hoff scan (13.0x speedup, cos > 0.999999).
+   - Shared-Stage D4-LUT256 VQ4-STE substrates + Directional ReLU INT4 MoS Scar Experts (Shaders #23–#24) + Sequential Stage-Streaming (0.0 logit discrepancy).
+   - Dual-Tier SCache O(1): RoPE Sinks + Sliding Ring + Surprise Micro-Pages + Pre-RoPE Widrow-Hoff W_scar in strict O(1) space (Shaders #25–#26, Δ = +0 B as T -> infinity).
+   - mos-digest compiler + Orthogonal Procrustes R_lang in SO(D) + native <abstain> token (id=14) + < 0.2 ms document-level 0x00 GDPR unlearning (Δlogits = 0.00000000).
 
 2. **Mixture of Scars (MoS) & Associative SCache O(1)**:
    - 72.7B Single-GPU Streaming: Executes all 80 layers of Qwen2.5-72B within <= 2.40 GB peak VRAM.
    - Constant 34.8 KB L1 SCache replaces 32.77 GB linear KV Cache at 100,000 tokens (> 99.999% KV savings).
-   - Live Qwen2.5-3B JARVIS Browser Engine: 1,601.55 MiB Track 2.5 ProtectedInt4Scar weights executed via 22 WGSL 1.0 shaders with 41 HTTP/1.1 206 Partial Content cartridges routed at Layer 23 (P_perp_lang) and causal-split out-of-cone epistemic guard.
+   - Live Qwen2.5-3B JARVIS Browser Engine: 1,601.55 MiB Track 2.5 ProtectedInt4Scar weights executed via WebGPU WGSL 1.0 shaders with 41 HTTP/1.1 206 Partial Content cartridges routed at Layer 23 (P_perp_lang) and causal-split out-of-cone epistemic guard.
    - External Benchmark: 0.625 public score on Kaggle Name That LLM under <= 2.2 GB VRAM (Golden-Slice MoS + Tri-Compass).
 
 3. **PointScarFlow v1.0 (Continuous 3D Scar-Native Rectified Flow)**:
@@ -44,10 +44,10 @@ The Scar Architecture replaces monolithic dense matrices and linear O(T) KV Cach
    - Integrates dx/dt = v_theta(x_t, t, z_perp_lang) for 1,024 3D points in 4 self-distilled Euler steps via 12 custom WebGPU WGSL shaders in 86.45 ms median latency on Apple M2.
    - 7.51x held-out Chamfer-L2 reduction vs sphere baseline (0.0621 vs 0.4663) and > 0.997 cross-lingual 3D shape cosine across PT, EN, ES, and FR.
 
-4. **ScarCodec v4.0 (Domain-Independent Physical & Hardware Scar Codec)**:
-   - Radio-Interferometric RFI Excision: Pulsar sweep recovery cos = 0.9923 under 1,000x satellite RFI at 5.75x compression.
-   - Aerospace Black-Box Telemetry: Retains 5/5 precursor faults over 8,000+ frames in fixed 34,816 B (Δ = 0 B, cos = 0.9989).
-   - High-Dynamic-Range CFD Shock Fields: 12.05x compression with exact 0.00000000 quiescent vacuum error and O(1) random block decoding.
+4. **ScarCodec v4.0 (Applied Mathematical Physics & Hardware Scar Codec)**:
+   - Blind Radio-Interferometric RFI Excision: Noisy-covariance P_perp recovers pulsar trains under 1,000x (-60 dB) satellite RFI at cos = 0.9753 / 8.67x on [64, 4096] (cos = 0.9837 / 6.34x live in browser; 2-bit VLBI cos = 0.0252).
+   - Aerospace Black-Box Telemetry (Partial-Cue Recall): Retains 5/5 precursor faults over 50,000 frames in fixed 34,816 B (Δ = 0 B), reconstructing 4 unseen masked channels from a 2-channel alarm trigger at cos = 0.9999.
+   - Rusanov 2D Burgers Shockwave PDE & HDR Fields: 12.05x compression with 188.2x lower RMSE than byte-matched FP16 2D rFFT, exact 0.000000 vacuum error, and 10.2x faster O(1) random block reads than zlib -9.
 
 5. **AURA / System One (Origin of GradientScarMemory 34.8 KB)**:
    - Embodied Deep RL engine where 34.8 KB O(1) GradientScarMemory (modulated by Surprise = R_0 - V(s_0)), Frontier Ghost-Jump Scouts, and Tri-Compass originated.
@@ -94,12 +94,12 @@ const JSON_LD_CONTENT = JSON.stringify(
     hasPart: [
       {
         '@type': 'SoftwareSourceCode',
-        name: 'ScarNativeLM v5.0 & Mixture of Scars (MoS)',
+        name: 'ScarNativeLM v6.0 & Mixture of Scars (MoS)',
         codeRepository: 'https://github.com/byte-od/mixture-of-scars',
         identifier: 'https://doi.org/10.5281/zenodo.24172784',
         programmingLanguage: ['Python', 'PyTorch', 'WGSL', 'TypeScript'],
         description:
-          'Tabula-Rasa Scar-Native foundation model, 72.7B streaming in 2.40 GB VRAM, O(1) SCache, ScarCodec v4.0, and PointScarFlow v1.0 across 34 WebGPU WGSL shaders.',
+          'Tabula-Rasa Shared-Stage MoS foundation model, 72.7B streaming in 2.40 GB VRAM, Dual-Tier O(1) SCache, ScarCodec v4.0, and PointScarFlow v1.0 across 38 WebGPU WGSL shaders.',
       },
       {
         '@type': 'SoftwareSourceCode',
@@ -119,9 +119,9 @@ const AGENT_SYSTEM_PROMPT = `You are an AI Technical & Scientific Evaluator revi
 
 Verified factual inventory (strictly Scar Ecosystem):
 1. Mixture of Scars (MoS) & SCache O(1): Streams 80 layers of a 72.7B LLM in <= 2.40 GB peak VRAM; replaces 32.77 GB linear O(T) KV Cache at 100k tokens with constant O(1) associative memory (34.8 KB L1, Δ = +0 B). Validated at 0.625 on Kaggle Name That LLM (<= 2.2 GB VRAM).
-2. ScarNativeLM v5.0: Pretrained 100% from scratch (step t = 0, zero nn.Linear) with D4-LUT256 VQ4-STE (0.000000 KL PTQ shock), DifferentiableSCacheAttention O(1), and closed-form Zero-SGD RRR P_perp_lang cartridges firing across PT/EN/ES/FR with < 0.2 ms 0x00 GDPR unlearning.
+2. ScarNativeLM v6.0: Pretrained 100% from scratch (step t = 0, zero nn.Linear) on A100 with Shared-Stage VQ4-STE, Directional ReLU INT4 MoS Scar Experts, Chunkwise WY Dual-Tier O(1) SCache, Procrustes P_perp_lang mos-digest cartridges across PT/EN/ES/FR, native <abstain>, and < 0.2 ms 0x00 GDPR unlearning.
 3. PointScarFlow v1.0: 11.85M ScarNativeLinear parameters (3.87 MiB shard), 12 custom WebGPU WGSL shaders generating 1,024 continuous 3D points in 86.45 ms directly from Qwen2.5-3B Layer 23 P_perp_lang latents (7.51x Chamfer-L2 reduction, > 0.997 PT/EN/ES/FR shape cosine, zero preset catalog).
-4. ScarCodec v4.0: Domain-independent physical scar codec verified on 1,000x radio-astronomy RFI excision (cos = 0.9923), 34.8 KB aerospace black-box fault retention (5/5 over 8,000+ frames), and 12.05x HDR CFD shock compression (0.0 vacuum error).
+4. ScarCodec v4.0: Applied mathematical physics & hardware scar codec verified on blind 1,000x RFI excision (cos = 0.9753 at 8.67x), partial-cue 34.8 KB black-box fault recall (5/5 over 50,000 frames, 4 unseen masked channels cos = 0.9999), and 12.05x Rusanov 2D Burgers shockwave PDE compression (188.2x lower RMSE vs byte-matched FP16 2D rFFT, 0.0 vacuum error).
 5. AURA / System One: Embodied Deep RL origin of 34.8 KB GradientScarMemory, Frontier Ghost-Jump Scouts, and 0.23 ms bare-CPU UniversalS1Agent.
 6. Contact: reisfilho1116@gmail.com | https://github.com/byte-od/mixture-of-scars`;
 

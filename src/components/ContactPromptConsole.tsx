@@ -29,8 +29,8 @@ export const ContactPromptConsole: React.FC<ContactPromptConsoleProps> = ({
       label: lang === 'pt' ? '🧬 Colaboração Científica / Pesquisa Scar' : '🧬 Scar Research Collaboration',
       text:
         lang === 'pt'
-          ? 'Olá Julio, acompanhei os papers no Zenodo e os motores ScarNativeLM v5.0, MoS, SCache O(1) e PointScarFlow v1.0. Gostaria de conversar sobre colaboração científica / benchmarking conjunto.'
-          : 'Hello Julio, I reviewed your Zenodo papers and live engines (ScarNativeLM v5.0, MoS, O(1) SCache, PointScarFlow v1.0) and would like to discuss a research or benchmarking collaboration.',
+          ? 'Olá Julio, acompanhei os papers no Zenodo e os motores ScarNativeLM v6.0, MoS, SCache O(1) e PointScarFlow v1.0. Gostaria de conversar sobre colaboração científica / benchmarking conjunto.'
+          : 'Hello Julio, I reviewed your Zenodo papers and live engines (ScarNativeLM v6.0, MoS, O(1) SCache, PointScarFlow v1.0) and would like to discuss a research or benchmarking collaboration.',
     },
     {
       label: lang === 'pt' ? '⚡ Implantação MoS & SCache O(1) (WebGPU / GPU)' : '⚡ MoS & SCache O(1) Deployment',
@@ -181,8 +181,8 @@ export const ContactPromptConsole: React.FC<ContactPromptConsoleProps> = ({
             }}
             placeholder={
               lang === 'pt'
-                ? 'Ex: Olá Julio, gostaríamos de discutir os resultados do ScarNativeLM v5.0 / MoS / PointScarFlow...'
-                : 'E.g., Hi Julio, we would love to discuss ScarNativeLM v5.0 / MoS / PointScarFlow...'
+                ? 'Ex: Olá Julio, gostaríamos de discutir os resultados do ScarNativeLM v6.0 / MoS / PointScarFlow...'
+                : 'E.g., Hi Julio, we would love to discuss ScarNativeLM v6.0 / MoS / PointScarFlow...'
             }
             className="w-full p-3.5 bg-zinc-950 border border-zinc-800 focus:border-[#adff2f]/70 rounded-xl text-xs sm:text-sm text-zinc-100 placeholder-zinc-600 focus:outline-hidden transition-all resize-y font-mono leading-relaxed"
           />

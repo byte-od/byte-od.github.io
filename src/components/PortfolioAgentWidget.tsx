@@ -1070,6 +1070,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       {/* FULL-VIEWPORT FLOATING 3D POINT-SCAR GENERATIVE STAGE (VQ4-Scar OT Rectified Flow) */}
       <JarvisFloatingPointStage
         enabled={pointFieldEnabled}
+        stageActive={hasCaptionContent || isGenerating || isExpanded || unlearnShockActive}
         face={jarvisFace}
         isGenerating={isGenerating}
         isExpanded={isExpanded}

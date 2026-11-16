@@ -110,13 +110,13 @@ const FAQ_ITEMS: FaqItem[] = [
       'O SCache nasceu como o GradientScarMemory constante de 34.8 KB dentro do AURA / System One (Deep RL incorporado com reflexo S1 de 0.23 ms em CPU e Batedores de Fronteira Ghost-Jump), e o ScarCodec v4.0 prova que o mesmo operador domina excisão de RFI em radioastronomia, caixas-pretas aeroespaciais e compressão CFD HDR.',
     detailsEn: [
       'AURA / System One: Surprise-gated retention (Surprise = R_0 − V(s_0)) stores non-trivial transition shocks in 34.8 KB while solving Rubik’s Cube scrambles up to Depth 10 (232.2B states) without tree search.',
-      'Radio-Astronomy RFI Excision: Recovers weak pulsar sweeps under 1,000x satellite interference (cos = 0.9923 at 5.75x compression).',
-      'Aerospace Black-Box & HDR CFD: Retains 5/5 precursor faults over 8,000+ frames in 34,816 B (Δ = 0 B) and compresses Mach shock fields 12.05x with exact 0.0 vacuum error.',
+      'Radio-Astronomy Blind RFI Excision: Estimates P_⊥ from noisy calibration voltages (0 oracle) to recover pulsar trains under 1,000x satellite RFI (cos = 0.9753 at 8.67x on [64, 4096]; cos = 0.9837 at 6.34x live in browser; 2-bit VLBI cos = 0.0252).',
+      'Black-Box Partial-Cue Recall & Rusanov Burgers PDE: Retains 5/5 precursor faults over 50,000 frames in 34,816 B (Δ = 0 B, reconstructing 4 masked channels at cos = 0.9999) and compresses 2D Burgers Rankine-Hugoniot shock fields 12.05x with 188.2x lower RMSE than byte-matched FP16 2D rFFT and exact 0.0 vacuum error.',
     ],
     detailsPt: [
       'AURA / System One: Retenção ponderada por surpresa (Surpresa = R_0 − V(s_0)) grava choques informacionais em 34.8 KB resolvendo o Cubo de Rubik até Profundidade 10 (232.2B estados) sem árvore MCTS.',
-      'Radiointerferometria RFI: Recupera pulsos de pulsares sob interferência de satélite 1.000x mais forte (cos = 0.9923 com compressão 5.75x).',
-      'Caixa-Preta Aeroespacial & CFD HDR: Retém 5/5 falhas precursoras após 8.000+ quadros em 34.816 B (Δ = 0 B) e comprime ondas de choque de Mach em 12.05x com erro 0.0 no vácuo.',
+      'Excisão Cega de RFI em Radiointerferometria: Estima P_⊥ por covariância ruidosa (0 oráculo) e recupera pulsos de pulsares sob interferência 1.000x (cos = 0.9753 em 8.67x em [64, 4096]; cos = 0.9837 em 6.34x ao vivo no navegador; VLBI 2-bit cos = 0.0252).',
+      'Caixa-Preta por Pista Parcial & EDP de Burgers (Rusanov): Retém 5/5 falhas precursoras após 50.000 quadros em 34.816 B (Δ = 0 B, reconstruindo 4 canais ocultos com cos = 0.9999) e comprime ondas de choque Rankine-Hugoniot em 12.05x com RMSE 188.2x menor que rFFT 2D FP16 pareada em bytes e erro 0.0 no vácuo.',
     ],
   },
   {
@@ -126,9 +126,9 @@ const FAQ_ITEMS: FaqItem[] = [
     questionEn: 'Who created the Scar Architecture Ecosystem and how can labs or engineering teams get in touch?',
     questionPt: 'Quem criou o Ecossistema de Arquitetura de Cicatrizes e como entrar em contato?',
     directAnswerEn:
-      'The entire Scar Architecture Ecosystem (MoS, SCache O(1), VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0, PointScarFlow v1.0, and AURA / System One) is authored by Julio Cesar da Costa Reis Filho (Zenodo DOI 10.5281/zenodo.24172784). Reach out directly at reisfilho1116@gmail.com.',
+      'The entire Scar Architecture Ecosystem (MoS, SCache O(1), VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0, PointScarFlow v1.0, and AURA / System One) is authored by Julio Cesar da Costa Reis Filho (Zenodo DOI 10.5281/zenodo.24172784). Reach out directly at reisfilho1116@gmail.com.',
     directAnswerPt:
-      'Todo o Ecossistema de Arquitetura de Cicatrizes (MoS, SCache O(1), VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0, PointScarFlow v1.0 e AURA / System One) foi criado por Julio Cesar da Costa Reis Filho (Zenodo DOI 10.5281/zenodo.24172784). Contato direto em reisfilho1116@gmail.com.',
+      'Todo o Ecossistema de Arquitetura de Cicatrizes (MoS, SCache O(1), VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0, PointScarFlow v1.0 e AURA / System One) foi criado por Julio Cesar da Costa Reis Filho (Zenodo DOI 10.5281/zenodo.24172784). Contato direto em reisfilho1116@gmail.com.',
     detailsEn: [
       'Direct Email: reisfilho1116@gmail.com',
       'Canonical Open-Source Repository: https://github.com/byte-od/mixture-of-scars',
@@ -181,8 +181,8 @@ export const FaqSection: React.FC<FaqSectionProps> = ({ lang }) => {
           <Sparkles className="w-3.5 h-3.5 text-[#38bdf8]" />
           <span>
             {lang === 'pt'
-              ? 'Verificado em PyTorch Nativo & 34 Shaders WebGPU WGSL'
-              : 'Verified on Native PyTorch & 34 WebGPU WGSL Shaders'}
+              ? 'Verificado em PyTorch Nativo & 38 Shaders WebGPU WGSL'
+              : 'Verified on Native PyTorch & 38 WebGPU WGSL Shaders'}
           </span>
         </div>
       </div>

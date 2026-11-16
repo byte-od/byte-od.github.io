@@ -147,10 +147,10 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
     } else if (lower === 'scarcodec' || lower === 'codec') {
       newLogs.push({
         type: 'output',
-        text: `[SCARCODEC v4.0 — DOMAIN-INDEPENDENT PHYSICAL SCAR CODEC]
-  1. Radio RFI P_⊥:  Pulsar recovery cos = 0.9923 under 1,000x satellite RFI (5.75x compression)
-  2. Black-Box O(1): 5/5 precursor faults retained over 8,000+ frames in 34,816 B (Δ = 0 B)
-  3. HDR CFD Field:  12.05x compression, bit-exact 0.00000000 vacuum error & O(1) block decode`,
+        text: `[SCARCODEC v4.0 — APPLIED MATHEMATICAL PHYSICS & HARDWARE SCAR CODEC]
+  1. Blind RFI P_⊥:   Pulsar recovery cos = 0.9753 under 1,000x RFI (8.67x on [64,4096]; 0.9837 live)
+  2. Black-Box O(1):  5/5 faults retained over 50,000 frames in 34,816 B (2/6 cue -> 4 masked cos = 0.9999)
+  3. Burgers PDE 2D:  12.05x Rusanov shock compression, 188.2x lower RMSE vs FP16 2D rFFT & 0.0 vacuum`,
       });
     } else if (lower === 'aura' || lower === 'system_one' || lower === 's1') {
       newLogs.push({
@@ -171,7 +171,8 @@ export const TerminalModal: React.FC<TerminalModalProps> = ({ isOpen, onClose, l
   Releases:
     - v1.0 – v3.0: Mixture of Scars (72.7B in 2.40 GB), Associative SCache O(1) & Golden-Slice P_⊥lang
     - v4.0:        ScarCodec Physical & Hardware Signal/Tensor Compression + Browser WGSL Engine
-    - v5.0:        ScarNativeLM Tabula-Rasa VQ4-STE + DifferentiableSCacheAttention O(1) (22 WGSL)`,
+    - v5.0:        ScarNativeLM Tabula-Rasa VQ4-STE + DifferentiableSCacheAttention O(1) (22 WGSL)
+    - v6.0:        ScarNativeLM Shared-Stage MoS + Chunkwise WY Dual-Tier O(1) + mos-digest (26 WGSL)`,
       });
     } else if (lower === 'projects' || lower === 'projetos') {
       const projList = projects.map((p) => `  - ${p.title}\n    ${p.specs}`).join('\n');

@@ -16,10 +16,10 @@ Across language models, 3D point-cloud optimal-transport flow, embodied reinforc
 
 ## 2. Live Browser & Native Engines Verified in Repository
 
-1. **ScarNativeLM v5.0 (`public/webgpu/scarnative_v5/` & `src/lib/scarNativeEngine.ts`)**:
-   - Zero `nn.Linear` layers; trained from `step t = 0` with `ScarNativeLinear` (`0.000000` KL PTQ shock) and `DifferentiableSCacheAttention` (`O(1)` `Δ = +0 B`).
-   - `16` closed-form `Zero-SGD` Reduced-Rank Regression (`RRR`) cartridges minted in English firing across `PT/EN/ES/FR`, with exact `0x00` GDPR unlearning (`Δlogits = 0.00000000`).
-   - Executed by `22` custom `WGSL 1.0` compute shaders (`cos > 0.99999` vs PyTorch).
+1. **ScarNativeLM v6.0 (`public/webgpu/scarnative_v6/` & `src/lib/scarNativeV6Engine.ts`)**:
+   - Zero `nn.Linear` layers; trained from `step t = 0` on `NVIDIA A100` with `4,096`-vocab byte-level BPE (`0 <unk>`, native `<abstain>` token), Shared-Stage `D4-LUT256 VQ4-STE` substrates (`0.000000` KL PTQ shock, held-out PPL `1.395` vs `1.583` Dense FP16), Top-`k` Directional `ReLU` `INT4` MoS Scar Experts (`Shaders #23–#24`), and Dual-Tier `SCache O(1)` (`Surprise Micro-Pages + Widrow-Hoff W_scar`, `Shaders #25–#26`, `100.0%` passkey recall up to `T = 567`, `Δ = +0 B`) trained via parallel `Chunkwise WY` scan (`12.63x` speedup).
+   - `24` `mos-digest` `4 KB`-aligned `.scarstore` cartridges compiled from `4` raw English Markdown documents (`0` trunk SGD) with Orthogonal Procrustes `R_lang in SO(D)` alignment firing across `PT/EN/ES/FR`, document-level `0x00` GDPR unlearning (`Δlogits = 0.00000000`), and `Sequential Stage-Streaming` (`0.0` discrepancy).
+   - Executed by `26` custom `WGSL 1.0` compute shaders (`cos > 0.99999` vs PyTorch).
 
 2. **Mixture of Scars (MoS) 72.7B & Qwen2.5-3B JARVIS (`public/webgpu/qwen3b/` & `src/lib/mosWebgpuEngine.ts`)**:
    - `72.7B` single-GPU streaming in `<= 2.40 GB` peak VRAM across all 80 layers.
@@ -32,9 +32,9 @@ Across language models, 3D point-cloud optimal-transport flow, embodied reinforc
    - `7.51x` held-out Chamfer-L2 reduction vs sphere baseline (`0.0621` vs `0.4663`); cross-lingual 3D shape cosine `PT<->EN = 0.9978`, `ES<->EN = 0.9977`, `FR<->EN = 0.9974`.
 
 4. **ScarCodec v4.0 (`src/lib/physicalScarCodec.ts` & `src/components/PhysicalScarLab.tsx`)**:
-   - Radio-Astronomy `1,000x` RFI excision (`cos = 0.9923`, `5.75x` compression).
-   - Aerospace Black-Box `34,816 B` `O(1)` telemetry (`5/5` faults retained across `8,000+` frames, `Δ = 0 B`).
-   - HDR CFD Shock Field (`12.05x` compression, exact `0.0` vacuum error, `O(1)` block decode).
+   - Blind noisy-covariance Radio-Astronomy `1,000x` RFI excision (`cos = 0.9753` at `8.67x` on `[64, 4096]`; `cos = 0.9837` at `6.34x` live in browser; 2-bit VLBI `cos = 0.0252`).
+   - Aerospace Black-Box `34,816 B` `O(1)` telemetry (`5/5` faults retained across `50,000` frames, `Δ = 0 B`, `2/6` partial-cue -> `4` unseen masked channels `cos = 0.9999`).
+   - Rusanov 2D Burgers Shockwave PDE + `500x` HDR Field (`12.05x` compression, `188.2x` lower RMSE vs byte-matched `FP16` 2D `rFFT`, exact `0.0` vacuum error, `10.2x` faster `O(1)` block decode vs `zlib -9`).
 
 5. **AURA / System One (`src/components/SystemOneHudDemo.tsx` & `https://github.com/byte-od/system_one`)**:
    - Birthplace of `34.8 KB` `O(1)` `GradientScarMemory` (`Surprise = R_0 - V(s_0)`), Frontier Ghost-Jump Scouts (`> 2,000 FPS` lookahead), and `Tri-Compass`.

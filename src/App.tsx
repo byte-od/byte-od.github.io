@@ -98,8 +98,8 @@ export default function App() {
           <div className="max-w-3xl border-l-2 border-[#adff2f]/60 pl-6 my-7">
             <p className="text-base sm:text-lg text-zinc-300 leading-relaxed font-sans">
               {lang === 'pt'
-                ? 'Pesquisa aberta e motores WebGPU/PyTorch reais que substituem o KV Cache linear O(T) e matrizes densas monolíticas por decomposição vetorial em cicatrizes: Mixture of Scars (MoS), SCache Associativo O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0 (Tabula Rasa), PointScarFlow v1.0 e AURA / System One.'
-                : 'Open research and live WebGPU/PyTorch engines replacing linear O(T) KV Cache and monolithic dense matrices with directional scar decomposition: Mixture of Scars (MoS), Associative O(1) SCache (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0 (Tabula Rasa), PointScarFlow v1.0, and AURA / System One.'}
+                ? 'Pesquisa aberta e motores WebGPU/PyTorch reais que substituem o KV Cache linear O(T) e matrizes densas monolíticas por decomposição vetorial em cicatrizes: Mixture of Scars (MoS), SCache Associativo O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0 (Tabula Rasa Shared-Stage MoS), PointScarFlow v1.0 e AURA / System One.'
+                : 'Open research and live WebGPU/PyTorch engines replacing linear O(T) KV Cache and monolithic dense matrices with directional scar decomposition: Mixture of Scars (MoS), Associative O(1) SCache (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0 (Tabula Rasa Shared-Stage MoS), PointScarFlow v1.0, and AURA / System One.'}
             </p>
           </div>
 
@@ -125,16 +125,16 @@ export default function App() {
               <div className="text-3xl font-bold font-mono text-[#c4b5fd] tabular-nums">0.0000 KL</div>
               <div className="text-xs text-zinc-400 mt-1">
                 {lang === 'pt'
-                  ? 'Choque PTQ no ScarNativeLM v5.0 (VQ4-STE)'
-                  : 'PTQ Shock in ScarNativeLM v5.0 (VQ4-STE)'}
+                  ? 'Choque PTQ no ScarNativeLM v6.0 (VQ4-STE)'
+                  : 'PTQ Shock in ScarNativeLM v6.0 (VQ4-STE)'}
               </div>
             </div>
             <div>
-              <div className="text-3xl font-bold font-mono text-emerald-400 tabular-nums">34 WGSL</div>
+              <div className="text-3xl font-bold font-mono text-emerald-400 tabular-nums">38 WGSL</div>
               <div className="text-xs text-zinc-400 mt-1">
                 {lang === 'pt'
-                  ? 'Compute Shaders no Browser (22 LLM + 12 3D)'
-                  : 'Browser Compute Shaders (22 LLM + 12 3D)'}
+                  ? 'Compute Shaders no Browser (26 LLM + 12 3D)'
+                  : 'Browser Compute Shaders (26 LLM + 12 3D)'}
               </div>
             </div>
           </div>
@@ -150,15 +150,15 @@ export default function App() {
               className="px-5 py-2.5 bg-[#adff2f] hover:bg-lime-300 text-black text-xs font-mono font-extrabold rounded-lg transition-all flex items-center gap-2 shadow-[0_0_24px_rgba(173,255,47,0.3)] hover:shadow-[0_0_34px_rgba(173,255,47,0.5)] cursor-pointer"
               title={
                 lang === 'pt'
-                  ? 'Focar JARVIS Qwen 3B + PointScarFlow 3D (34 Shaders WGSL + SCache O(1))'
-                  : 'Focus JARVIS Qwen 3B + PointScarFlow 3D (34 WGSL Shaders + SCache O(1))'
+                  ? 'Focar JARVIS Qwen 3B + PointScarFlow 3D (38 Shaders WGSL + SCache O(1))'
+                  : 'Focus JARVIS Qwen 3B + PointScarFlow 3D (38 WGSL Shaders + SCache O(1))'
               }
             >
               <Bot className="w-4 h-4" />
               <span>
                 {lang === 'pt'
-                  ? 'JARVIS + PointScarFlow 3D (Qwen 3B · 34 WGSL)'
-                  : 'JARVIS + PointScarFlow 3D (Qwen 3B · 34 WGSL)'}
+                  ? 'JARVIS + PointScarFlow 3D (Qwen 3B · 38 WGSL)'
+                  : 'JARVIS + PointScarFlow 3D (Qwen 3B · 38 WGSL)'}
               </span>
             </button>
 
@@ -167,7 +167,7 @@ export default function App() {
               className="px-5 py-2.5 bg-zinc-900 hover:bg-zinc-850 text-[#adff2f] text-xs font-mono font-bold rounded-lg border border-[#adff2f]/50 hover:border-[#adff2f] transition-all flex items-center gap-2 cursor-pointer"
             >
               <Cpu className="w-4 h-4" />
-              <span>Scar-Native Lab v5.0</span>
+              <span>Scar-Native Lab v6.0</span>
             </a>
 
             <a
@@ -227,8 +227,8 @@ export default function App() {
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-[#adff2f]/15 text-[#adff2f] border border-[#adff2f]/40 shadow-xs">
                     <Sparkles className="w-3.5 h-3.5 animate-pulse" />
                     {lang === 'pt'
-                      ? 'NOVO · POINTSCARFLOW v1.0 (3D OT FLOW) + SCARNATIVE v5.0'
-                      : 'NEW · POINTSCARFLOW v1.0 (3D OT FLOW) + SCARNATIVE v5.0'}
+                      ? 'NOVO · SCARNATIVE v6.0 (SHARED-STAGE MoS) + POINTSCARFLOW v1.0 (3D OT FLOW)'
+                      : 'NEW · SCARNATIVE v6.0 (SHARED-STAGE MoS) + POINTSCARFLOW v1.0 (3D OT FLOW)'}
                   </span>
                   <a
                     href="https://doi.org/10.5281/zenodo.24172784"
@@ -403,8 +403,8 @@ export default function App() {
             </h2>
             <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
               {lang === 'pt'
-                ? 'Criador e pesquisador responsável pela arquitetura Mixture of Scars (MoS), SCache Associativo O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0, PointScarFlow v1.0 e AURA / System One. Aberto a colaborações de pesquisa científica, implantação de motores MoS/SCache em produção (Edge / WebGPU / GPU Clusters) e liderança arquitetural em IA.'
-                : 'Creator and principal researcher behind Mixture of Scars (MoS), Associative O(1) SCache (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0, PointScarFlow v1.0, and AURA / System One. Open to research collaborations, production MoS/SCache deployments (Edge / WebGPU / GPU Clusters), and AI architecture leadership.'}
+                ? 'Criador e pesquisador responsável pela arquitetura Mixture of Scars (MoS), SCache Associativo O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0, PointScarFlow v1.0 e AURA / System One. Aberto a colaborações de pesquisa científica, implantação de motores MoS/SCache em produção (Edge / WebGPU / GPU Clusters) e liderança arquitetural em IA.'
+                : 'Creator and principal researcher behind Mixture of Scars (MoS), Associative O(1) SCache (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0, PointScarFlow v1.0, and AURA / System One. Open to research collaborations, production MoS/SCache deployments (Edge / WebGPU / GPU Clusters), and AI architecture leadership.'}
             </p>
 
             <ContactPromptConsole

@@ -1,9 +1,9 @@
 {
-  "version": "5.0.0",
+  "version": "6.0.0",
   "name": "Scar Architecture Ecosystem — Julio Cesar Reis Filho",
   "url": "https://byte-od.github.io/",
   "zenodo_doi": "https://doi.org/10.5281/zenodo.24172784",
-  "description": "Official research and live WebGPU showcase of Mixture of Scars (MoS), Associative O(1) SCache (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0 (Tabula Rasa), PointScarFlow v1.0, and AURA / System One.",
+  "description": "Official research and live WebGPU showcase of Mixture of Scars (MoS), Associative O(1) SCache (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0 (Tabula Rasa Shared-Stage MoS), PointScarFlow v1.0, and AURA / System One.",
   "author": {
     "name": "Julio Cesar da Costa Reis Filho",
     "role": "Creator of Mixture of Scars (MoS) & SCache O(1)",
@@ -15,17 +15,17 @@
     {
       "id": "overview",
       "title": "Overview, JARVIS Qwen 3B & PointScarFlow 3D",
-      "summary": "Live 34-shader WebGPU showcase uniting Qwen2.5-3B Track 2.5 ProtectedInt4Scar, O(1) SCache, HTTP 206 P_perp_lang ScarStore cartridges, and PointScarFlow v1.0 continuous 3D Optimal-Transport Flow."
+      "summary": "Live 38-shader WebGPU showcase uniting Qwen2.5-3B Track 2.5 ProtectedInt4Scar, O(1) SCache, HTTP 206 P_perp_lang ScarStore cartridges, and PointScarFlow v1.0 continuous 3D Optimal-Transport Flow."
     },
     {
       "id": "scar-native-lab",
-      "title": "Scar-Native Lab v5.0 (Tabula Rasa)",
-      "summary": "Foundation model pretrained from step t = 0 with ScarNativeLinear (D4-LUT256 VQ4-STE, 0.0000 KL PTQ shock), DifferentiableSCacheAttention O(1), and Zero-SGD RRR P_perp_lang cartridges with 0x00 GDPR unlearning."
+      "title": "Scar-Native Lab v6.0 (Tabula Rasa Shared-Stage MoS)",
+      "summary": "12-layer foundation model pretrained on A100 from step t = 0 with Shared-Stage VQ4 substrates, Directional ReLU INT4 MoS Scar Experts, Dual-Tier O(1) SCache (Chunkwise WY 12.63x, 100.0% passkey recall to T=567), mos-digest 4 KB cartridges (98.96% 4-language recall), Procrustes R_lang, document 0x00 GDPR wipe (100% abstain reversion), and native <abstain>."
     },
     {
       "id": "physical-scar-lab",
       "title": "Physical Scar Lab v4.0 (ScarCodec)",
-      "summary": "Domain-independent physical scar compression: 1,000x radio-astronomy RFI excision (cos = 0.9923), 34.8 KB O(1) black-box telemetry (5/5 faults), and 12.05x HDR CFD shock compression (0.0 vacuum error)."
+      "summary": "Applied mathematical physics & hardware scar operators: blind 1,000x radio-astronomy RFI excision (cos = 0.9753 at 8.67x), partial-cue 34.8 KB O(1) black-box telemetry (5/5 faults, 4 masked channels cos = 0.9999), and 12.05x Rusanov 2D Burgers shockwave PDE compression (188.2x lower RMSE vs byte-matched FP16 2D rFFT, 0.0 vacuum error)."
     },
     {
       "id": "aura-origin",

@@ -214,6 +214,9 @@ const CAPSULE_CATEGORY_MAP: Record<string, string> = {
   portfolio_agent_identity: 'Agent Identity',
   portfolio_agent_capabilities: 'Agent Identity',
   portfolio_jarvis_architecture: 'Flagship AI Architecture',
+  portfolio_julio_scar_research: 'Scar Research & Author',
+  portfolio_scarnative_vq4: 'Tabula-Rasa Scar Foundation',
+  portfolio_pointscar_flow_3d: 'Continuous 3D Scar Flow',
   portfolio_mos_scache_72b: 'Flagship AI Architecture',
   portfolio_browser_webgpu_wgsl: 'Edge & Browser GPU',
   portfolio_aura_system_one: 'Embodied Deep RL',
@@ -476,14 +479,20 @@ export function computeJarvisFaceState(input: JarvisNeuralInput): JarvisFaceStat
   } else if (
     dominantCapsuleId === 'portfolio_aura_system_one' ||
     dominantCapsuleId === 'portfolio_tricompass_scouts' ||
+    dominantCapsuleId === 'portfolio_pointscar_flow_3d' ||
     dominantCategory.includes('RL') ||
+    dominantCategory.includes('3D') ||
     dominantCategory.includes('Perception')
   ) {
     posture = 'KINETIC_FOCUS';
   } else if (
     dominantCapsuleId === 'portfolio_mos_scache_72b' ||
+    dominantCapsuleId === 'portfolio_jarvis_architecture' ||
+    dominantCapsuleId === 'portfolio_julio_scar_research' ||
+    dominantCapsuleId === 'portfolio_scarnative_vq4' ||
     dominantCapsuleId === 'portfolio_browser_webgpu_wgsl' ||
     dominantCategory.includes('Architecture') ||
+    dominantCategory.includes('Scar') ||
     dominantCategory.includes('Transformers') ||
     dominantCategory.includes('Developer') ||
     dominantCategory.includes('Distributed') ||

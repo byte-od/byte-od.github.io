@@ -1932,3 +1932,674 @@ fn scarnative_o1_hybrid_gqa_attention(
         rw_f32_a[h_q * head_dim + d0 + 1u] = v_acc.y + alpha_assoc * fast1;
     }
 }
+
+// ============================================================================
+// SCAR-NATIVE v6.0 SHARED-STAGE MOS + DUAL-TIER HIERARCHICAL O(1) SCACHE KERNELS
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// 23. Scar-Native v6.0 Native Mixture-of-Scars (MoS) Block-64 INT4 Top-k Router
+//     + Directional ReLU A_exp Down-Projection (`u_j = w_j * ReLU(A_exp[e_j] @ x)`)
+//     params:
+//       p0 = hidden_dim (multiple of 64)
+//       p1 = num_experts (<= 16)
+//       p2 = top_k (<= 4)
+//       p3 = expert_rank (<= 128, multiple of 8)
+//       p4 = router_packed_u32_off  ([E, hidden_dim / 8] u32 words)
+//       p5 = router_scales_u32_off  ([E, hidden_dim / 64] FP16 scales)
+//       p6 = a_exp_packed_u32_off   ([E * rank, hidden_dim / 8] u32 words)
+//       p7 = a_exp_scales_u32_off   ([E * rank, hidden_dim / 64] FP16 scales)
+//     ro_u32_a: layer/model shard
+//     ro_f32_a: normalized input `x` [hidden_dim]
+//     rw_f32_a: `mos_u` [top_k * expert_rank]
+//     rw_u32_a: `mos_selected_idx` [4] (`[0 .. top_k - 1]`)
+//     dispatch: (1u, 1u, 1u)
+// ----------------------------------------------------------------------------
+var<workgroup> wg_mos6_red: array<f32, 256>;
+var<workgroup> wg_mos6_logits: array<f32, 16>;
+var<workgroup> wg_mos6_idx: array<u32, 4>;
+var<workgroup> wg_mos6_w: array<f32, 4>;
+
+@compute @workgroup_size(256, 1, 1)
+fn scarnative_v6_mos_router_topk_relu(
+    @builtin(local_invocation_id) lid: vec3<u32>,
+) {
+    let tid = lid.x;
+    let sub_row = tid >> 5u;
+    let lane = tid & 31u;
+
+    let hidden_dim = params.p0;
+    let num_experts = params.p1;
+    let top_k = params.p2;
+    let expert_rank = params.p3;
+    let words_per_row = hidden_dim >> 3u;
+    let blocks_per_row = hidden_dim >> 6u;
+
+    // Phase 1: Compute Block-64 INT4 router logits `r_logits[e] = dot(router[e], x)`
+    for (var e_base = 0u; e_base < num_experts; e_base += 8u) {
+        let e = e_base + sub_row;
+        var r_acc: f32 = 0.0;
+        if (e < num_experts) {
+            let p_row = params.p4 + e * words_per_row;
+            let s_row = e * blocks_per_row;
+            for (var w_idx = lane; w_idx < words_per_row; w_idx += 32u) {
+                let word = ro_u32_a[p_row + w_idx];
+                let blk_idx = s_row + (w_idx >> 3u);
+                let scale = unpack_f16_lane(ro_u32_a[params.p5 + (blk_idx >> 1u)], blk_idx);
+                let c0 = w_idx << 3u;
+                let sub_dot = (f32((word >>  0u) & 0xFu) - 8.0) * ro_f32_a[c0 + 0u]
+                            + (f32((word >>  4u) & 0xFu) - 8.0) * ro_f32_a[c0 + 1u]
+                            + (f32((word >>  8u) & 0xFu) - 8.0) * ro_f32_a[c0 + 2u]
+                            + (f32((word >> 12u) & 0xFu) - 8.0) * ro_f32_a[c0 + 3u]
+                            + (f32((word >> 16u) & 0xFu) - 8.0) * ro_f32_a[c0 + 4u]
+                            + (f32((word >> 20u) & 0xFu) - 8.0) * ro_f32_a[c0 + 5u]
+                            + (f32((word >> 24u) & 0xFu) - 8.0) * ro_f32_a[c0 + 6u]
+                            + (f32((word >> 28u) & 0xFu) - 8.0) * ro_f32_a[c0 + 7u];
+                r_acc += sub_dot * scale;
+            }
+        }
+        wg_mos6_red[tid] = r_acc;
+        workgroupBarrier();
+
+        for (var s = 16u; s > 0u; s >>= 1u) {
+            if (lane < s) {
+                wg_mos6_red[tid] += wg_mos6_red[tid + s];
+            }
+            workgroupBarrier();
+        }
+        if (lane == 0u && e < num_experts) {
+            wg_mos6_logits[e] = wg_mos6_red[sub_row * 32u];
+        }
+        workgroupBarrier();
+    }
+
+    // Phase 2: Exact Top-k selection (`-1e-7 * e` deterministic tie-break) + Softmax over Top-k
+    if (tid == 0u) {
+        var used_mask: u32 = 0u;
+        var max_top: f32 = -1e30;
+        for (var j = 0u; j < top_k; j += 1u) {
+            var best_e: u32 = 0u;
+            var best_pert: f32 = -1e30;
+            for (var e = 0u; e < num_experts; e += 1u) {
+                if (((used_mask >> e) & 1u) == 0u) {
+                    let pert = wg_mos6_logits[e] - 1e-7 * f32(e);
+                    if (pert > best_pert) {
+                        best_pert = pert;
+                        best_e = e;
+                    }
+                }
+            }
+            used_mask = used_mask | (1u << best_e);
+            wg_mos6_idx[j] = best_e;
+            rw_u32_a[j] = best_e;
+            let raw_lg = wg_mos6_logits[best_e];
+            if (raw_lg > max_top) {
+                max_top = raw_lg;
+            }
+        }
+        var sum_ex: f32 = 0.0;
+        for (var j = 0u; j < top_k; j += 1u) {
+            let ex = exp(wg_mos6_logits[wg_mos6_idx[j]] - max_top);
+            wg_mos6_w[j] = ex;
+            sum_ex += ex;
+        }
+        let inv_sum = 1.0 / max(sum_ex, 1e-12);
+        for (var j = 0u; j < top_k; j += 1u) {
+            wg_mos6_w[j] = wg_mos6_w[j] * inv_sum;
+        }
+    }
+    workgroupBarrier();
+
+    // Phase 3: Compute `u[j * rank + r] = w_j * max(dot(A_exp[idx_j, r], x), 0.0)`
+    let total_rows = top_k * expert_rank;
+    for (var r_base = 0u; r_base < total_rows; r_base += 8u) {
+        let item = r_base + sub_row;
+        var a_acc: f32 = 0.0;
+        if (item < total_rows) {
+            let j = item / expert_rank;
+            let r_loc = item % expert_rank;
+            let e_sel = wg_mos6_idx[j];
+            let a_row = e_sel * expert_rank + r_loc;
+            let p_row = params.p6 + a_row * words_per_row;
+            let s_row = a_row * blocks_per_row;
+            for (var w_idx = lane; w_idx < words_per_row; w_idx += 32u) {
+                let word = ro_u32_a[p_row + w_idx];
+                let blk_idx = s_row + (w_idx >> 3u);
+                let scale = unpack_f16_lane(ro_u32_a[params.p7 + (blk_idx >> 1u)], blk_idx);
+                let c0 = w_idx << 3u;
+                let sub_dot = (f32((word >>  0u) & 0xFu) - 8.0) * ro_f32_a[c0 + 0u]
+                            + (f32((word >>  4u) & 0xFu) - 8.0) * ro_f32_a[c0 + 1u]
+                            + (f32((word >>  8u) & 0xFu) - 8.0) * ro_f32_a[c0 + 2u]
+                            + (f32((word >> 12u) & 0xFu) - 8.0) * ro_f32_a[c0 + 3u]
+                            + (f32((word >> 16u) & 0xFu) - 8.0) * ro_f32_a[c0 + 4u]
+                            + (f32((word >> 20u) & 0xFu) - 8.0) * ro_f32_a[c0 + 5u]
+                            + (f32((word >> 24u) & 0xFu) - 8.0) * ro_f32_a[c0 + 6u]
+                            + (f32((word >> 28u) & 0xFu) - 8.0) * ro_f32_a[c0 + 7u];
+                a_acc += sub_dot * scale;
+            }
+        }
+        wg_mos6_red[tid] = a_acc;
+        workgroupBarrier();
+
+        for (var s = 16u; s > 0u; s >>= 1u) {
+            if (lane < s) {
+                wg_mos6_red[tid] += wg_mos6_red[tid + s];
+            }
+            workgroupBarrier();
+        }
+        if (lane == 0u && item < total_rows) {
+            let j = item / expert_rank;
+            rw_f32_a[item] = wg_mos6_w[j] * max(wg_mos6_red[sub_row * 32u], 0.0);
+        }
+        workgroupBarrier();
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 24. Scar-Native v6.0 Native MoS Row-Scaled INT4 B_exp Residual Accumulator
+//     Accumulates `rw_f32_a[d] += sum_{j=0..top_k-1} dot(B_exp[idx_j, d], u_j)`
+//     params:
+//       p0 = hidden_dim
+//       p1 = top_k (<= 4)
+//       p2 = expert_rank (<= 128, multiple of 8)
+//       p3 = b_exp_packed_u32_off   ([E * hidden_dim, rank / 8] u32 words)
+//       p4 = b_exp_scales_u32_off   ([E * hidden_dim] FP16 row scales)
+//     ro_u32_a: layer/model shard
+//     ro_u32_b: `mos_selected_idx` [4]
+//     ro_f32_a: `mos_u` [top_k * expert_rank]
+//     rw_f32_a: residual target `h_cur` [hidden_dim] (accumulates in-place!)
+//     dispatch: ((hidden_dim + 255u) >> 8u, 1u, 1u)
+// ----------------------------------------------------------------------------
+var<workgroup> wg_mos6_u: array<f32, 512>;
+var<workgroup> wg_mos6_bidx: array<u32, 4>;
+
+@compute @workgroup_size(256, 1, 1)
+fn scarnative_v6_mos_bscar_accumulate(
+    @builtin(workgroup_id) wgid: vec3<u32>,
+    @builtin(local_invocation_id) lid: vec3<u32>,
+) {
+    let tid = lid.x;
+    let hidden_dim = params.p0;
+    let top_k = params.p1;
+    let expert_rank = params.p2;
+    let total_u = top_k * expert_rank;
+
+    if (tid < top_k) {
+        wg_mos6_bidx[tid] = ro_u32_b[tid];
+    }
+    for (var i = tid; i < total_u; i += 256u) {
+        wg_mos6_u[i] = ro_f32_a[i];
+    }
+    workgroupBarrier();
+
+    let d = wgid.x * 256u + tid;
+    if (d >= hidden_dim) {
+        return;
+    }
+
+    let b_words_per_row = expert_rank >> 3u;
+    var add_val: f32 = 0.0;
+    for (var j = 0u; j < top_k; j += 1u) {
+        let e_sel = wg_mos6_bidx[j];
+        let b_row = e_sel * hidden_dim + d;
+        let b_row_base = params.p3 + b_row * b_words_per_row;
+        let b_scale = unpack_f16_lane(ro_u32_a[params.p4 + (b_row >> 1u)], b_row);
+        let u_base = j * expert_rank;
+        var sub_acc: f32 = 0.0;
+        for (var bw = 0u; bw < b_words_per_row; bw += 1u) {
+            let bword = ro_u32_a[b_row_base + bw];
+            let r0 = u_base + (bw << 3u);
+            sub_acc += (f32((bword >>  0u) & 0xFu) - 8.0) * wg_mos6_u[r0 + 0u]
+                     + (f32((bword >>  4u) & 0xFu) - 8.0) * wg_mos6_u[r0 + 1u]
+                     + (f32((bword >>  8u) & 0xFu) - 8.0) * wg_mos6_u[r0 + 2u]
+                     + (f32((bword >> 12u) & 0xFu) - 8.0) * wg_mos6_u[r0 + 3u]
+                     + (f32((bword >> 16u) & 0xFu) - 8.0) * wg_mos6_u[r0 + 4u]
+                     + (f32((bword >> 20u) & 0xFu) - 8.0) * wg_mos6_u[r0 + 5u]
+                     + (f32((bword >> 24u) & 0xFu) - 8.0) * wg_mos6_u[r0 + 6u]
+                     + (f32((bword >> 28u) & 0xFu) - 8.0) * wg_mos6_u[r0 + 7u];
+        }
+        add_val += sub_acc * b_scale;
+    }
+    rw_f32_a[d] = rw_f32_a[d] + add_val;
+}
+
+// ----------------------------------------------------------------------------
+// 25. Scar-Native v6.0 Dual-Tier Hierarchical O(1) SCache Eviction & Update
+//     (`RoPE Sinks + Sliding Ring + Surprise-Routed Exact Micro-Pages + W_scar`, `Δ = +0 B`)
+//     1 workgroup per KV head (`wgid.x = h_kv in 0 .. n_kv_heads - 1`).
+//
+//     params:
+//       p0 = layer_idx
+//       p1 = n_kv_heads
+//       p2 = head_dim (<= 128)
+//       p3 = num_sink
+//       p4 = slide_len
+//       p5 = num_micro_pages (<= 64)
+//       p6 = counts_u32_total (`num_layers * n_kv_heads * 4`)
+//       p7 = flags (`bit 0 = enable_widrow_hoff`, `bit 1 = enable_micro_pages`)
+//       f0 = micro_page_theta
+//     ro_u32_b: step_state_u32 ([1] = pos_t)
+//     ro_f32_a: k_rope_cur [n_kv_heads * head_dim]
+//     ro_f32_b: v_cur      [n_kv_heads * head_dim]
+//     ro_f32_c: k_raw_and_gates ([0..n_kv*d_h-1] = k_raw_cur, followed by [w_gate(d_h), b_gate, lambda_h, eta_h])
+//     rw_f32_a: scarnative_v6_w_scar_f32 [L * n_kv_heads * head_dim * head_dim]
+//     rw_f32_b: scarnative_v6_page_scores_f32 [L * n_kv_heads * max(1u, num_micro_pages)]
+//     rw_u32_a: scarnative_v6_kv_f16_u32:
+//               - [0 .. counts_u32_total - 1]: 4 u32 per (layer, h_kv):
+//                   [sink_cnt, win_cnt, absorbed_cnt, page_cnt]
+//               - [counts_u32_total ..]: `(2 * cap_total + cap_local) * vec_u32` per (layer, h_kv):
+//                   K_rope [cap_total], V [cap_total], K_raw [cap_local]
+// ----------------------------------------------------------------------------
+var<workgroup> wg_v6_kraw: array<f32, 128>;
+var<workgroup> wg_v6_vev: array<f32, 128>;
+var<workgroup> wg_v6_ku: array<f32, 128>;
+var<workgroup> wg_v6_err: array<f32, 128>;
+var<workgroup> wg_v6_red: array<f32, 64>;
+var<workgroup> wg_v6_ctrl: array<u32, 8>;
+
+@compute @workgroup_size(64, 1, 1)
+fn scarnative_v6_hierarchical_evict_update(
+    @builtin(workgroup_id) wgid: vec3<u32>,
+    @builtin(local_invocation_id) lid: vec3<u32>,
+) {
+    let tid = lid.x;
+    let layer_idx = params.p0;
+    let n_kv_heads = params.p1;
+    let head_dim = params.p2;
+    let num_sink = params.p3;
+    let slide_len = params.p4;
+    let num_micro_pages = params.p5;
+    let counts_u32_total = params.p6;
+    let en_wh = (params.p7 & 1u) != 0u;
+    let en_mp = (params.p7 & 2u) != 0u;
+    let micro_page_theta = params.f0;
+    let h_kv = wgid.x;
+
+    let head_flat = layer_idx * n_kv_heads + h_kv;
+    let cnt_base = head_flat * 4u;
+    let cap_local = num_sink + slide_len;
+    let cap_total = cap_local + num_micro_pages;
+    let vec_u32 = head_dim >> 1u;
+    let head_stride = (2u * cap_total + cap_local) * vec_u32;
+
+    let krope_base = counts_u32_total + head_flat * head_stride;
+    let v_base = krope_base + cap_total * vec_u32;
+    let kraw_base = v_base + cap_total * vec_u32;
+    let w_base = head_flat * head_dim * head_dim;
+
+    if (tid == 0u) {
+        let pos_t = ro_u32_b[1];
+        let sink_cnt = rw_u32_a[cnt_base + 0u];
+        let win_cnt = rw_u32_a[cnt_base + 1u];
+        let absorbed = rw_u32_a[cnt_base + 2u];
+        let page_cnt = rw_u32_a[cnt_base + 3u];
+        let ev = (pos_t >= num_sink) && (win_cnt >= slide_len);
+        wg_v6_ctrl[0] = pos_t;
+        wg_v6_ctrl[1] = sink_cnt;
+        wg_v6_ctrl[2] = win_cnt;
+        wg_v6_ctrl[3] = absorbed;
+        wg_v6_ctrl[4] = page_cnt;
+        wg_v6_ctrl[5] = select(0u, 1u, ev);
+        wg_v6_ctrl[6] = 0xFFFFFFFFu;
+    }
+    workgroupBarrier();
+
+    let pos_t = wg_v6_ctrl[0];
+    let sink_cnt = wg_v6_ctrl[1];
+    let win_cnt = wg_v6_ctrl[2];
+    let absorbed = wg_v6_ctrl[3];
+    let page_cnt = wg_v6_ctrl[4];
+    let do_evict = wg_v6_ctrl[5] != 0u;
+    let active_evict = do_evict && (layer_idx > 0u) && (en_wh || en_mp);
+    let rel_t = select(0u, pos_t - num_sink, pos_t >= num_sink);
+    let ring_idx = select(0u, rel_t % max(slide_len, 1u), slide_len > 0u);
+    let ring_slot = num_sink + ring_idx;
+
+    // Step 1: Unpack evicted Pre-RoPE K_raw and V from `ring_slot`
+    var kn_sq: f32 = 0.0;
+    if (active_evict) {
+        for (var p = tid; p < vec_u32; p += 64u) {
+            let krp = unpack2x16float(rw_u32_a[kraw_base + ring_slot * vec_u32 + p]);
+            let vp = unpack2x16float(rw_u32_a[v_base + ring_slot * vec_u32 + p]);
+            let d0 = p << 1u;
+            wg_v6_kraw[d0] = krp.x;
+            wg_v6_kraw[d0 + 1u] = krp.y;
+            wg_v6_vev[d0] = vp.x;
+            wg_v6_vev[d0 + 1u] = vp.y;
+            kn_sq += krp.x * krp.x + krp.y * krp.y;
+        }
+    }
+    wg_v6_red[tid] = kn_sq;
+    workgroupBarrier();
+
+    for (var s = 32u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            wg_v6_red[tid] += wg_v6_red[tid + s];
+        }
+        workgroupBarrier();
+    }
+
+    if (active_evict) {
+        let inv_kn = 1.0 / max(sqrt(wg_v6_red[0]), 1e-6);
+        for (var d = tid; d < head_dim; d += 64u) {
+            wg_v6_ku[d] = wg_v6_kraw[d] * inv_kn;
+        }
+    }
+    workgroupBarrier();
+
+    // Step 2: Prediction `pred = W_scar @ ku`, value error `err = v_ev - pred`, and `||err||_2`
+    var err_sq: f32 = 0.0;
+    if (active_evict) {
+        for (var r = tid; r < head_dim; r += 64u) {
+            let w_row = w_base + r * head_dim;
+            var pred_r: f32 = 0.0;
+            for (var c = 0u; c < head_dim; c += 1u) {
+                pred_r += rw_f32_a[w_row + c] * wg_v6_ku[c];
+            }
+            let e_r = wg_v6_vev[r] - pred_r;
+            wg_v6_err[r] = e_r;
+            err_sq += e_r * e_r;
+        }
+    }
+    wg_v6_red[tid] = err_sq;
+    workgroupBarrier();
+
+    for (var s = 32u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            wg_v6_red[tid] += wg_v6_red[tid + s];
+        }
+        workgroupBarrier();
+    }
+    let err_norm = sqrt(wg_v6_red[0]);
+
+    // Step 3: Gate `g_tau = sigmoid(dot(w_gate, k_raw_ev) + b_gate)` and surprise `s_tau = g_tau * ||err||_2`
+    let gate_stride = head_dim + 3u;
+    let gate_off = n_kv_heads * head_dim + h_kv * gate_stride;
+    var g_dot: f32 = 0.0;
+    if (active_evict) {
+        for (var d = tid; d < head_dim; d += 64u) {
+            g_dot += ro_f32_c[gate_off + d] * wg_v6_kraw[d];
+        }
+    }
+    wg_v6_red[tid] = g_dot;
+    workgroupBarrier();
+
+    for (var s = 32u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            wg_v6_red[tid] += wg_v6_red[tid + s];
+        }
+        workgroupBarrier();
+    }
+
+    let b_gate = ro_f32_c[gate_off + head_dim + 0u];
+    let lambda_h = ro_f32_c[gate_off + head_dim + 1u];
+    let eta_h = ro_f32_c[gate_off + head_dim + 2u];
+    let z_gate = clamp(wg_v6_red[0] + b_gate, -20.0, 20.0);
+    let g_tau = 1.0 / (1.0 + exp(-z_gate));
+    let s_tau = g_tau * err_norm;
+
+    // Step 3a: Promote high-surprise evicted token into Exact Micro-Page Bank BEFORE overwriting `ring_slot`
+    if (tid == 0u && active_evict && en_mp && (num_micro_pages > 0u) && (s_tau >= micro_page_theta)) {
+        let ps_base = head_flat * num_micro_pages;
+        if (page_cnt < num_micro_pages) {
+            wg_v6_ctrl[6] = page_cnt;
+            rw_f32_b[ps_base + page_cnt] = s_tau;
+            rw_u32_a[cnt_base + 3u] = page_cnt + 1u;
+        } else {
+            var min_idx: u32 = 0u;
+            var min_sc: f32 = rw_f32_b[ps_base + 0u];
+            for (var m = 1u; m < num_micro_pages; m += 1u) {
+                let sc_m = rw_f32_b[ps_base + m];
+                if (sc_m < min_sc) {
+                    min_sc = sc_m;
+                    min_idx = m;
+                }
+            }
+            if (s_tau > (min_sc + 1e-4)) {
+                wg_v6_ctrl[6] = min_idx;
+                rw_f32_b[ps_base + min_idx] = s_tau;
+            }
+        }
+    }
+    workgroupBarrier();
+
+    let target_page = wg_v6_ctrl[6];
+    if (target_page != 0xFFFFFFFFu) {
+        let dst_slot = cap_local + target_page;
+        for (var p = tid; p < vec_u32; p += 64u) {
+            rw_u32_a[krope_base + dst_slot * vec_u32 + p] = rw_u32_a[krope_base + ring_slot * vec_u32 + p];
+            rw_u32_a[v_base + dst_slot * vec_u32 + p] = rw_u32_a[v_base + ring_slot * vec_u32 + p];
+        }
+    }
+    workgroupBarrier();
+
+    // Step 3b: Widrow-Hoff Fast-Weight Matrix `W_scar` Update
+    if (active_evict && en_wh) {
+        let decay_eff = 1.0 - lambda_h * g_tau;
+        let lr_eff = eta_h * g_tau;
+        for (var r = tid; r < head_dim; r += 64u) {
+            let w_row = w_base + r * head_dim;
+            let e_r = wg_v6_err[r];
+            for (var c = 0u; c < head_dim; c += 1u) {
+                rw_f32_a[w_row + c] = decay_eff * rw_f32_a[w_row + c] + lr_eff * e_r * wg_v6_ku[c];
+            }
+        }
+    }
+    workgroupBarrier();
+
+    // Step 4: Write current `(k_rope_cur, k_raw_cur, v_cur)` into Sink or Ring Slot
+    let write_slot = select(ring_slot, pos_t, pos_t < num_sink);
+    let in_off = h_kv * head_dim;
+    for (var p = tid; p < vec_u32; p += 64u) {
+        let d0 = p << 1u;
+        let krop2 = clamp(
+            vec2<f32>(ro_f32_a[in_off + d0], ro_f32_a[in_off + d0 + 1u]),
+            vec2<f32>(-65500.0),
+            vec2<f32>(65500.0),
+        );
+        let kraw2 = clamp(
+            vec2<f32>(ro_f32_c[in_off + d0], ro_f32_c[in_off + d0 + 1u]),
+            vec2<f32>(-65500.0),
+            vec2<f32>(65500.0),
+        );
+        let vn2 = clamp(
+            vec2<f32>(ro_f32_b[in_off + d0], ro_f32_b[in_off + d0 + 1u]),
+            vec2<f32>(-65500.0),
+            vec2<f32>(65500.0),
+        );
+        rw_u32_a[krope_base + write_slot * vec_u32 + p] = pack2x16float(krop2);
+        rw_u32_a[kraw_base + write_slot * vec_u32 + p] = pack2x16float(kraw2);
+        rw_u32_a[v_base + write_slot * vec_u32 + p] = pack2x16float(vn2);
+    }
+    if (tid == 0u) {
+        if (pos_t < num_sink) {
+            if ((pos_t + 1u) > sink_cnt) {
+                rw_u32_a[cnt_base + 0u] = pos_t + 1u;
+            }
+        } else {
+            rw_u32_a[cnt_base + 1u] = min(slide_len, win_cnt + 1u);
+            if (do_evict) {
+                rw_u32_a[cnt_base + 2u] = absorbed + 1u;
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------------------------
+// 26. Scar-Native v6.0 Dual-Tier Hierarchical O(1) GQA Attention
+//     (`Exact Softmax over [Sinks ∪ Ring ∪ Micro-Pages] + Widrow-Hoff W_scar @ qu`)
+//     1 workgroup per Query head (`wgid.x = h_q in 0 .. n_q_heads - 1`).
+//
+//     params:
+//       p0 = layer_idx
+//       p1 = n_q_heads
+//       p2 = n_kv_heads
+//       p3 = head_dim (<= 128)
+//       p4 = num_sink
+//       p5 = slide_len
+//       p6 = num_micro_pages (<= 64)
+//       p7 = (flags << 28u) | counts_u32_total (`bit 28 = en_wh`, `bit 29 = en_mp`)
+//       f0 = attn_scale
+//     ro_u32_a: scarnative_v6_kv_f16_u32
+//     ro_f32_a: q_rope_cur [n_q_heads * head_dim]
+//     ro_f32_b: scarnative_v6_w_scar_f32 [L * n_kv_heads * head_dim * head_dim]
+//     ro_f32_c: q_raw_and_alpha ([0..n_q*d_h-1] = q_raw_cur, followed by alpha_assoc[h_q])
+//     rw_f32_a: attn_out [n_q_heads * head_dim]
+// ----------------------------------------------------------------------------
+var<workgroup> wg_v6_qrope: array<f32, 128>;
+var<workgroup> wg_v6_qu: array<f32, 128>;
+var<workgroup> wg_v6_logits: array<f32, 512>;
+var<workgroup> wg_v6_ared: array<f32, 64>;
+var<workgroup> wg_v6_acnts: array<u32, 4>;
+
+@compute @workgroup_size(64, 1, 1)
+fn scarnative_v6_hierarchical_o1_gqa_attention(
+    @builtin(workgroup_id) wgid: vec3<u32>,
+    @builtin(local_invocation_id) lid: vec3<u32>,
+) {
+    let tid = lid.x;
+    let layer_idx = params.p0;
+    let n_q_heads = params.p1;
+    let n_kv_heads = params.p2;
+    let head_dim = params.p3;
+    let num_sink = params.p4;
+    let slide_len = params.p5;
+    let num_micro_pages = params.p6;
+    let counts_u32_total = params.p7 & 0x0FFFFFFFu;
+    let flags = params.p7 >> 28u;
+    let en_wh = (flags & 1u) != 0u;
+    let en_mp = (flags & 2u) != 0u;
+    let attn_scale = params.f0;
+
+    let h_q = wgid.x;
+    let gqa_group = n_q_heads / n_kv_heads;
+    let h_kv = h_q / gqa_group;
+    let head_flat = layer_idx * n_kv_heads + h_kv;
+    let cnt_base = head_flat * 4u;
+
+    let cap_local = num_sink + slide_len;
+    let cap_total = cap_local + num_micro_pages;
+    let vec_u32 = head_dim >> 1u;
+    let head_stride = (2u * cap_total + cap_local) * vec_u32;
+    let krope_base = counts_u32_total + head_flat * head_stride;
+    let v_base = krope_base + cap_total * vec_u32;
+    let w_base = head_flat * head_dim * head_dim;
+
+    var qraw_sq: f32 = 0.0;
+    for (var d = tid; d < head_dim; d += 64u) {
+        wg_v6_qrope[d] = ro_f32_a[h_q * head_dim + d];
+        let qr = ro_f32_c[h_q * head_dim + d];
+        wg_v6_qu[d] = qr;
+        qraw_sq += qr * qr;
+    }
+    wg_v6_ared[tid] = qraw_sq;
+    if (tid < 4u) {
+        wg_v6_acnts[tid] = ro_u32_a[cnt_base + tid];
+    }
+    workgroupBarrier();
+
+    for (var s = 32u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            wg_v6_ared[tid] += wg_v6_ared[tid + s];
+        }
+        workgroupBarrier();
+    }
+
+    let inv_qn = 1.0 / max(sqrt(wg_v6_ared[0]), 1e-6);
+    for (var d = tid; d < head_dim; d += 64u) {
+        wg_v6_qu[d] = wg_v6_qu[d] * inv_qn;
+    }
+    workgroupBarrier();
+
+    let sink_cnt = wg_v6_acnts[0];
+    let win_cnt = wg_v6_acnts[1];
+    let absorbed = wg_v6_acnts[2];
+    let page_cnt = select(0u, wg_v6_acnts[3], (layer_idx > 0u) && en_mp);
+    let local_keys = sink_cnt + win_cnt;
+    let total_keys = local_keys + page_cnt;
+
+    // Phase 1: Exact scaled dot-product logits over `[Sinks ∪ Sliding Ring ∪ Active Micro-Pages]`
+    var local_max: f32 = -1e30;
+    for (var idx = tid; idx < total_keys; idx += 64u) {
+        var phys_slot: u32 = idx;
+        if (idx >= local_keys) {
+            phys_slot = cap_local + (idx - local_keys);
+        } else if (idx >= sink_cnt) {
+            phys_slot = num_sink + (idx - sink_cnt);
+        }
+        let k_off = krope_base + phys_slot * vec_u32;
+        var dot_qk: f32 = 0.0;
+        for (var p = 0u; p < vec_u32; p += 1u) {
+            let kp = unpack2x16float(ro_u32_a[k_off + p]);
+            let d0 = p << 1u;
+            dot_qk += wg_v6_qrope[d0] * kp.x + wg_v6_qrope[d0 + 1u] * kp.y;
+        }
+        let lg = dot_qk * attn_scale;
+        wg_v6_logits[idx] = lg;
+        if (lg > local_max) {
+            local_max = lg;
+        }
+    }
+    wg_v6_ared[tid] = local_max;
+    workgroupBarrier();
+
+    for (var s = 32u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            wg_v6_ared[tid] = max(wg_v6_ared[tid], wg_v6_ared[tid + s]);
+        }
+        workgroupBarrier();
+    }
+    let max_lg = wg_v6_ared[0];
+
+    var local_sum: f32 = 0.0;
+    for (var idx = tid; idx < total_keys; idx += 64u) {
+        let ex = exp(wg_v6_logits[idx] - max_lg);
+        wg_v6_logits[idx] = ex;
+        local_sum += ex;
+    }
+    wg_v6_ared[tid] = local_sum;
+    workgroupBarrier();
+
+    for (var s = 32u; s > 0u; s >>= 1u) {
+        if (tid < s) {
+            wg_v6_ared[tid] += wg_v6_ared[tid + s];
+        }
+        workgroupBarrier();
+    }
+    let inv_sum = 1.0 / max(wg_v6_ared[0], 1e-12);
+    for (var idx = tid; idx < total_keys; idx += 64u) {
+        wg_v6_logits[idx] = wg_v6_logits[idx] * inv_sum;
+    }
+    workgroupBarrier();
+
+    // Phase 2: Aggregate exact Softmax V + Content-Addressed `W_scar @ qu`
+    let use_wh = en_wh && (layer_idx > 0u) && (absorbed > 0u);
+    let alpha_assoc = select(0.0, ro_f32_c[n_q_heads * head_dim + h_q], use_wh);
+    for (var p = tid; p < vec_u32; p += 64u) {
+        var v_acc = vec2<f32>(0.0, 0.0);
+        for (var idx = 0u; idx < total_keys; idx += 1u) {
+            var phys_slot: u32 = idx;
+            if (idx >= local_keys) {
+                phys_slot = cap_local + (idx - local_keys);
+            } else if (idx >= sink_cnt) {
+                phys_slot = num_sink + (idx - sink_cnt);
+            }
+            let vp = unpack2x16float(ro_u32_a[v_base + phys_slot * vec_u32 + p]);
+            v_acc += wg_v6_logits[idx] * vp;
+        }
+        let d0 = p << 1u;
+        var fast0: f32 = 0.0;
+        var fast1: f32 = 0.0;
+        if (use_wh) {
+            let w_r0 = w_base + d0 * head_dim;
+            let w_r1 = w_base + (d0 + 1u) * head_dim;
+            for (var c = 0u; c < head_dim; c += 1u) {
+                let q_c = wg_v6_qu[c];
+                fast0 += ro_f32_b[w_r0 + c] * q_c;
+                fast1 += ro_f32_b[w_r1 + c] * q_c;
+            }
+        }
+        rw_f32_a[h_q * head_dim + d0] = v_acc.x + alpha_assoc * fast0;
+        rw_f32_a[h_q * head_dim + d0 + 1u] = v_acc.y + alpha_assoc * fast1;
+    }
+}

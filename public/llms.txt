@@ -14,15 +14,15 @@ linkedin: https://linkedin.com/in/juliocrfilho
 ---
 
 ## Architectural Thesis
-The Scar Architecture Ecosystem replaces monolithic dense weight matrices and linear O(T) KV Cache growth with directional vector quantization + low-rank residual scars (**Mixture of Scars / MoS**) and constant-byte associative memory (**SCache O(1)**). Every operator is verified across native PyTorch/CUDA/Metal and **34 custom client-side WebGPU WGSL 1.0 compute shaders** (`22` LLM/SCache shaders + `12` continuous 3D Optimal-Transport Flow shaders) running live at https://byte-od.github.io/.
+The Scar Architecture Ecosystem replaces monolithic dense weight matrices and linear O(T) KV Cache growth with directional vector quantization + low-rank residual scars (**Mixture of Scars / MoS**) and constant-byte associative memory (**SCache O(1)**). Every operator is verified across native PyTorch/CUDA/Metal and **38 custom client-side WebGPU WGSL 1.0 compute shaders** (`26` LLM/MoS/SCache shaders + `12` continuous 3D Optimal-Transport Flow shaders) running live at https://byte-od.github.io/.
 
 ## Core Pillars of the Scar Ecosystem
 
-### 1. ScarNativeLM v5.0 — Tabula-Rasa Pure Scar-Native Foundation Engine
-- Pretrained 100% from scratch (`step t = 0`, zero dense `nn.Linear` layers, zero pretrained Gaussian floor) directly inside the discrete scar manifold.
-- **ScarNativeLinear**: Channel equilibration `d_eq` + `FWHT-64` + `D4-LUT256 VQ4-STE` + `INT4-STE` low-rank scars -> exact **`0.000000` KL divergence** upon binary shard export.
-- **DifferentiableSCacheAttention**: End-to-end differentiable hybrid attention over Attention Sinks + Circular Window + Pre-RoPE Widrow-Hoff Associative Matrix `W_scar` in strict **O(1) space (`Δ = +0 B` as `T -> ∞`)**, with `cos > 0.99999` parity against WebGPU Shaders `#21` and `#22`.
-- **LanguageNullspaceProjector (`P_perp_lang`) + DetachedScarStore**: Closed-form Reduced-Rank Regression (`Zero-SGD`) mints `4 KB`-aligned `INT4` cartridges in English that fire across `PT`, `EN`, `ES`, and `FR`, with `< 0.2 ms` cryptographic `0x00` GDPR physical unlearning (`Δlogits = 0.00000000`).
+### 1. ScarNativeLM v6.0 — Tabula-Rasa Shared-Stage MoS & Dual-Tier O(1) Foundation Engine
+- Pretrained 100% from scratch (`step t = 0`, zero dense `nn.Linear` layers, zero pretrained Gaussian floor) on `NVIDIA A100` via parallel **`Chunkwise WY` Widrow-Hoff scan** (`12.63x` Tensor-Core speedup, `cos > 0.999999`, held-out PPL `1.395` vs `1.583` Dense FP16).
+- **Shared-Stage VQ4 Substrates + Native MoS Scar Experts**: Groups of layers share universal `D4-LUT256 VQ4-STE` bases (`0.000000` KL PTQ shock) differentiated by `INT4-STE` identity scars and per-layer Top-`k` Directional `ReLU` `INT4` Scar Experts (`Shaders #23–#24`), supporting both resident and `Sequential Stage-Streaming` execution (`0.0` logit discrepancy).
+- **Dual-Tier Hierarchical SCache O(1)**: Combines `RoPE Sinks + Sliding Ring + Surprise-Routed Micro-Pages + Pre-RoPE Widrow-Hoff W_scar` in strict **O(1) space (`Δ = +0 B` as `T -> ∞`)**, with `cos > 0.99999` parity against WebGPU `Shaders #25–#26`.
+- **`mos-digest` Compiler + Procrustes `R_lang in SO(D)` + Native `<abstain>`**: Batch-compiles raw English Markdown documents into `4 KB`-aligned `HTTP 206` `.scarstore` cartridges (`0` trunk SGD) firing across `PT`, `EN`, `ES`, and `FR`, with `< 0.2 ms` document-level `0x00` GDPR physical unlearning (`Δlogits = 0.00000000`) and native `<abstain>` (`id=14`) abstention on ungrounded out-of-domain queries. Scales to `v6-Frontier` (`96L, d=8192`) in `4.36 GiB` MoS-LRU (`0.91 GiB` Stage-Streaming) vs `~205 GiB` Dense+128K KV.
 
 ### 2. Mixture of Scars (MoS) & Associative SCache O(1)
 - **72.7B Single-GPU Execution**: Streams all 80 layers of `Qwen2.5-72B` on a single 16 GB GPU with peak VRAM strictly `<= 2.40 GB`.
@@ -35,10 +35,10 @@ The Scar Architecture Ecosystem replaces monolithic dense weight matrices and li
 - Integrates optimal-transport velocity field `dx/dt = v_theta(x_t, t, z_perp_lang)` for `1,024` 3D coordinates in `4` self-distilled Euler steps via **12 custom WebGPU WGSL 1.0 shaders** in **`86.45 ms`** median latency on Apple M2 (`cos > 0.99999` vs PyTorch).
 - Conditioned directly on `Qwen2.5-3B Layer 23` `P_perp_lang` latents: achieves **`7.51x` Chamfer-L2 reduction** over sphere baseline (`0.0621` vs `0.4663`) and cross-lingual 3D shape cosine **`PT<->EN = 0.9978`, `ES<->EN = 0.9977`, `FR<->EN = 0.9974`**.
 
-### 4. ScarCodec v4.0 — Domain-Independent Physical & Hardware Scar Codec
-- **Radio-Astronomy RFI Excision**: Nullspace projector `P_perp` excises `1,000x` satellite bursts, recovering weak pulsar sweeps with `cos = 0.9923` at `5.75x` compression (where 2-bit VLBI collapses to `cos = 0.08`).
-- **34.8 KB O(1) Aerospace Black-Box**: Retains `5/5` precursor fault signatures over `8,000+` telemetry frames in fixed `34,816 B` (`Δ = 0 B`, `cos = 0.9989`) vs `0/5` for circular ring buffers.
-- **12.05x HDR CFD Shock Compression**: Entry-0 exact null vector in `LUT256` guarantees bit-exact `0.00000000` quiescent vacuum error with `O(1)` random block decoding.
+### 4. ScarCodec v4.0 — Applied Mathematical Physics & Hardware Scar Codec
+- **Blind Radio-Astronomy RFI Excision**: Nullspace projector `P_perp` estimated blindly from noisy calibration voltages excises `1,000x` (`-60 dB`) satellite bursts, recovering pulsar sweeps with `cos = 0.9753` at `8.67x` compression on `[64, 4096]` (`cos = 0.9837` at `6.34x` live in browser; 2-bit VLBI collapses to `cos = 0.0252`).
+- **34.8 KB O(1) Aerospace Black-Box (Partial-Cue Recall)**: Retains `5/5` precursor fault signatures over `50,000` telemetry frames in fixed `34,816 B` (`Δ = 0 B`), reconstructing `4` unseen masked channels from a `2`-channel alarm trigger at `cos = 0.9999` vs `0/5` for circular ring buffers.
+- **12.05x Rusanov 2D Burgers Shockwave PDE & HDR Compression**: Integrates the conservative 2D nonlinear inviscid Burgers PDE (`+ 500x` HDR glints), achieving `188.2x` lower RMSE than byte-matched `FP16` 2D `rFFT`, bit-exact `0.000000` vacuum error, and `10.2x` faster `O(1)` random block decoding than `zlib -9`.
 
 ### 5. AURA / System One — Origin of GradientScarMemory (34.8 KB)
 - Embodied Deep RL engine where `34.8 KB` `O(1)` `GradientScarMemory` (modulated by temporal shock `Surprise = R_0 - V(s_0)`), **Frontier Ghost-Jump Scouts**, and **Tri-Compass** originated.

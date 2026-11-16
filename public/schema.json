@@ -19,7 +19,7 @@
       "@type": "WebPage",
       "name": "Julio Cesar Reis Filho | Mixture of Scars (MoS) & SCache O(1)",
       "url": "https://byte-od.github.io/",
-      "description": "Official research and live WebGPU showcase of the Scar Architecture Ecosystem: MoS, O(1) SCache (34.8 KB), VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0, PointScarFlow v1.0, and AURA / System One."
+      "description": "Official research and live WebGPU showcase of the Scar Architecture Ecosystem: MoS, O(1) SCache (34.8 KB), VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0, PointScarFlow v1.0, and AURA / System One."
     },
     {
       "@type": "FAQPage",
@@ -34,10 +34,10 @@
         },
         {
           "@type": "Question",
-          "name": "How does ScarNativeLM v5.0 eliminate post-training quantization shock?",
+          "name": "How does ScarNativeLM v6.0 scale Tabula-Rasa Scar-Native pretraining?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "ScarNativeLM v5.0 is pretrained 100% from scratch (step t = 0, zero nn.Linear layers) with ScarNativeLinear (D4-LUT256 VQ4-STE + FWHT-64 + INT4-STE) and DifferentiableSCacheAttention O(1), yielding 0.000000 KL divergence upon binary packing."
+            "text": "ScarNativeLM v6.0 is pretrained 100% from scratch (step t = 0, zero nn.Linear layers) on NVIDIA A100 with Shared-Stage D4-LUT256 VQ4-STE substrates, Directional ReLU INT4 MoS Scar Experts, Chunkwise WY Dual-Tier SCache O(1), Procrustes P_perp_lang mos-digest cartridges, and native <abstain>."
           }
         },
         {

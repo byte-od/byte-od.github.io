@@ -35,7 +35,7 @@
   </text>
 
   <text x="90" y="332" font-family="'Plus Jakarta Sans', system-ui, sans-serif" font-size="19" font-weight="400" fill="#94a3b8">
-    ScarNativeLM v5.0 · VQ4-Scar · PointScarFlow 3D · ScarCodec v4.0 · AURA (34.8 KB SCache)
+    ScarNativeLM v6.0 · VQ4-Scar · PointScarFlow 3D · ScarCodec v4.0 · AURA (34.8 KB SCache)
   </text>
 
   <g transform="translate(90, 415)">
@@ -58,7 +58,7 @@
 
   <g transform="translate(855, 415)">
     <rect width="235" height="94" rx="14" fill="#090a0f" stroke="#27272a" stroke-width="1.5" />
-    <text x="22" y="44" font-family="'JetBrains Mono', monospace" font-size="30" font-weight="800" fill="#34d399">34 WGSL</text>
+    <text x="22" y="44" font-family="'JetBrains Mono', monospace" font-size="30" font-weight="800" fill="#34d399">38 WGSL</text>
     <text x="22" y="70" font-family="'JetBrains Mono', monospace" font-size="12" fill="#71717a">BROWSER GPU SHADERS</text>
   </g>
 

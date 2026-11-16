@@ -33,7 +33,7 @@ export const PORTFOLIO_INFO_EN: PortfolioInfo = {
   name: 'Julio Cesar da Costa Reis Filho',
   title: 'Creator of the Scar Architecture Ecosystem (MoS & SCache O(1))',
   subtitle:
-    'Independent AI Architecture Researcher & Principal Systems Engineer. Author of Mixture of Scars (MoS), Associative SCache O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0 (Tabula Rasa), PointScarFlow v1.0, and AURA / System One (GradientScarMemory).',
+    'Independent AI Architecture Researcher & Principal Systems Engineer. Author of Mixture of Scars (MoS), Associative SCache O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0 (Tabula Rasa Shared-Stage MoS), PointScarFlow v1.0, and AURA / System One (GradientScarMemory).',
   email: 'reisfilho1116@gmail.com',
   location: 'Global / Remote',
   github: 'https://github.com/byte-od',
@@ -48,7 +48,7 @@ export const PORTFOLIO_INFO_PT: PortfolioInfo = {
   name: 'Julio Cesar da Costa Reis Filho',
   title: 'Criador do Ecossistema de Arquitetura de Cicatrizes (MoS & SCache O(1))',
   subtitle:
-    'Pesquisador de Arquiteturas Neurais e Arquiteto Principal de Sistemas. Autor do Mixture of Scars (MoS), SCache Associativo O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v5.0 (Tabula Rasa), PointScarFlow v1.0 e AURA / System One (GradientScarMemory).',
+    'Pesquisador de Arquiteturas Neurais e Arquiteto Principal de Sistemas. Autor do Mixture of Scars (MoS), SCache Associativo O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0 (Tabula Rasa Shared-Stage MoS), PointScarFlow v1.0 e AURA / System One (GradientScarMemory).',
   email: 'reisfilho1116@gmail.com',
   location: 'Global / Remoto',
   github: 'https://github.com/byte-od',
@@ -61,28 +61,28 @@ export const PORTFOLIO_INFO_PT: PortfolioInfo = {
 
 export const PROJECTS_EN: ProjectData[] = [
   {
-    id: 'scarnative-v5',
-    title: 'ScarNativeLM v5.0 — Pure Scar-Native Foundation Engine',
-    badge: '🌱 Tabula Rasa · Zenodo v5.0',
+    id: 'scarnative-v6',
+    title: 'ScarNativeLM v6.0 — Shared-Stage MoS & Dual-Tier O(1) Foundation Engine',
+    badge: '🌱 Tabula Rasa A100 · v6.0',
     category: 'foundation_llm',
     featured: true,
-    specs: 'Zero nn.Linear · D4-LUT256 VQ4-STE · 0.0000 KL PTQ · 22 WGSL Shaders',
+    specs: 'Zero nn.Linear · Shared-Stage VQ4 + MoS · Chunkwise WY 12.63x · 26 WGSL Shaders',
     summary:
-      'Foundation language architecture pretrained 100% from scratch (step t = 0, zero pretrained weights, zero dense nn.Linear layers) directly on the discrete scar manifold with DifferentiableSCacheAttention O(1) and Zero-SGD RRR P_⊥lang cartridges.',
+      'Complete Scar-Native foundation architecture pretrained 100% from scratch (t = 0, zero pretrained weights, zero nn.Linear) on NVIDIA A100 with Shared-Stage VQ4 substrates, Directional ReLU INT4 MoS Scar Experts, Dual-Tier O(1) SCache, mos-digest 4 KB cartridges, and native <abstain> epistemic gating.',
     details: [
-      'ScarNativeLinear replaces every dense matrix with Equilibration d_eq + FWHT-64 + D4-LUT256 VQ4-STE + INT4-STE low-rank scars, eliminating post-training quantization shock (0.000000 KL divergence upon binary packing).',
-      'End-to-end DifferentiableSCacheAttention trains directly over fixed Sinks + Circular Window + Pre-RoPE Widrow-Hoff Associative Matrix W_scar in strict O(1) memory (Δ = +0 B at any horizon T -> ∞).',
-      'LanguageNullspaceProjector (P_⊥lang) decouples mutable facts from the frozen trunk: 4 KB-aligned INT4 cartridges minted via closed-form Reduced-Rank Regression (0 SGD steps) in English fire seamlessly across PT, EN, ES, and FR.',
-      'Cryptographic 0x00 physical overwrite erases individual factual cartridges in < 0.2 ms with exact bit-zero trunk collateral damage (Δlogits = 0.00000000).',
-      'Exact numerical parity (cos > 0.99999) verified between PyTorch and 22 custom WebGPU WGSL 1.0 compute shaders.',
+      'Shared-Stage Universal VQ4 Substrates + Sequential Stage-Streaming: Anchors groups of layers to shared D4-LUT256 VQ4-STE bases differentiated by per-layer INT4-STE identity scars and Top-k Directional ReLU MoS Scar Experts (Shaders #23–#24, 0.000000 KL PTQ shock, Held-out PPL 1.395 vs 1.583 Dense FP16).',
+      'Parallel Chunkwise WY Widrow-Hoff Scan + Dual-Tier O(1) SCache: Trains 12.63x faster on A100 Tensor Cores while combining RoPE Sinks + Sliding Ring + Surprise-Routed Micro-Pages + Widrow-Hoff W_scar in strict O(1) VRAM (Shaders #25–#26, 100.0% passkey recall up to T = 567, Δ = +0 B).',
+      'mos-digest Compiler + Orthogonal Procrustes R_lang ∈ SO(D): Batch-compiles raw English Markdown documents into 4 KB-aligned HTTP 206 .scarstore cartridges (0 trunk SGD) firing across PT, EN, ES, and FR.',
+      'Document-Level 0x00 GDPR Wipe & Native <abstain>: Physically zeroes an entire document’s cartridges in < 0.2 ms with exact 0.00000000 Δlogits on unrelated tasks and native <abstain> (id=14) abstention on ungrounded queries.',
+      'Scales to v6-Frontier (96L, d=8192) in 4.36 GiB MoS-LRU VRAM (0.91 GiB Stage-Streaming) vs ~205 GiB Dense+128K KV, with cos > 0.99999 parity across 26 WebGPU WGSL 1.0 shaders.',
     ],
-    techStack: ['ScarNativeLinear', 'VQ4-STE', 'SCache O(1)', 'WebGPU WGSL 1.0', 'PyTorch', 'P_⊥lang RRR'],
+    techStack: ['ScarNativeLM v6.0', 'Shared-Stage MoS', 'Dual-Tier SCache O(1)', 'Chunkwise WY', '26 WGSL Shaders', 'mos-digest R_lang'],
     githubUrl: 'https://github.com/byte-od/mixture-of-scars',
     paperUrl: 'https://doi.org/10.5281/zenodo.24172784',
     labAnchor: '#scar-native-lab',
     metrics: [
       { label: 'PTQ Packing Shock', value: '0.000000 KL' },
-      { label: 'SCache Growth', value: 'Δ +0 B (O(1))' },
+      { label: 'v6-Frontier 96L Peak', value: '0.91 GiB Stream (O(1))' },
     ],
   },
   {
@@ -140,19 +140,19 @@ export const PROJECTS_EN: ProjectData[] = [
     category: 'spatial_physical',
     specs: 'Radio RFI P_⊥ · 34.8 KB Black-Box Telemetry · 12.05x HDR CFD Vacuum=0.0',
     summary:
-      'Proves that the Scar Decomposition Operator S(X) = P_⊥(Q_VQ4(R · D^-1 X) + U · V^T) + W_scar is a universal mathematical compression and anomaly-retention primitive for physical sensors, radio interferometry, and scientific PDEs beyond NLP.',
+      'Applied mathematical physics & hardware compression suite demonstrating that the Scar Decomposition Operator S(X) = P_⊥(Q_VQ4(R · D^-1 X) + U · V^T) + W_scar operates deterministically on controlled array-signal, telemetry, and hyperbolic PDE phantoms with zero neural networks.',
     details: [
-      'Radio-Interferometric RFI Excision: Null-space projector P_⊥ excises 1,000x non-stationary satellite bursts while recovering weak pulsar dispersion sweeps with cos = 0.9923 at 5.75x array compression (where 2-bit VLBI collapses to cos = 0.08).',
-      '34.8 KB O(1) Aerospace Black-Box Telemetry: Retains 5/5 transient precursor fault signatures across T = 8,000+ sensor frames with exact Δ = +0 B memory growth (cos = 0.9989), where equal-byte circular ring buffers retain 0/5.',
-      '12.05x High-Dynamic-Range CFD Shockwave Compression: Entry-0 exact null vector in LUT256 guarantees bit-exact 0.00000000 quiescent vacuum error while preserving Mach shock discontinuities with O(1) random block access.',
+      'Radio-Interferometric RFI Excision (Blind Noisy Covariance): Null-space projector P_⊥ estimated blindly from noisy calibration voltages excises 1,000x (-60 dB) satellite bursts, recovering pulsar trains with cos = 0.9753 at 8.67x compression on [64, 4096] (cos = 0.9837 at 6.34x live in browser; 2-bit VLBI collapses to cos = 0.0252).',
+      '34.8 KB O(1) Aerospace Black-Box Telemetry (Partial-Cue Recall): Retains 5/5 precursor fault signatures across T = 50,000 frames in exact 34,816 B (Δ = +0 B), reconstructing 4 unseen masked channels from a 2-channel alarm trigger at cos = 0.9999 (where circular ring buffers retain 0/5).',
+      '12.05x Rusanov Burgers Shockwave PDE & HDR Compression: Integrates the 2D nonlinear inviscid Burgers conservation law via Rusanov finite volumes (+ 500x glints), achieving 188.2x lower RMSE than byte-matched FP16 2D rFFT, bit-exact 0.000000 vacuum error, and 10.2x faster O(1) random block reads than zlib -9.',
     ],
-    techStack: ['ScarCodec v4.0', 'Nullspace P_⊥', 'LUT256 Exact Vacuum', '34.8 KB Black-Box', 'O(1) Block Decode'],
+    techStack: ['ScarCodec v4.0', 'Blind Covariance P_⊥', 'LUT256 Exact Vacuum', '34.8 KB Black-Box', 'Rusanov PDE O(1)'],
     githubUrl: 'https://github.com/byte-od/mixture-of-scars',
     paperUrl: 'https://doi.org/10.5281/zenodo.24172784',
     labAnchor: '#physical-scar-lab',
     metrics: [
-      { label: '1,000x RFI Recovery', value: 'cos = 0.9923 (5.75x)' },
-      { label: 'CFD HDR Compression', value: '12.05x (0.0 Vacuum)' },
+      { label: '1,000x RFI Blind Nulling', value: 'cos = 0.9753 (8.67x)' },
+      { label: 'Burgers PDE Compression', value: '12.05x (188x vs rFFT)' },
     ],
   },
   {
@@ -181,28 +181,28 @@ export const PROJECTS_EN: ProjectData[] = [
 
 export const PROJECTS_PT: ProjectData[] = [
   {
-    id: 'scarnative-v5',
-    title: 'ScarNativeLM v5.0 — Motor Fundacional Puro de Cicatrizes',
-    badge: '🌱 Tabula Rasa · Zenodo v5.0',
+    id: 'scarnative-v6',
+    title: 'ScarNativeLM v6.0 — Motor Fundacional Shared-Stage MoS & Dual-Tier O(1)',
+    badge: '🌱 Tabula Rasa A100 · v6.0',
     category: 'foundation_llm',
     featured: true,
-    specs: 'Zero nn.Linear · D4-LUT256 VQ4-STE · 0.0000 KL PTQ · 22 Shaders WGSL',
+    specs: 'Zero nn.Linear · Shared-Stage VQ4 + MoS · Chunkwise WY 12.63x · 26 Shaders WGSL',
     summary:
-      'Arquitetura fundacional pré-treinada 100% do zero (passo t = 0, zero pesos pré-treinados, zero camadas densas nn.Linear) diretamente na variedade discreta de cicatrizes com DifferentiableSCacheAttention O(1) e cartuchos Zero-SGD RRR em P_⊥lang.',
+      'Arquitetura fundacional Scar-Native completa pré-treinada 100% do zero (t = 0, zero pesos pré-treinados, zero nn.Linear) em NVIDIA A100 com substratos VQ4 compartilhados por estágio, Especialistas MoS Direcionais ReLU INT4, SCache Dual-Tier O(1), cartuchos mos-digest de 4 KB e token epistêmico nativo <abstain>.',
     details: [
-      'ScarNativeLinear substitui toda matriz densa por Equilibração d_eq + FWHT-64 + D4-LUT256 VQ4-STE + cicatrizes INT4-STE de posto baixo, eliminando o choque de quantização pós-treino (0.000000 KL ao empacotar em binário).',
-      'DifferentiableSCacheAttention treina ponta a ponta sobre Sinks + Janela Circular + Matriz Associativa Widrow-Hoff pré-RoPE W_scar em memória estritamente O(1) (Δ = +0 B em qualquer horizonte T -> ∞).',
-      'LanguageNullspaceProjector (P_⊥lang) desacopla fatos mutáveis do tronco congelado: cartuchos INT4 alinhados a 4 KB cunhados via Regressão de Posto Reduzido fechada (0 passos de SGD) em inglês disparam nativamente em PT, EN, ES e FR.',
-      'Sobrescrita física criptográfica 0x00 apaga cartuchos factuais individuais em < 0.2 ms com zero dano colateral ao tronco (Δlogits = 0.00000000).',
-      'Paridade numérica exata (cos > 0.99999) verificada entre PyTorch e 22 compute shaders WebGPU WGSL 1.0 customizados.',
+      'Substratos Universais VQ4 Compartilhados por Estágio + Stage-Streaming Sequencial: Ancora grupos de camadas a bases D4-LUT256 VQ4-STE compartilhadas diferenciadas por cicatrizes de identidade INT4-STE e Especialistas MoS Direcionais ReLU Top-k (Shaders #23–#24, 0.000000 KL PTQ, PPL held-out 1.395 vs 1.583 Dense FP16).',
+      'Scan Paralelo Chunkwise WY Widrow-Hoff + SCache Dual-Tier O(1): Treina 12.63x mais rápido em Tensor Cores A100 combinando RoPE Sinks + Anel Deslizante + Micro-Pages por Surpresa + Widrow-Hoff W_scar em VRAM estritamente O(1) (Shaders #25–#26, 100.0% passkey até T = 567, Δ = +0 B).',
+      'Compilador mos-digest + Procrustes Ortogonal R_lang ∈ SO(D): Compila documentos Markdown em inglês para cartuchos .scarstore HTTP 206 alinhados a páginas de 4 KB (0 SGD no tronco) disparando em PT, EN, ES e FR.',
+      'Wipe LGPD 0x00 por Documento & <abstain> Nativo: Zera fisicamente todos os cartuchos de um documento em < 0.2 ms com Δlogits = 0.00000000 em tarefas não-relacionadas e emissão nativa de <abstain> (id=14) fora do cone.',
+      'Escala para v6-Frontier (96L, d=8192) em 4.36 GiB MoS-LRU (0.91 GiB em Stage-Streaming) contra ~205 GiB Dense+128K KV, com paridade cos > 0.99999 nos 26 compute shaders WebGPU WGSL 1.0.',
     ],
-    techStack: ['ScarNativeLinear', 'VQ4-STE', 'SCache O(1)', 'WebGPU WGSL 1.0', 'PyTorch', 'P_⊥lang RRR'],
+    techStack: ['ScarNativeLM v6.0', 'Shared-Stage MoS', 'Dual-Tier SCache O(1)', 'Chunkwise WY', '26 Shaders WGSL', 'mos-digest R_lang'],
     githubUrl: 'https://github.com/byte-od/mixture-of-scars',
     paperUrl: 'https://doi.org/10.5281/zenodo.24172784',
     labAnchor: '#scar-native-lab',
     metrics: [
       { label: 'Choque PTQ no Empacotamento', value: '0.000000 KL' },
-      { label: 'Crescimento do SCache', value: 'Δ +0 B (O(1))' },
+      { label: 'Pico v6-Frontier 96L', value: '0.91 GiB Stream (O(1))' },
     ],
   },
   {
@@ -260,19 +260,19 @@ export const PROJECTS_PT: ProjectData[] = [
     category: 'spatial_physical',
     specs: 'Rádio RFI P_⊥ · Caixa-Preta 34.8 KB · CFD HDR 12.05x Vácuo=0.0',
     summary:
-      'Demonstra que o Operador de Decomposição por Cicatrizes S(X) = P_⊥(Q_VQ4(R · D^-1 X) + U · V^T) + W_scar é uma primitiva matemática universal de compressão e retenção de anomalias para sensores físicos, radiointerferometria e EDPs científicas além de NLP.',
+      'Suíte de física matemática aplicada e compressão de hardware demonstrando que o Operador de Decomposição por Cicatrizes S(X) = P_⊥(Q_VQ4(R · D^-1 X) + U · V^T) + W_scar atua deterministicamente sobre phantoms controlados de arranjos de antenas, telemetria e EDPs hiperbólicas com zero redes neurais.',
     details: [
-      'Excisão de RFI em Radiointerferometria: O projetor de subespaço nulo P_⊥ anula rajadas não-estacionárias 1.000x mais intensas de satélites recuperando pulsos fracos de pulsares com cos = 0.9923 e compressão 5.75x (onde VLBI 2-bit colapsa para cos = 0.08).',
-      'Caixa-Preta Aeroespacial O(1) em 34.8 KB: Retém 5/5 assinaturas precursoras de falha ao longo de T = 8.000+ quadros de telemetria com crescimento exato Δ = +0 B (cos = 0.9989), onde um buffer circular de mesmo tamanho retém 0/5.',
-      'Compressão 12.05x em Campos de Choque CFD HDR: O vetor nulo exato na entrada 0 da LUT256 garante erro zero absoluto (0.00000000) em regiões de vácuo calmo preservando frentes de choque de Mach com decodificação aleatória O(1) por bloco.',
+      'Excisão Cega de RFI em Radiointerferometria: O projetor P_⊥ estimado às cegas por covariância ruidosa anula rajadas de satélites 1.000x (-60 dB), recuperando pulsos de pulsares com cos = 0.9753 em compressão 8.67x em [64, 4096] (cos = 0.9837 em 6.34x ao vivo no navegador; VLBI 2-bit colapsa para cos = 0.0252).',
+      'Caixa-Preta O(1) em 34.8 KB (Evocação por Pista Parcial): Retém 5/5 falhas precursoras ao longo de T = 50.000 quadros em exatos 34.816 B (Δ = +0 B), reconstruindo 4 canais ocultos a partir de apenas 2 canais de alarme com cos = 0.9999 (onde um buffer circular retém 0/5).',
+      'Compressão 12.05x em EDP de Burgers 2D (Volumes Finitos de Rusanov) + HDR: Atinge RMSE 188.2x menor que rFFT 2D FP16 pareada em bytes, erro zero exato (0.000000) no vácuo e leitura aleatória O(1) por bloco 10.2x mais rápida que zlib -9.',
     ],
-    techStack: ['ScarCodec v4.0', 'Subespaço Nulo P_⊥', 'LUT256 Vácuo Exato', 'Caixa-Preta 34.8 KB', 'Decode O(1)'],
+    techStack: ['ScarCodec v4.0', 'Covariância Cega P_⊥', 'LUT256 Vácuo Exato', 'Caixa-Preta 34.8 KB', 'EDP Rusanov O(1)'],
     githubUrl: 'https://github.com/byte-od/mixture-of-scars',
     paperUrl: 'https://doi.org/10.5281/zenodo.24172784',
     labAnchor: '#physical-scar-lab',
     metrics: [
-      { label: 'Recuperação sob RFI 1.000x', value: 'cos = 0.9923 (5.75x)' },
-      { label: 'Compressão CFD HDR', value: '12.05x (Vácuo 0.0)' },
+      { label: 'Anulação Cega RFI 1.000x', value: 'cos = 0.9753 (8.67x)' },
+      { label: 'EDP Burgers 2D HDR', value: '12.05x (188x vs rFFT)' },
     ],
   },
   {
