@@ -990,7 +990,10 @@ async function main() {
     'src/components/InteractiveToolDemos.tsx',
     'src/components/ExperienceTimeline.tsx',
     'src/components/KnowledgeTensor3D.tsx',
+    'src/components/SystemOneHudDemo.tsx',
+    'src/components/RubiksCube3D.tsx',
     'src/lib/tokenizer.ts',
+    'src/lib/system1.ts',
   ];
   for (const rel of removedLegacyFiles) {
     assert(

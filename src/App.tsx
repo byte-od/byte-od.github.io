@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { ProjectShowcase } from './components/ProjectShowcase';
-import { SystemOneHudDemo } from './components/SystemOneHudDemo';
 import { FaqSection } from './components/FaqSection';
 import { ContactPromptConsole } from './components/ContactPromptConsole';
 import { TerminalModal } from './components/TerminalModal';
@@ -291,7 +290,7 @@ export default function App() {
                   className="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-[#38bdf8] font-mono text-xs font-bold border border-[#38bdf8]/40 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <span>{lang === 'pt' ? 'Papers Zenodo (v1 – v5)' : 'Zenodo Papers (v1 – v5)'}</span>
+                  <span>{lang === 'pt' ? 'Papers Zenodo (v1 – v6)' : 'Zenodo Papers (v1 – v6)'}</span>
                 </a>
 
                 <a
@@ -324,40 +323,81 @@ export default function App() {
         {/* CHAPTER 02: DOMAIN-INDEPENDENT PHYSICAL SCAR LAB (v4.0) */}
         <PhysicalScarLab lang={lang} />
 
-        {/* CHAPTER 03: ORIGIN OF GRADIENTSCARMEMORY (34.8 KB) — AURA / SYSTEM ONE */}
+        {/* CHAPTER 03: ORIGIN STORY OF THE SCAR OPERATOR — AURA / SYSTEM ONE */}
         <section id="aura-origin" className="space-y-6 scroll-mt-24">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-zinc-800 pb-4 gap-3">
-            <div>
+          <div className="space-y-2 border-b border-zinc-800 pb-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs font-mono text-[#c4b5fd] uppercase tracking-wider">
                 {lang === 'pt'
-                  ? '03. Berço do GradientScarMemory (34.8 KB O(1)) & Batedores de Fronteira'
-                  : '03. Birthplace of GradientScarMemory (34.8 KB O(1)) & Frontier Scouts'}
+                  ? '03. História & Origem · Onde Nasceu o Operador Cicatriz (34,8 KB O(1))'
+                  : '03. Origin Story · Where the Scar Operator Was Born (34.8 KB O(1))'}
               </span>
-              <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-1">
-                {lang === 'pt'
-                  ? 'AURA / System One — Onde Nasceu o SCache O(1)'
-                  : 'AURA / System One — Where O(1) SCache Was Born'}
-              </h2>
+              <a
+                href="https://github.com/byte-od/system_one"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-mono text-zinc-400 hover:text-white inline-flex items-center gap-1.5"
+              >
+                <Github className="w-3.5 h-3.5" />
+                <span>github.com/byte-od/system_one</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
             </div>
-            <a
-              href="https://github.com/byte-od/system_one"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs font-mono text-zinc-400 hover:text-white flex items-center gap-1.5"
-            >
-              <Github className="w-3.5 h-3.5" />
-              <span>github.com/byte-od/system_one</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+              {lang === 'pt'
+                ? 'O Nascimento do Operador Cicatriz (AURA / System One)'
+                : 'The Birth of the Scar Operator (AURA / System One)'}
+            </h2>
           </div>
 
-          <p className="text-sm text-zinc-400 max-w-4xl leading-relaxed">
-            {lang === 'pt'
-              ? 'Antes de escalar para Transformers de 72.7B e motores WebGPU, o SCache O(1) nasceu aqui como GradientScarMemory (34.8 KB constantes): Batedores de Fronteira (Ghost-Jump Scouts) sondam bifurcações de alta entropia e gravam cicatrizes ponderadas por choque de surpresa temporal (Surpresa = R_0 − V(s_0)), modulando o núcleo reflexivo UniversalS1Agent (0.23 ms P50) ao vivo no navegador.'
-              : 'Before scaling to 72.7B Transformers and WebGPU engines, O(1) SCache originated here as GradientScarMemory (constant 34.8 KB): Frontier Ghost-Jump Scouts probe high-entropy bifurcations ahead in time and write surprise-weighted shock scars (Surprise = R_0 − V(s_0)) that modulate the reflexive UniversalS1Agent (0.23 ms P50) live in your browser.'}
-          </p>
+          <div className="p-6 sm:p-8 rounded-3xl bg-zinc-950/85 border border-zinc-800 space-y-5">
+            <p className="text-sm sm:text-base text-zinc-200 leading-relaxed">
+              {lang === 'pt'
+                ? 'A matemática de cicatrizes não começou tentando comprimir modelos de linguagem prontos. Ela nasceu no projeto AURA / System One, ao investigar uma pergunta simples: por que sistemas de IA acumulam gigabytes de histórico repetitivo e ainda assim esquecem o único evento raro que realmente importava? Na biologia e na física, um sistema eficiente não grava cada segundo da própria rotina — ele mantém sua estrutura leve e registra apenas "cicatrizes" permanentes onde sofreu um choque real de surpresa.'
+                : 'Scar mathematics did not begin as an attempt to compress off-the-shelf language models. It was born inside AURA / System One while investigating a fundamental question: why do AI systems accumulate gigabytes of repetitive history yet still forget the single rare shock that actually mattered? Physical and biological systems do not record every routine second — they keep a lightweight substrate and etch permanent "scars" only where an unexpected prediction shock strikes.'}
+            </p>
 
-          <SystemOneHudDemo lang={lang} />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 rounded-2xl bg-zinc-900/70 border border-zinc-800 space-y-1.5">
+                <div className="font-mono font-bold text-[#c4b5fd] uppercase">
+                  {lang === 'pt'
+                    ? '1. GradientScarMemory (34,8 KB) → SCache O(1)'
+                    : '1. GradientScarMemory (34.8 KB) → O(1) SCache'}
+                </div>
+                <p className="text-zinc-400 leading-relaxed">
+                  {lang === 'pt'
+                    ? 'Substituímos históricos episódicos que cresciam sem fim por uma matriz associativa fixa de 34.816 bytes modulada pelo choque de surpresa temporal (Surpresa = R_0 − V(s_0)), ignorando estados triviais. É exatamente esse operador que hoje substitui o KV Cache linear O(T) em LLMs de 72.7B, no ScarNativeLM v6.0 e nas caixas-pretas espaciais do ScarCodec.'
+                    : 'We replaced unbounded episodic buffers with a fixed 34,816-byte associative matrix gated by temporal prediction surprise (Surprise = R_0 − V(s_0)), filtering out routine states. That exact operator evolved into O(1) SCache across 72.7B LLMs, ScarNativeLM v6.0, and ScarCodec spacecraft black-boxes.'}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-zinc-900/70 border border-zinc-800 space-y-1.5">
+                <div className="font-mono font-bold text-[#adff2f] uppercase">
+                  {lang === 'pt'
+                    ? '2. Batedores Ghost-Jump → Desacoplamento'
+                    : '2. Ghost-Jump Scouts → Decoupled Inference'}
+                </div>
+                <p className="text-zinc-400 leading-relaxed">
+                  {lang === 'pt'
+                    ? 'Para explorar bifurcações de alta incerteza sem poluir o núcleo reflexivo (~0,23 ms em CPU), criamos Batedores de Fronteira isolados que sondam passos à frente e gravam cicatrizes de choque — originando tanto a decodificação especulativa sem perdas (Ghost-Jump KL = 0,0000) quanto os cartuchos externos Zero-SGD.'
+                    : 'To probe high-uncertainty bifurcations ahead in time without polluting the fast reflexive core (~0.23 ms CPU), we built isolated Frontier Ghost-Jump Scouts — directly inspiring both lossless Ghost-Jump speculative decoding (KL = 0.0000) and detached Zero-SGD knowledge cartridges.'}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-zinc-900/70 border border-zinc-800 space-y-1.5">
+                <div className="font-mono font-bold text-[#38bdf8] uppercase">
+                  {lang === 'pt'
+                    ? '3. Tri-Compass → Projetores P_⊥ & MoS'
+                    : '3. Tri-Compass → P_⊥ Projectors & MoS'}
+                </div>
+                <p className="text-zinc-400 leading-relaxed">
+                  {lang === 'pt'
+                    ? 'A ideia de separar a estrutura invariante do ruído superficial (subtraindo o centro temático antes de ler a assinatura latente) evoluiu para os projetores de subespaço ortogonal P_⊥ — hoje responsáveis por alinhar PT/EN/ES/FR sem retrabalho, cancelar interferência em telescópios e guiar nuvens 3D no PointScarFlow.'
+                    : 'Separating invariant structure from surface nuisance (centering cluster means to isolate latent signatures) evolved directly into orthogonal subspace projectors P_⊥ — now powering PT/EN/ES/FR cross-lingual routing, telescope interference nulling, and 3D PointScarFlow conditioning.'}
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* CHAPTER 04: SCAR ARCHITECTURE MODULES & PUBLICATIONS */}

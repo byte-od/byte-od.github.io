@@ -748,46 +748,47 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
       data-testid="physical-scar-lab"
       className="space-y-6 scroll-mt-24"
     >
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-800 pb-4">
-        <div>
+      <div className="space-y-3 border-b border-zinc-800 pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-xs font-mono text-[#adff2f] uppercase tracking-wider">
             {lang === 'pt'
               ? '00. Biblioteca Independente ScarCodec (v4.0) · Física Matemática Aplicada & Dados Públicos Reais'
               : '00. Domain-Independent ScarCodec (v4.0) · Applied Mathematical Physics & Real Public Data'}
           </span>
-          <h2 className="mt-1 text-3xl sm:text-4xl font-black text-white tracking-tight">
-            {lang === 'pt'
-              ? 'Physical Scar Lab: 3 Bancadas Ao Vivo + 5 Arquivos Reais (NASA & PhysioNet)'
-              : 'Physical Scar Lab: 3 Live Proofs + 5 Real Public Archives (NASA & PhysioNet)'}
-          </h2>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {webgpuFwhtCosine !== null && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                WGSL FWHT-64 cos={webgpuFwhtCosine.toFixed(6)}
+              </span>
+            )}
+            <a
+              href="/webgpu/scarcodec_public_datasets_v1_0_audit.json"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-mono text-emerald-300 hover:text-white inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30"
+            >
+              <span>{lang === 'pt' ? 'JSON SHA-256 Público' : 'Public SHA-256 JSON'}</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+            <a
+              href="https://github.com/byte-od/mixture-of-scars"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-mono text-zinc-400 hover:text-white inline-flex items-center gap-1"
+            >
+              <span>scar_codec v4.0.0</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {webgpuFwhtCosine !== null && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              WGSL FWHT-64 cos={webgpuFwhtCosine.toFixed(6)}
-            </span>
-          )}
-          <a
-            href="/webgpu/scarcodec_public_datasets_v1_0_audit.json"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-mono text-emerald-300 hover:text-white inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30"
-          >
-            <span>{lang === 'pt' ? 'JSON SHA-256 Público' : 'Public SHA-256 JSON'}</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-          <a
-            href="https://github.com/byte-od/mixture-of-scars"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-mono text-zinc-400 hover:text-white inline-flex items-center gap-1"
-          >
-            <span>scar_codec v4.0.0</span>
-            <ExternalLink className="w-3.5 h-3.5" />
-          </a>
-        </div>
+        <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+          {lang === 'pt'
+            ? 'Physical Scar Lab: 3 Bancadas Ao Vivo + 5 Arquivos Reais (NASA & PhysioNet)'
+            : 'Physical Scar Lab: 3 Live Proofs + 5 Real Public Archives (NASA & PhysioNet)'}
+        </h2>
       </div>
 
       {/* Plain-Language Overview for General Audience + Technical Summary */}

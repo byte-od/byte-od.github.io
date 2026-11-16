@@ -65,12 +65,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   const featuredHighlights = [
     {
       href: '#scar-native-lab',
-      label: 'Scar-Native Lab v5.0',
-      badge: 'TABULA RASA',
+      label: 'Scar-Native Lab v6.0',
+      badge: 'TABULA RASA A100',
       desc:
         lang === 'pt'
-          ? 'ScarNativeLM v5.0 do zero (VQ4-STE 0.0000 KL), SCache O(1) Δ +0 B, P_⊥lang & 0x00 GDPR'
-          : 'Tabula-Rasa ScarNativeLM v5.0 (VQ4-STE 0.0000 KL), O(1) SCache Δ +0 B, P_⊥lang & 0x00 GDPR',
+          ? 'ScarNativeLM v6.0 12L Shared-Stage MoS, Dual-Tier SCache O(1), mos-digest & 0x00 GDPR'
+          : 'Tabula-Rasa ScarNativeLM v6.0 12L Shared-Stage MoS, Dual-Tier SCache O(1) & mos-digest',
       icon: FlaskConical,
       accent: '#adff2f',
       glowBorder: 'border-[#adff2f]/50 hover:border-[#adff2f]',
@@ -78,14 +78,14 @@ export const Navbar: React.FC<NavbarProps> = ({
       badgeBg: 'bg-[#adff2f]/15 text-[#adff2f] border-[#adff2f]/40',
     },
     {
-      href: '#aura-origin',
-      label: 'AURA · System One',
-      badge: '34.8 KB SCACHE',
+      href: '#physical-scar-lab',
+      label: 'Physical Scar Lab v4.0',
+      badge: 'NASA & LIVE PDE',
       desc:
         lang === 'pt'
-          ? 'Berço do GradientScarMemory O(1) (34.8 KB), Batedores Ghost-Jump & S1 0.23 ms ao vivo'
-          : 'Birthplace of 34.8 KB O(1) GradientScarMemory, Ghost-Jump Scouts & live 0.23 ms S1 HUD',
-      icon: Brain,
+          ? '3 bancadas físicas ao vivo + 5 arquivos públicos reais (NASA Spitzer, Space Shuttle & PhysioNet)'
+          : '3 live physics testbeds + 5 real public archives (NASA Spitzer, Space Shuttle & PhysioNet)',
+      icon: Radio,
       accent: '#38bdf8',
       glowBorder: 'border-[#38bdf8]/50 hover:border-[#38bdf8]',
       glowBg: 'from-[#38bdf8]/15 via-zinc-900 to-zinc-950',
@@ -106,11 +106,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     },
     {
       href: '#scar-native-lab',
-      label: 'Scar-Native Lab v5.0',
+      label: 'Scar-Native Lab v6.0',
       desc:
         lang === 'pt'
-          ? 'D4-LUT256 VQ4-STE, DifferentiableSCacheAttention O(1) & RRR P_⊥lang'
-          : 'D4-LUT256 VQ4-STE, O(1) DifferentiableSCacheAttention & RRR P_⊥lang',
+          ? 'Shared-Stage MoS, Dual-Tier SCache O(1), mos-digest & 0x00 GDPR'
+          : 'Shared-Stage MoS, Dual-Tier O(1) SCache, mos-digest & 0x00 GDPR',
       icon: Cpu,
       tag: '02',
     },
@@ -126,11 +126,11 @@ export const Navbar: React.FC<NavbarProps> = ({
     },
     {
       href: '#aura-origin',
-      label: 'AURA / System One',
+      label: lang === 'pt' ? 'Origem do Operador Cicatriz' : 'Origin of the Scar Operator',
       desc:
         lang === 'pt'
-          ? 'Origem do GradientScarMemory (34.8 KB) & Deep RL 0.23 ms'
-          : 'Origin of GradientScarMemory (34.8 KB) & 0.23 ms Deep RL',
+          ? 'História do AURA / System One & nascimento do SCache 34.8 KB'
+          : 'History of AURA / System One & birth of 34.8 KB SCache',
       icon: Brain,
       tag: '04',
     },
@@ -220,7 +220,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     </span>
                   </span>
                   <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
-                    MOS + SCACHE v5.0
+                    MOS + SCACHE v6.0
                   </span>
                 </div>
 
@@ -337,7 +337,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               href="#scar-native-lab"
               className="px-2.5 py-1 rounded text-zinc-300 hover:text-[#adff2f] hover:bg-zinc-800 transition-colors"
             >
-              ScarNative v5.0
+              ScarNative v6.0
             </a>
             <a
               href="#physical-scar-lab"

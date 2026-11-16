@@ -167,9 +167,9 @@ export const PROJECTS_EN: ProjectData[] = [
       'Birthplace of SCache O(1): GradientScarMemory replaces unbounded episodic history with a fixed 34.8 KB surprise-weighted associative scar buffer modulated by temporal prediction shock (R_0 - V(s_0)).',
       'Frontier Ghost-Jump Scouts probe high-entropy state bifurcations ahead in time (> 2,000 FPS batched lookahead with strict curriculum isolation) and write shock scars directly into SCache.',
       'UniversalS1Agent executes deterministic bare-CPU reflexive inference in 0.23 ms P50 latency (~1.6M parameters) with full epistemic telemetry (confidence, normalized entropy, margin p_1 - p_2).',
-      'Trained across 450M+ steps in 128 parallel C++/Rust environments, solving Rubik’s Cube scrambles up to Depth 10 (232.2B states) with zero MCTS tree search — running live in-browser via ONNX Wasm SIMD.',
+      'Trained across 450M+ steps in 128 parallel C++/Rust environments, establishing the surprise-gated memory and orthogonal subspace principles that evolved into MoS, SCache O(1), ScarCodec, and ScarNativeLM.',
     ],
-    techStack: ['GradientScarMemory 34.8 KB', 'Frontier Scouts', 'Tri-Compass', 'UniversalS1Agent', 'Rust / PyTorch', 'ONNX Wasm SIMD'],
+    techStack: ['GradientScarMemory 34.8 KB', 'Frontier Scouts', 'Tri-Compass', 'UniversalS1Agent', 'Rust / PyTorch'],
     githubUrl: 'https://github.com/byte-od/system_one',
     labAnchor: '#aura-origin',
     metrics: [
@@ -287,9 +287,9 @@ export const PROJECTS_PT: ProjectData[] = [
       'Berço do SCache O(1): GradientScarMemory substitui históricos episódicos lineares por uma matriz compacta constante de 34.8 KB modulada por choque de surpresa temporal (R_0 - V(s_0)).',
       'Batedores de Fronteira (Frontier Ghost-Jump Scouts) sondam bifurcações de alta entropia à frente no tempo (> 2.000 FPS em lote com isolamento curricular estrito) e gravam cicatrizes de choque diretamente no SCache.',
       'UniversalS1Agent executa inferência reflexiva determinística pura em CPU em 0.23 ms P50 (~1.6M parâmetros) com contrato completo de incerteza epistêmica (confiança, entropia normalizada, margem p_1 - p_2).',
-      'Treinado por mais de 450M+ passos em 128 ambientes paralelos C++/Rust, resolvendo embaralhamentos do Cubo de Rubik até Profundidade 10 (232.2B estados) sem busca em árvore MCTS — rodando ao vivo no navegador via ONNX Wasm SIMD.',
+      'Treinado por mais de 450M+ passos em 128 ambientes paralelos C++/Rust, estabelecendo os princípios de memória modulada por surpresa e subespaços ortogonais que evoluíram para MoS, SCache O(1), ScarCodec e ScarNativeLM.',
     ],
-    techStack: ['GradientScarMemory 34.8 KB', 'Frontier Scouts', 'Tri-Compass', 'UniversalS1Agent', 'Rust / PyTorch', 'ONNX Wasm SIMD'],
+    techStack: ['GradientScarMemory 34.8 KB', 'Frontier Scouts', 'Tri-Compass', 'UniversalS1Agent', 'Rust / PyTorch'],
     githubUrl: 'https://github.com/byte-od/system_one',
     labAnchor: '#aura-origin',
     metrics: [

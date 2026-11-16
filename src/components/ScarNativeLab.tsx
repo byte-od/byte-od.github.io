@@ -507,21 +507,19 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
       data-testid="scar-native-v6-lab"
       className="relative rounded-3xl bg-zinc-950/90 border border-[#adff2f]/40 p-6 sm:p-8 shadow-[0_0_50px_rgba(173,255,47,0.08)] space-y-6"
     >
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
-        <div className="space-y-2">
+      {/* Header (Full-Width Stacked + Balanced 3-Column Tab Grid) */}
+      <div className="space-y-4 border-b border-zinc-800 pb-5">
+        <div className="space-y-2.5">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-mono font-bold bg-[#adff2f]/15 text-[#adff2f] border border-[#adff2f]/40">
-              <Sparkles className="w-3.5 h-3.5" />
-              {lang === 'pt'
-                ? 'PURE SCAR-NATIVE ENGINE v6.0 · TABULA RASA (NVIDIA A100)'
-                : 'PURE SCAR-NATIVE ENGINE v6.0 · TABULA RASA (NVIDIA A100)'}
+              <Sparkles className="w-3.5 h-3.5 shrink-0" />
+              <span>PURE SCAR-NATIVE ENGINE v6.0 · TABULA RASA (NVIDIA A100)</span>
             </span>
-            <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-zinc-900 border border-zinc-800 text-[#38bdf8]">
+            <span className="text-[11px] font-mono px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-[#38bdf8]">
               26 WGSL 1.0 Shaders · {shardMiB} MiB Resident ({streamMiB} MiB Stream) · SCache {scacheKb} KB (Δ +0 B)
             </span>
             {engine?.liveParityCosine != null && (
-              <span className="text-[11px] font-mono px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
+              <span className="text-[11px] font-mono px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-300">
                 WebGPU 26-Shader cos = {engine.liveParityCosine.toFixed(7)}
                 {engine.stageStreamingMaxDiff != null
                   ? ` · Stream Δ = ${engine.stageStreamingMaxDiff.toExponential(1)}`
@@ -534,49 +532,49 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
               ? 'Motor Fundacional Pure Scar-Native (ScarNativeLM v6.0 · 12L Shared-Stage MoS)'
               : 'Pure Scar-Native Foundation Architecture (ScarNativeLM v6.0 · 12L Shared-Stage MoS)'}
           </h2>
-          <p className="text-xs sm:text-sm text-zinc-400 max-w-4xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
             {lang === 'pt'
               ? `Pré-treinado 100% do zero (t = 0, zero camadas nn.Linear) em NVIDIA A100 via scan paralelo Chunkwise WY (${wySpeedup}x speedup): BPE nativo de 4.096 tokens (0 <unk>, token epistêmico <abstain>), 3 Estágios Universais VQ4 compartilhados em 12 camadas com Stage-Streaming sequencial, bancos por camada de Especialistas MoS Direcionais ReLU INT4 (Shaders #23–#24), SCache Dual-Tier O(1) (Micro-Pages por surpresa + Widrow-Hoff W_scar, Shaders #25–#26) e compilador mos-digest (24 cartuchos .scarstore alinhados a 4 KB com alinhamento Procrustes R_lang ∈ SO(D) e wipe LGPD 0x00 por documento).`
               : `Pretrained 100% from scratch (t = 0, zero nn.Linear modules) on NVIDIA A100 via parallel Chunkwise WY scan (${wySpeedup}x speedup): native 4,096-vocab byte-level BPE (0 <unk>, native <abstain> token), 3 Shared-Stage Universal VQ4 substrates across 12 layers with sequential Stage-Streaming, per-layer Directional ReLU INT4 MoS Scar Experts (Shaders #23–#24), Dual-Tier O(1) SCache (Surprise Micro-Pages + Widrow-Hoff W_scar, Shaders #25–#26), and mos-digest compiler (24 4 KB-aligned .scarstore cartridges with R_lang ∈ SO(D) Procrustes routing and document-level 0x00 GDPR wipe).`}
           </p>
         </div>
 
-        {/* Tab Selector */}
-        <div className="flex flex-wrap gap-2 shrink-0">
+        {/* Full-Width 3-Column Tab Selector */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
           <button
             type="button"
             onClick={() => setTab('live_o1')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer flex items-center justify-center gap-2 ${
               tab === 'live_o1'
                 ? 'bg-[#adff2f] text-black border-[#adff2f]'
                 : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:border-zinc-700'
             }`}
           >
-            <Cpu className="w-3.5 h-3.5" />
+            <Cpu className="w-3.5 h-3.5 shrink-0" />
             <span>{lang === 'pt' ? '1. Dual-Tier O(1) & MoS Stream' : '1. Dual-Tier O(1) & MoS Stream'}</span>
           </button>
           <button
             type="button"
             onClick={() => setTab('cartridges_gdpr')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer flex items-center justify-center gap-2 ${
               tab === 'cartridges_gdpr'
                 ? 'bg-[#38bdf8] text-black border-[#38bdf8]'
                 : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:border-zinc-700'
             }`}
           >
-            <Database className="w-3.5 h-3.5" />
+            <Database className="w-3.5 h-3.5 shrink-0" />
             <span>{lang === 'pt' ? '2. mos-digest · 0x00 & <abstain>' : '2. mos-digest · 0x00 & <abstain>'}</span>
           </button>
           <button
             type="button"
             onClick={() => setTab('ablation_curves')}
-            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer flex items-center justify-center gap-2 ${
               tab === 'ablation_curves'
                 ? 'bg-[#c4b5fd] text-black border-[#c4b5fd]'
                 : 'bg-zinc-900 text-zinc-300 border-zinc-800 hover:border-zinc-700'
             }`}
           >
-            <Activity className="w-3.5 h-3.5" />
+            <Activity className="w-3.5 h-3.5 shrink-0" />
             <span>{lang === 'pt' ? '3. Curvas A100 & v6-Frontier' : '3. A100 Curves & v6-Frontier'}</span>
           </button>
         </div>
@@ -592,8 +590,8 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
       {/* TAB 1: DUAL-TIER O(1) SCACHE + SEQUENTIAL STAGE-STREAMING + MOS TOP-K EXPERTS */}
       {tab === 'live_o1' && (
         <div className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 rounded-2xl bg-zinc-900/70 border border-zinc-800">
-            <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-end p-4 rounded-2xl bg-zinc-900/70 border border-zinc-800">
+            <div className="lg:col-span-3">
               <label className="block text-[11px] font-mono text-zinc-400 mb-1.5">
                 {lang === 'pt' ? 'Idioma Poliglota' : 'Prompt Language'}
               </label>
@@ -618,9 +616,9 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
               </div>
             </div>
 
-            <div>
+            <div className="lg:col-span-2">
               <label className="block text-[11px] font-mono text-zinc-400 mb-1.5">
-                {lang === 'pt' ? 'Passkey Held-Out (3 dígitos)' : 'Held-Out Passkey (3 digits)'}
+                {lang === 'pt' ? 'Passkey (3 dígitos)' : 'Passkey (3 digits)'}
               </label>
               <input
                 type="text"
@@ -631,7 +629,7 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
               />
             </div>
 
-            <div>
+            <div className="lg:col-span-3">
               <label className="block text-[11px] font-mono text-zinc-400 mb-1.5">
                 {lang === 'pt'
                   ? `Horizonte (${clauses} cláusulas · >> S+W=24)`
@@ -644,13 +642,13 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
                 step={4}
                 value={clauses}
                 onChange={(e) => setClauses(Number(e.target.value))}
-                className="w-full accent-[#adff2f] mt-2 cursor-pointer"
+                className="w-full accent-[#adff2f] my-2 cursor-pointer"
               />
             </div>
 
-            <div>
+            <div className="lg:col-span-2">
               <label className="block text-[11px] font-mono text-zinc-400 mb-1.5">
-                {lang === 'pt' ? 'Modo de Pesos na GPU' : 'GPU Weight Mode'}
+                {lang === 'pt' ? 'Modo de Pesos' : 'Weight Mode'}
               </label>
               <button
                 type="button"
@@ -659,30 +657,30 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
                   setStreamStages(next);
                   void runPasskeyComparison(polyLang, passkeyCode, clauses, next);
                 }}
-                className={`w-full py-1.5 px-3 rounded-lg text-xs font-mono font-bold border flex items-center justify-center gap-1.5 cursor-pointer ${
+                className={`w-full py-1.5 px-2.5 rounded-lg text-[11px] font-mono font-bold border flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   streamStages
                     ? 'bg-[#38bdf8]/20 border-[#38bdf8] text-[#38bdf8]'
                     : 'bg-zinc-950 border-zinc-800 text-zinc-300'
                 }`}
               >
-                <Layers className="w-3.5 h-3.5" />
+                <Layers className="w-3.5 h-3.5 shrink-0" />
                 <span>
                   {streamStages
-                    ? `Stage-Stream (${streamMiB} MiB)`
-                    : `Resident (${shardMiB} MiB)`}
+                    ? `Stream (${streamMiB}M)`
+                    : `Resident (${shardMiB}M)`}
                 </span>
               </button>
             </div>
 
-            <div className="flex items-end">
+            <div className="lg:col-span-2">
               <button
                 type="button"
                 disabled={!engine || isBusy}
                 onClick={() => void runPasskeyComparison(polyLang, passkeyCode, clauses, streamStages)}
-                className="w-full py-2 px-4 rounded-xl bg-[#adff2f] hover:bg-lime-300 disabled:opacity-50 text-black font-mono text-xs font-extrabold flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2 px-3 rounded-xl bg-[#adff2f] hover:bg-lime-300 disabled:opacity-50 text-black font-mono text-xs font-extrabold flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
               >
-                <Play className="w-3.5 h-3.5" />
-                <span>{lang === 'pt' ? 'Executar v6.0 O(1)' : 'Run Live v6.0 O(1)'}</span>
+                <Play className="w-3.5 h-3.5 shrink-0" />
+                <span>{lang === 'pt' ? 'Rodar v6.0' : 'Run v6.0'}</span>
               </button>
             </div>
           </div>
