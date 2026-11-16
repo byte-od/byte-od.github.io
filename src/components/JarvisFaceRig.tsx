@@ -6,6 +6,7 @@ export interface JarvisFaceRigProps {
   isSpeaking: boolean;
   isBooting?: boolean;
   bootPercent?: number;
+  morphDimmed?: boolean;
   width?: number;
   height?: number;
   onClick?: () => void;
@@ -213,6 +214,47 @@ function evalCranioCervicalPoint(y: number, theta: number): {
   nz /= nLen;
 
   return { x, y, z, nx, ny, nz };
+}
+
+/**
+ * Deterministic `1,024`-point 3D cranio-facial cloud (`[numPoints * 4]`: `x, y, z, salience`)
+ * sampled directly on JARVIS's Loomis human facial surface so `PointScarFlow` OT manifolds
+ * morph smoothly out of (and back into) JARVIS's exact 3D face in place.
+ */
+export function buildJarvisFacePointCloudF32(numPoints = 1024): Float32Array {
+  const out = new Float32Array(numPoints * 4);
+  const goldenAngle = Math.PI * (3.0 - Math.sqrt(5.0));
+  for (let i = 0; i < numPoints; i++) {
+    const u = (i + 0.5) / numPoints;
+    const s = 1.0 - 2.0 * u; // +1 (crown) .. -1 (chin)
+    const sWarped = 0.72 * s + 0.28 * s * s * s;
+    const y = 0.225 + 0.785 * sWarped; // [-0.560, +1.010]
+
+    // Azimuth topologically matched to PointScarFlow's golden-spiral initial sphere
+    const th = i * goldenAngle;
+    let thetaRaw = Math.PI * 0.5 - (th % (Math.PI * 2.0));
+    while (thetaRaw > Math.PI) thetaRaw -= Math.PI * 2.0;
+    while (thetaRaw < -Math.PI) thetaRaw += Math.PI * 2.0;
+    const signTh = thetaRaw < 0.0 ? -1.0 : 1.0;
+    const normTh = Math.abs(thetaRaw) / Math.PI;
+    const theta = signTh * Math.pow(normTh, 1.38) * Math.PI;
+
+    const pt = evalCranioCervicalPoint(y, theta);
+    const front = Math.max(0.0, Math.cos(theta));
+    const landmarkSal =
+      0.42 * gauss2D(pt.x, pt.y, -0.272, 0.055, 0.12, 0.055) +
+      0.42 * gauss2D(pt.x, pt.y, 0.272, 0.055, 0.12, 0.055) +
+      0.38 * gauss2D(pt.x, pt.y, 0.0, -0.145, 0.075, 0.095) +
+      0.40 * gauss2D(pt.x, pt.y, 0.0, -0.348, 0.14, 0.048) +
+      0.32 * gauss(pt.y, 0.19, 0.045) * front +
+      0.26 * (gauss2D(pt.x, pt.y, -0.38, -0.05, 0.12, 0.09) + gauss2D(pt.x, pt.y, 0.38, -0.05, 0.12, 0.09));
+
+    out[i * 4 + 0] = pt.x;
+    out[i * 4 + 1] = pt.y;
+    out[i * 4 + 2] = pt.z;
+    out[i * 4 + 3] = clamp(0.38 + 0.22 * front + landmarkSal, 0.32, 0.98);
+  }
+  return out;
 }
 
 function insideOrbitalOrOralCutout(x: number, y: number, z: number): boolean {
@@ -1314,6 +1356,7 @@ export const JarvisFaceRig: React.FC<JarvisFaceRigProps> = ({
   isSpeaking,
   isBooting = false,
   bootPercent = 0,
+  morphDimmed = false,
   width = 214,
   height = 218,
   onClick,
@@ -2186,12 +2229,14 @@ export const JarvisFaceRig: React.FC<JarvisFaceRigProps> = ({
     <div
       data-testid="jarvis-floating-face-rig"
       onClick={onClick}
-      className={`relative select-none flex items-center justify-center transition-transform duration-200 ${
+      className={`relative select-none flex items-center justify-center ${
         onClick ? 'cursor-pointer hover:scale-[1.02]' : ''
       }`}
       style={{
         width: `${width}px`,
         height: `${height}px`,
+        opacity: morphDimmed ? 0.14 : 1.0,
+        transition: 'opacity 580ms cubic-bezier(0.22, 1, 0.36, 1), transform 200ms ease',
         filter: `drop-shadow(0 16px 32px rgba(0,0,0,0.88)) drop-shadow(0 0 24px ${face.primaryHex}33)`,
       }}
     >

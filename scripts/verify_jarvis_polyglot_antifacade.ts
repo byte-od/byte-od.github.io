@@ -41,6 +41,7 @@ import {
   type ScarNativeBPETokenizerJSON,
   type ScarNativeV6ManifestJSON,
 } from '../src/lib/scarNativeV6Engine';
+import { buildJarvisFacePointCloudF32 } from '../src/components/JarvisFaceRig';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -967,12 +968,37 @@ async function main() {
   const workerRaw = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/lib/llmWorker.ts'), 'utf-8');
   assert(
     stageRaw.includes('data-testid="jarvis-floating-point-stage"') &&
+      stageRaw.includes('buildJarvisFacePointCloudF32') &&
+      stageRaw.includes("width: '100vw'") &&
+      stageRaw.includes('canvas.getBoundingClientRect()') &&
+      !stageRaw.includes('desiredStageX') &&
       widgetCode.includes('jarvis-pointscar-toggle') &&
+      widgetCode.includes('isFaceMorphedToCloud') &&
       engineCode.includes('BrowserPointScarFlowEngine') &&
       engineCode.includes('pointScarSample') &&
       workerRaw.includes('pointScarFinalF32'),
-    'Missing PointScarFlow full-viewport stage or WebGPU worker wiring!'
+    'Missing in-place Face-to-PointScarFlow morphing, Retina CSS viewport sizing, or WebGPU worker wiring!'
   );
+
+  const faceCloudA = buildJarvisFacePointCloudF32(1024);
+  const faceCloudB = buildJarvisFacePointCloudF32(1024);
+  assert(faceCloudA.length === 4096, `Expected 4096 floats in JARVIS 3D face cloud, got ${faceCloudA.length}`);
+  for (let i = 0; i < faceCloudA.length; i++) {
+    assert(
+      Number.isFinite(faceCloudA[i]) && faceCloudA[i] === faceCloudB[i],
+      `Non-finite or non-deterministic float in buildJarvisFacePointCloudF32 at index ${i}`
+    );
+  }
+  for (let pIdx = 0; pIdx < 1024; pIdx++) {
+    const px = faceCloudA[pIdx * 4 + 0];
+    const py = faceCloudA[pIdx * 4 + 1];
+    const pz = faceCloudA[pIdx * 4 + 2];
+    const psal = faceCloudA[pIdx * 4 + 3];
+    assert(
+      Math.abs(px) <= 0.75 && py >= -0.65 && py <= 1.05 && pz >= -0.85 && pz <= 1.08 && psal >= 0.30 && psal <= 1.0,
+      `Out-of-bounds cranio-facial point at ${pIdx}: (${px}, ${py}, ${pz}, sal=${psal})`
+    );
+  }
   console.log(
     `[PASS 11/12] PointScarFlow v1.0 ScarNative 3D Generator (12 WGSL Shaders · ${(psfShardStat.size / (1024 * 1024)).toFixed(2)} MiB VQ4-Scar Shard · Chamfer=${psfEval.held_out_chamfer_l2_4step_1pass} · Zero Catalog)`
   );

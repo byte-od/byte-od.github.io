@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import type { JarvisFaceState } from '../lib/jarvisNeuralController';
+import { buildJarvisFacePointCloudF32 } from './JarvisFaceRig';
 
 export interface JarvisFloatingPointStageProps {
   enabled: boolean;
@@ -17,7 +18,6 @@ export interface JarvisFloatingPointStageProps {
 }
 
 const NUM_POINTS = 1024;
-const GOLDEN_ANGLE = Math.PI * (3.0 - Math.sqrt(5.0));
 
 function clamp(v: number, lo: number, hi: number): number {
   return v < lo ? lo : v > hi ? hi : v;
@@ -40,25 +40,7 @@ function parseHexRgb(hex: string): [number, number, number] {
 }
 
 /**
- * Deterministic canonical Fibonacci sphere `X_0 [1024, 4]` matching `point_scar_flow.py` bit-for-bit.
- * ZERO `Math.random()`.
- */
-function buildCanonicalSphereF32(numPoints = NUM_POINTS): Float32Array {
-  const out = new Float32Array(numPoints * 4);
-  for (let i = 0; i < numPoints; i++) {
-    const y = 1.0 - (2.0 * (i + 0.5)) / numPoints;
-    const rad = Math.sqrt(Math.max(0.0, 1.0 - y * y));
-    const th = i * GOLDEN_ANGLE;
-    out[i * 4 + 0] = rad * Math.cos(th);
-    out[i * 4 + 1] = y;
-    out[i * 4 + 2] = rad * Math.sin(th);
-    out[i * 4 + 3] = 0.45 + 0.35 * Math.abs(y);
-  }
-  return out;
-}
-
-/**
- * Computes 2 nearest 3D structural neighbors per point (`Int16Array [numPoints * 2]`)
+ * Computes 2 nearest 3D structural neighbors per point (`Int16Array [numPoints]`)
  * directly from the GPU-synthesized 3D coordinates so high-salience ridges form crisp filaments.
  */
 function computeNearest2Edges(cloudF32: Float32Array, numPoints = NUM_POINTS): {
@@ -173,34 +155,37 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const canonicalSphere = buildCanonicalSphereF32(NUM_POINTS);
+    // Exact 1,024-point 3D cranio-facial topology of JARVIS (`t = 0` morph origin & return target)
+    const faceCloudF32 = buildJarvisFacePointCloudF32(NUM_POINTS);
 
-    // Current interpolated local 3D manifold coordinates + salience `[1024 * 4]`
-    const curLocal = new Float32Array(canonicalSphere);
-    const startLocal = new Float32Array(canonicalSphere);
-    const midLocal = new Float32Array(canonicalSphere);
-    const targetLocal = new Float32Array(canonicalSphere);
+    // Active GPU PointScarFlow 3D manifolds (`[1024 * 4]`: `x, y, z, salience`)
+    const sculptStartLocal = new Float32Array(faceCloudF32);
+    const sculptMidLocal = new Float32Array(faceCloudF32);
+    const sculptTargetLocal = new Float32Array(faceCloudF32);
+    const sculptLiveLocal = new Float32Array(faceCloudF32);
 
-    // Per-particle screen-space spring positions for smooth detachment from JARVIS's cranial halo
     const screenX = new Float32Array(NUM_POINTS);
     const screenY = new Float32Array(NUM_POINTS);
+    const magOffsetX = new Float32Array(NUM_POINTS);
+    const magOffsetY = new Float32Array(NUM_POINTS);
     const depthZ = new Float32Array(NUM_POINTS);
     const salArr = new Float32Array(NUM_POINTS);
     const drawOrder = new Int16Array(NUM_POINTS);
     for (let i = 0; i < NUM_POINTS; i++) drawOrder[i] = i;
 
-    let edgeGraph = computeNearest2Edges(canonicalSphere, NUM_POINTS);
+    let edgeGraph = computeNearest2Edges(faceCloudF32, NUM_POINTS);
     let lastAppliedSeq = 0;
-    let morphStartMs = 0;
+    let retargetStartMs = 0;
+    let isSculptureToSculptureTransition = false;
     let hasActiveSculpture = false;
 
-    let pointerX = -9999;
-    let pointerY = -9999;
+    let pointerClientX = -9999;
+    let pointerClientY = -9999;
     let pointerInside = false;
 
     const onPointerMove = (ev: PointerEvent) => {
-      pointerX = ev.clientX;
-      pointerY = ev.clientY;
+      pointerClientX = ev.clientX;
+      pointerClientY = ev.clientY;
       pointerInside = true;
     };
     const onPointerLeave = () => {
@@ -209,12 +194,9 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     window.addEventListener('pointerleave', onPointerLeave);
 
-    let initializedPositions = false;
-    let stageAnchorX = 0;
-    let stageAnchorY = 0;
-    let stageVisibility = 0.0;
+    let morphProgress = 0.0; // 0.0 = resting on JARVIS's 3D face, 1.0 = morphed into PointScarFlow 3D manifold
+    let turntableOffset = 0.0;
     let prevTimeMs = performance.now();
-    let turntableAngle = 0.0;
     let rafId = 0;
 
     const render = (nowMs: number) => {
@@ -222,8 +204,10 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
       const dt = clamp((nowMs - prevTimeMs) * 0.001, 0.001, 0.05);
       prevTimeMs = nowMs;
 
-      const vw = window.innerWidth || 1280;
-      const vh = window.innerHeight || 800;
+      // Measure exact CSS viewport box on the canvas itself so Retina `dpr = 2/3` never shifts coordinates
+      const canvasRect = canvas.getBoundingClientRect();
+      const vw = Math.max(1, canvasRect.width || window.innerWidth || 1280);
+      const vh = Math.max(1, canvasRect.height || window.innerHeight || 800);
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const targetW = Math.max(1, Math.round(vw * dpr));
       const targetH = Math.max(1, Math.round(vh * dpr));
@@ -235,92 +219,76 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, vw, vh);
 
-      if (!p.enabled) {
-        stageVisibility = 0.0;
-        rafId = window.requestAnimationFrame(render);
-        return;
-      }
-
       if (p.pointScarSeq === 0 && lastAppliedSeq !== 0) {
         lastAppliedSeq = 0;
         hasActiveSculpture = false;
-        curLocal.set(canonicalSphere);
       }
 
-      // Check if a new GPU-synthesized PointScarFlow 3D manifold arrived
+      // Apply newly synthesized GPU PointScarFlow 3D manifold (`X_0.5` -> `X_1.0`)
       if (p.pointScarSeq !== lastAppliedSeq && p.pointScarFinalF32 && p.pointScarFinalF32.length >= NUM_POINTS * 4) {
         lastAppliedSeq = p.pointScarSeq;
-        startLocal.set(curLocal);
+        if (morphProgress > 0.35 && hasActiveSculpture) {
+          sculptStartLocal.set(sculptLiveLocal);
+          isSculptureToSculptureTransition = true;
+        } else {
+          sculptStartLocal.set(faceCloudF32);
+          isSculptureToSculptureTransition = false;
+        }
+
         if (p.pointScarMidF32 && p.pointScarMidF32.length >= NUM_POINTS * 4) {
-          midLocal.set(p.pointScarMidF32.subarray(0, NUM_POINTS * 4));
+          sculptMidLocal.set(p.pointScarMidF32.subarray(0, NUM_POINTS * 4));
         } else {
           for (let k = 0; k < NUM_POINTS * 4; k++) {
-            midLocal[k] = 0.5 * (startLocal[k] + p.pointScarFinalF32[k]);
+            sculptMidLocal[k] = 0.5 * (sculptStartLocal[k] + p.pointScarFinalF32[k]);
           }
         }
-        targetLocal.set(p.pointScarFinalF32.subarray(0, NUM_POINTS * 4));
-        edgeGraph = computeNearest2Edges(targetLocal, NUM_POINTS);
-        morphStartMs = nowMs;
+        sculptTargetLocal.set(p.pointScarFinalF32.subarray(0, NUM_POINTS * 4));
+        edgeGraph = computeNearest2Edges(sculptTargetLocal, NUM_POINTS);
+        retargetStartMs = nowMs;
         hasActiveSculpture = true;
       }
 
-      const targetVis = hasActiveSculpture && p.stageActive ? 1.0 : p.isExpanded ? 0.35 : 0.0;
-      stageVisibility += (targetVis - stageVisibility) * (1.0 - Math.exp(-dt * 6.5));
-      if (stageVisibility < 0.012) {
-        initializedPositions = false;
+      const wantSculpture = p.enabled && p.stageActive && hasActiveSculpture;
+      if (wantSculpture) {
+        morphProgress = Math.min(1.0, morphProgress + dt / 0.88);
+      } else {
+        morphProgress = Math.max(0.0, morphProgress - dt / 0.64);
+      }
+
+      if (morphProgress < 0.004) {
+        turntableOffset = 0.0;
         rafId = window.requestAnimationFrame(render);
         return;
       }
 
-      // Locate JARVIS's live 3D face rig in viewport coordinates
+      // Lock 1:1 to JARVIS's live 3D face rig in the exact same CSS coordinate space as `canvasRect`
       const faceEl = document.querySelector('[data-testid="jarvis-floating-face-rig"]');
-      const faceRect = faceEl ? faceEl.getBoundingClientRect() : null;
-      const faceCx = faceRect ? faceRect.left + faceRect.width * 0.5 : vw - 140;
-      const faceCy = faceRect ? faceRect.top + faceRect.height * 0.48 : vh - 180;
-      const faceRadius = faceRect ? Math.min(faceRect.width, faceRect.height) * 0.50 : 108;
-
-      // Determine target 3D sculpture stage center in unobstructed open viewport space
-      let desiredStageX = faceCx;
-      let desiredStageY = faceCy;
-      let desiredRadius = faceRadius * 1.08;
-
-      if (hasActiveSculpture) {
-        if (p.isExpanded) {
-          // Place sculpture cleanly to the left of expanded centered JARVIS on desktop, or above on narrow viewports
-          if (vw >= 960) {
-            desiredStageX = clamp(faceCx - Math.min(340, vw * 0.28), 180, vw - 180);
-            desiredStageY = clamp(faceCy - 10, 170, vh - 190);
-            desiredRadius = Math.min(168, vw * 0.135);
-          } else {
-            desiredStageX = vw * 0.5;
-            desiredStageY = clamp(faceCy - faceRadius - 115, 110, vh * 0.36);
-            desiredRadius = Math.min(110, vw * 0.22);
-          }
-        } else {
-          // Compact bottom-right corner mode: project floating sculpture into open space left-and-slightly-above JARVIS
-          if (vw >= 760) {
-            desiredStageX = clamp(faceCx - Math.min(350, vw * 0.30), 175, vw - 260);
-            desiredStageY = clamp(faceCy - 72, 165, vh - 175);
-            desiredRadius = Math.min(148, vw * 0.145, vh * 0.20);
-          } else {
-            desiredStageX = vw * 0.5;
-            desiredStageY = clamp(faceCy - 250, 130, vh - 310);
-            desiredRadius = Math.min(112, vw * 0.26);
-          }
-        }
+      if (!faceEl) {
+        rafId = window.requestAnimationFrame(render);
+        return;
+      }
+      const faceRect = faceEl.getBoundingClientRect();
+      if (faceRect.width < 8 || faceRect.height < 8) {
+        rafId = window.requestAnimationFrame(render);
+        return;
       }
 
-      if (!initializedPositions) {
-        stageAnchorX = desiredStageX;
-        stageAnchorY = desiredStageY;
-      } else {
-        const anchorAlpha = 1.0 - Math.exp(-dt * 5.2);
-        stageAnchorX += (desiredStageX - stageAnchorX) * anchorAlpha;
-        stageAnchorY += (desiredStageY - stageAnchorY) * anchorAlpha;
-      }
+      const localFaceLeft = faceRect.left - canvasRect.left;
+      const localFaceTop = faceRect.top - canvasRect.top;
+      const faceW = faceRect.width;
+      const faceH = faceRect.height;
+      const minWH = Math.min(faceW, faceH);
 
-      // Compute OT Rectified Flow morph progression `u in [0, 1]` (`0 -> X_0.5 -> X_1.0`)
-      const morphElapsedS = hasActiveSculpture ? Math.max(0.0, (nowMs - morphStartMs) * 0.001) : 1.0;
+      const morphW = smoothstep(0.0, 1.0, morphProgress);
+
+      // Exact `JarvisFaceRig` camera at `morphW = 0` (`centerY = 0.555 * H`, `scale = 0.56 * minWH`)
+      // smoothly centered to head-box midpoint at `morphW = 1` (`centerY = 0.485 * H`, `scale = 0.40 * minWH`)
+      const originX = localFaceLeft + faceW * 0.5;
+      const originY = localFaceTop + faceH * (0.555 - 0.070 * morphW);
+      const scalePx = minWH * (0.56 - 0.16 * morphW);
+      const camZ = 3.62;
+      const focal = 2.84;
+
       const harmonics = p.face.viseme.voiceHarmonics;
       const voiceEnergy =
         p.isGenerating
@@ -329,206 +297,220 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
       const epistemicCrisp = clamp(0.45 + 0.55 * p.face.epistemicMargin, 0.35, 1.0);
       const isShieldPosture = p.face.posture === 'OUT_OF_CONE_GUARD';
 
-      // Gentle 3D turntable rotation + pointer parallax
-      const rotSpeed = hasActiveSculpture ? (p.isGenerating ? 0.52 : 0.34) : 0.24;
-      turntableAngle += dt * rotSpeed;
+      // Continuous wrapped turntable rotation (`[-pi, +pi]`) so returning to JARVIS's face never unwinds multiple turns
+      if (wantSculpture) {
+        const rotSpeed = p.isGenerating ? 0.50 : 0.32;
+        turntableOffset += dt * rotSpeed * morphW;
+        turntableOffset = Math.atan2(Math.sin(turntableOffset), Math.cos(turntableOffset));
+      }
 
-      const ptrNormX = pointerInside ? clamp((pointerX - stageAnchorX) / 360.0, -1.0, 1.0) : 0.0;
-      const ptrNormY = pointerInside ? clamp((pointerY - stageAnchorY) / 360.0, -1.0, 1.0) : 0.0;
-      const yaw = turntableAngle + ptrNormX * 0.36;
-      const pitch = -0.16 + ptrNormY * 0.26;
+      const ptrLocalX = pointerClientX - canvasRect.left;
+      const ptrLocalY = pointerClientY - canvasRect.top;
+      const ptrNormX = pointerInside ? clamp((ptrLocalX - originX) / Math.max(180.0, minWH * 1.4), -1.0, 1.0) : 0.0;
+      const ptrNormY = pointerInside ? clamp((ptrLocalY - originY) / Math.max(180.0, minWH * 1.4), -1.0, 1.0) : 0.0;
+
+      const faceYawRad = p.face.headYaw * 0.36 + p.face.gazeX * 0.20;
+      const facePitchRad = p.face.headPitch * 0.28 - p.face.gazeY * 0.16;
+      const faceRollRad = p.face.headRoll * 0.22;
+
+      const yaw = faceYawRad * (1.0 - 0.70 * morphW) + turntableOffset * morphW + ptrNormX * 0.34 * morphW;
+      const pitch = facePitchRad * (1.0 - 0.60 * morphW) - 0.12 * morphW + ptrNormY * 0.22 * morphW;
+      const roll = faceRollRad * (1.0 - morphW);
+
       const cosY = Math.cos(yaw);
       const sinY = Math.sin(yaw);
       const cosP = Math.cos(pitch);
       const sinP = Math.sin(pitch);
+      const cosR = Math.cos(roll);
+      const sinR = Math.sin(roll);
 
       const [pr, pg, pb] = parseHexRgb(p.face.primaryHex);
       const [sr, sg, sb] = parseHexRgb(p.face.secondaryHex);
 
-      // Update 1,024 particles along real GPU OT trajectory (`start -> mid -> target`)
+      const retargetElapsedS = Math.max(0.0, (nowMs - retargetStartMs) * 0.001);
+      const springMag = 1.0 - Math.exp(-dt * 16.0);
+      const magRadiusPx = Math.max(54.0, minWH * 0.32);
+      const magRadiusSq = magRadiusPx * magRadiusPx;
+
+      // Transform all 1,024 points between JARVIS's 3D cranio-facial topology and GPU OT manifold
       for (let i = 0; i < NUM_POINTS; i++) {
         const i4 = i * 4;
+        const stagger = i / NUM_POINTS;
+
+        // 1) Active sculpture coordinate (`sculptLiveLocal`) for smooth sculpture->sculpture updates
+        let sx3: number;
+        let sy3: number;
+        let sz3: number;
+        let sSal: number;
+        if (isSculptureToSculptureTransition) {
+          const uRet = clamp((retargetElapsedS - 0.14 * stagger) / 0.72, 0.0, 1.0);
+          if (uRet < 0.5) {
+            const w = smoothstep(0.0, 0.5, uRet);
+            sx3 = sculptStartLocal[i4 + 0] + (sculptMidLocal[i4 + 0] - sculptStartLocal[i4 + 0]) * w;
+            sy3 = sculptStartLocal[i4 + 1] + (sculptMidLocal[i4 + 1] - sculptStartLocal[i4 + 1]) * w;
+            sz3 = sculptStartLocal[i4 + 2] + (sculptMidLocal[i4 + 2] - sculptStartLocal[i4 + 2]) * w;
+            sSal = sculptStartLocal[i4 + 3] + (sculptMidLocal[i4 + 3] - sculptStartLocal[i4 + 3]) * w;
+          } else {
+            const w = smoothstep(0.5, 1.0, uRet);
+            sx3 = sculptMidLocal[i4 + 0] + (sculptTargetLocal[i4 + 0] - sculptMidLocal[i4 + 0]) * w;
+            sy3 = sculptMidLocal[i4 + 1] + (sculptTargetLocal[i4 + 1] - sculptMidLocal[i4 + 1]) * w;
+            sz3 = sculptMidLocal[i4 + 2] + (sculptTargetLocal[i4 + 2] - sculptMidLocal[i4 + 2]) * w;
+            sSal = sculptMidLocal[i4 + 3] + (sculptTargetLocal[i4 + 3] - sculptMidLocal[i4 + 3]) * w;
+          }
+        } else {
+          sx3 = sculptTargetLocal[i4 + 0];
+          sy3 = sculptTargetLocal[i4 + 1];
+          sz3 = sculptTargetLocal[i4 + 2];
+          sSal = sculptTargetLocal[i4 + 3];
+        }
+        sculptLiveLocal[i4 + 0] = sx3;
+        sculptLiveLocal[i4 + 1] = sy3;
+        sculptLiveLocal[i4 + 2] = sz3;
+        sculptLiveLocal[i4 + 3] = sSal;
+
+        // 2) Bidirectional 2-Stage OT Morph (`JARVIS 3D Face <-> X_0.5 <-> PointScarFlow X_1.0`)
+        const uMorph = clamp((morphProgress - 0.14 * stagger) / 0.86, 0.0, 1.0);
+        const fx = faceCloudF32[i4 + 0];
+        const fy = faceCloudF32[i4 + 1];
+        const fz = faceCloudF32[i4 + 2];
+        const fSal = faceCloudF32[i4 + 3];
+
         let lx: number;
         let ly: number;
         let lz: number;
         let sal: number;
-
-        if (!hasActiveSculpture) {
-          // Idle ambient dual-ring synaptic halo orbiting JARVIS's 3D head (`0` Math.random!)
-          const baseX = canonicalSphere[i4 + 0];
-          const baseY = canonicalSphere[i4 + 1];
-          const baseZ = canonicalSphere[i4 + 2];
-          const ringFlatten = i % 3 === 0 ? 0.22 : 1.0;
-          const breath = 1.0 + 0.035 * Math.sin(nowMs * 0.0018 + i * 0.015);
-          lx = baseX * breath;
-          ly = baseY * ringFlatten * breath;
-          lz = baseZ * breath;
-          sal = canonicalSphere[i4 + 3] * 0.55;
-          curLocal[i4 + 0] = lx;
-          curLocal[i4 + 1] = ly;
-          curLocal[i4 + 2] = lz;
-          curLocal[i4 + 3] = sal;
+        if (uMorph < 0.5) {
+          const w = smoothstep(0.0, 0.5, uMorph);
+          lx = fx + (sculptMidLocal[i4 + 0] - fx) * w;
+          ly = fy + (sculptMidLocal[i4 + 1] - fy) * w;
+          lz = fz + (sculptMidLocal[i4 + 2] - fz) * w;
+          sal = fSal + (sculptMidLocal[i4 + 3] - fSal) * w;
         } else {
-          // Staggered detachment from JARVIS -> `X_0.5` -> `X_1.0` over `0.95s`
-          const delayS = 0.22 * (i / NUM_POINTS);
-          const u = clamp((morphElapsedS - delayS) / 0.78, 0.0, 1.0);
-          if (u < 0.5) {
-            const w = smoothstep(0.0, 0.5, u);
-            lx = startLocal[i4 + 0] + (midLocal[i4 + 0] - startLocal[i4 + 0]) * w;
-            ly = startLocal[i4 + 1] + (midLocal[i4 + 1] - startLocal[i4 + 1]) * w;
-            lz = startLocal[i4 + 2] + (midLocal[i4 + 2] - startLocal[i4 + 2]) * w;
-            sal = startLocal[i4 + 3] + (midLocal[i4 + 3] - startLocal[i4 + 3]) * w;
-          } else {
-            const w = smoothstep(0.5, 1.0, u);
-            lx = midLocal[i4 + 0] + (targetLocal[i4 + 0] - midLocal[i4 + 0]) * w;
-            ly = midLocal[i4 + 1] + (targetLocal[i4 + 1] - midLocal[i4 + 1]) * w;
-            lz = midLocal[i4 + 2] + (targetLocal[i4 + 2] - midLocal[i4 + 2]) * w;
-            sal = midLocal[i4 + 3] + (targetLocal[i4 + 3] - midLocal[i4 + 3]) * w;
-          }
-          curLocal[i4 + 0] = lx;
-          curLocal[i4 + 1] = ly;
-          curLocal[i4 + 2] = lz;
-          curLocal[i4 + 3] = sal;
-
-          // Subtle acoustic harmonic ripple + epistemic shimmer + 0x00 unlearn shockwave
-          const band = harmonics[i & 7];
-          const acousticPulse = 1.0 + voiceEnergy * (0.045 + 0.055 * band) * Math.sin(nowMs * 0.012 + i * 0.07);
-          const unlearnShock = p.unlearnShockActive
-            ? 1.0 + 0.28 * Math.sin(nowMs * 0.018 + i * 0.03)
-            : 1.0;
-          const jitterAmp = (1.0 - epistemicCrisp) * 0.022;
-          lx = lx * acousticPulse * unlearnShock + jitterAmp * Math.sin(nowMs * 0.005 + i * 1.7);
-          ly = ly * acousticPulse * unlearnShock + jitterAmp * Math.cos(nowMs * 0.006 + i * 1.3);
-          lz = lz * acousticPulse * unlearnShock;
+          const w = smoothstep(0.5, 1.0, uMorph);
+          lx = sculptMidLocal[i4 + 0] + (sx3 - sculptMidLocal[i4 + 0]) * w;
+          ly = sculptMidLocal[i4 + 1] + (sy3 - sculptMidLocal[i4 + 1]) * w;
+          lz = sculptMidLocal[i4 + 2] + (sz3 - sculptMidLocal[i4 + 2]) * w;
+          sal = sculptMidLocal[i4 + 3] + (sSal - sculptMidLocal[i4 + 3]) * w;
         }
 
-        // 3D Yaw + Pitch + Perspective projection (`+Y` up -> `-Y` screen)
+        // Subtle acoustic harmonic ripple + epistemic shimmer + 0x00 unlearn shockwave scaled by `morphW`
+        const band = harmonics[i & 7];
+        const acousticPulse =
+          1.0 + morphW * voiceEnergy * (0.042 + 0.052 * band) * Math.sin(nowMs * 0.012 + i * 0.07);
+        const unlearnShock = p.unlearnShockActive
+          ? 1.0 + 0.25 * morphW * Math.sin(nowMs * 0.018 + i * 0.03)
+          : 1.0;
+        const jitterAmp = (1.0 - epistemicCrisp) * 0.018 * morphW;
+        lx = lx * acousticPulse * unlearnShock + jitterAmp * Math.sin(nowMs * 0.005 + i * 1.7);
+        ly = ly * acousticPulse * unlearnShock + jitterAmp * Math.cos(nowMs * 0.006 + i * 1.3);
+        lz = lz * acousticPulse * unlearnShock;
+
+        // 3) Exact 3D Yaw + Pitch + Roll + Perspective projection matching `JarvisFaceRig`
         const rx1 = lx * cosY + lz * sinY;
         const rz1 = -lx * sinY + lz * cosY;
         const ry2 = ly * cosP - rz1 * sinP;
-        const rz2 = ly * sinP + rz1 * cosP;
+        const rz2 = ly * sinP + rz1 * cpSafe(cosP);
+        const rx3 = rx1 * cosR - ry2 * sinR;
+        const ry3 = rx1 * sinR + ry2 * cosR;
 
-        const persp = 2.65 / Math.max(1.2, 2.65 - rz2 * 0.68);
+        const persp = focal / Math.max(1.2, camZ - rz2);
+        const baseScreenX = originX + rx3 * persp * scalePx;
+        const baseScreenY = originY - ry3 * persp * scalePx;
 
-        // During detachment (`u < 1`), smoothly glide particle center from JARVIS's face to `stageAnchor`!
-        const detachW = hasActiveSculpture
-          ? smoothstep(0.0, 0.85, clamp((morphElapsedS - 0.18 * (i / NUM_POINTS)) / 0.68, 0.0, 1.0))
-          : 0.0;
-        const originX = faceCx + (stageAnchorX - faceCx) * detachW;
-        const originY = faceCy + (stageAnchorY - faceCy) * detachW;
-        const effRad = faceRadius * 1.06 + (desiredRadius - faceRadius * 1.06) * detachW;
-
-        let tx = originX + rx1 * effRad * persp;
-        let ty = originY - ry2 * effRad * persp;
-
-        // Interactive cursor magnetic swirl when visitor hovers near floating points
-        if (pointerInside) {
-          const dx = tx - pointerX;
-          const dy = ty - pointerY;
+        // Smooth local magnetic cursor swirl (zero lag when page scrolls or widget expands!)
+        let targetMagX = 0.0;
+        let targetMagY = 0.0;
+        if (pointerInside && morphW > 0.15) {
+          const dx = baseScreenX - ptrLocalX;
+          const dy = baseScreenY - ptrLocalY;
           const d2 = dx * dx + dy * dy;
-          if (d2 < 8400 && d2 > 1e-3) {
+          if (d2 < magRadiusSq && d2 > 1e-3) {
             const d = Math.sqrt(d2);
-            const push = (1.0 - d / 91.65) * 18.0;
-            tx += (dx / d) * push;
-            ty += (dy / d) * push;
+            const push = (1.0 - d / magRadiusPx) * 15.0 * morphW;
+            targetMagX = (dx / d) * push;
+            targetMagY = (dy / d) * push;
           }
         }
+        magOffsetX[i] += (targetMagX - magOffsetX[i]) * springMag;
+        magOffsetY[i] += (targetMagY - magOffsetY[i]) * springMag;
 
-        if (!initializedPositions) {
-          screenX[i] = tx;
-          screenY[i] = ty;
-        } else {
-          const spring = 1.0 - Math.exp(-dt * 16.5);
-          screenX[i] += (tx - screenX[i]) * spring;
-          screenY[i] += (ty - screenY[i]) * spring;
-        }
+        screenX[i] = baseScreenX + magOffsetX[i];
+        screenY[i] = baseScreenY + magOffsetY[i];
         depthZ[i] = rz2;
         salArr[i] = sal;
       }
-      initializedPositions = true;
+
+      // Smooth cross-dissolve on initial emergence & final merge onto JARVIS's 3D face
+      const stageAlpha = wantSculpture
+        ? smoothstep(0.0, 0.18, morphProgress)
+        : smoothstep(0.0, 0.24, morphProgress);
 
       ctx.save();
-      ctx.globalAlpha = clamp(stageVisibility, 0.0, 1.0);
+      ctx.globalAlpha = clamp(stageAlpha, 0.0, 1.0);
 
-      // Pass 1: Synaptic umbilical stream connecting JARVIS's cranial constellation to the 3D Point-Scar Stage
-      if (hasActiveSculpture) {
-        const grad = ctx.createLinearGradient(faceCx, faceCy, stageAnchorX, stageAnchorY);
-        grad.addColorStop(0.0, `rgba(${pr}, ${pg}, ${pb}, 0.22)`);
-        grad.addColorStop(0.5, `rgba(${sr}, ${sg}, ${sb}, 0.12)`);
-        grad.addColorStop(1.0, `rgba(${pr}, ${pg}, ${pb}, 0.24)`);
-        ctx.strokeStyle = grad;
-        ctx.lineWidth = 1.1;
-        for (let b = -1; b <= 1; b++) {
-          const midX = 0.5 * (faceCx + stageAnchorX);
-          const midY = 0.5 * (faceCy + stageAnchorY) - 28 + b * 18 * Math.sin(nowMs * 0.002 + b);
-          ctx.beginPath();
-          ctx.moveTo(faceCx, faceCy);
-          ctx.quadraticCurveTo(midX, midY, stageAnchorX, stageAnchorY);
-          ctx.stroke();
-        }
-      }
-
-      // Pass 2: Subtle DOM Section Guiding Arc (when active ScarStore cartridge maps to a visible page section)
-      const secId = hasActiveSculpture ? resolveRelevantDomSectionId(p.activeCapsuleIds) : null;
+      // Pass 1: Subtle DOM Section Guiding Arc (only in compact corner mode when page sections are unblurred)
+      const secId = !p.isExpanded && morphW > 0.45 ? resolveRelevantDomSectionId(p.activeCapsuleIds) : null;
       if (secId) {
         const secEl = document.getElementById(secId);
         if (secEl) {
           const r = secEl.getBoundingClientRect();
-          if (r.bottom > 40 && r.top < vh - 40) {
-            const targetDomX = clamp(r.left + Math.min(220, r.width * 0.28), 40, vw - 40);
-            const targetDomY = clamp(r.top + 36, 48, vh - 48);
-            const domGrad = ctx.createLinearGradient(stageAnchorX, stageAnchorY, targetDomX, targetDomY);
-            domGrad.addColorStop(0.0, `rgba(${pr}, ${pg}, ${pb}, 0.26)`);
-            domGrad.addColorStop(1.0, `rgba(${sr}, ${sg}, ${sb}, 0.06)`);
+          const localTopSec = r.top - canvasRect.top;
+          const localBottomSec = r.bottom - canvasRect.top;
+          if (localBottomSec > 40 && localTopSec < vh - 40) {
+            const targetDomX = clamp(r.left - canvasRect.left + Math.min(220, r.width * 0.28), 40, vw - 40);
+            const targetDomY = clamp(localTopSec + 36, 48, vh - 48);
+            const domGrad = ctx.createLinearGradient(originX, originY, targetDomX, targetDomY);
+            domGrad.addColorStop(0.0, `rgba(${pr}, ${pg}, ${pb}, ${(0.24 * morphW).toFixed(3)})`);
+            domGrad.addColorStop(1.0, `rgba(${sr}, ${sg}, ${sb}, ${(0.06 * morphW).toFixed(3)})`);
             ctx.strokeStyle = domGrad;
             ctx.setLineDash([4, 6]);
-            ctx.lineWidth = 1.15;
+            ctx.lineWidth = 1.1;
             ctx.beginPath();
-            ctx.moveTo(stageAnchorX, stageAnchorY);
+            ctx.moveTo(originX, originY);
             ctx.quadraticCurveTo(
-              0.5 * (stageAnchorX + targetDomX),
-              Math.min(stageAnchorY, targetDomY) - 42,
+              0.5 * (originX + targetDomX),
+              Math.min(originY, targetDomY) - 42,
               targetDomX,
               targetDomY
             );
             ctx.stroke();
             ctx.setLineDash([]);
 
-            // Traveling harmonic pulse dot along the DOM pointer arc
             const uPulse = (nowMs * 0.00055) % 1.0;
-            const cx = 0.5 * (stageAnchorX + targetDomX);
-            const cy = Math.min(stageAnchorY, targetDomY) - 42;
+            const cx = 0.5 * (originX + targetDomX);
+            const cy = Math.min(originY, targetDomY) - 42;
             const px =
-              (1 - uPulse) * (1 - uPulse) * stageAnchorX +
+              (1 - uPulse) * (1 - uPulse) * originX +
               2 * (1 - uPulse) * uPulse * cx +
               uPulse * uPulse * targetDomX;
             const py =
-              (1 - uPulse) * (1 - uPulse) * stageAnchorY +
+              (1 - uPulse) * (1 - uPulse) * originY +
               2 * (1 - uPulse) * uPulse * cy +
               uPulse * uPulse * targetDomY;
-            ctx.fillStyle = `rgba(${pr}, ${pg}, ${pb}, 0.85)`;
+            ctx.fillStyle = `rgba(${pr}, ${pg}, ${pb}, ${(0.82 * morphW).toFixed(3)})`;
             ctx.beginPath();
-            ctx.arc(px, py, 2.6, 0, Math.PI * 2);
+            ctx.arc(px, py, 2.4, 0, Math.PI * 2);
             ctx.fill();
           }
         }
       }
 
-      // Pass 3: Protective Epistemic Perimeter Ring when `OUT_OF_CONE_GUARD` is active
-      if (hasActiveSculpture && isShieldPosture) {
-        ctx.strokeStyle = 'rgba(251, 191, 36, 0.28)';
-        ctx.lineWidth = 1.25;
-        ctx.setLineDash([6, 5]);
+      // Pass 2: Co-centered Epistemic Shield Halo around JARVIS's morphed head when `OUT_OF_CONE_GUARD` is active
+      if (isShieldPosture && morphW > 0.25) {
+        const shieldR = minWH * 0.405;
+        ctx.strokeStyle = `rgba(251, 191, 36, ${(0.25 * morphW).toFixed(3)})`;
+        ctx.lineWidth = 1.15;
+        ctx.setLineDash([5, 5]);
         ctx.beginPath();
-        ctx.arc(stageAnchorX, stageAnchorY, desiredRadius * 1.10, 0, Math.PI * 2);
+        ctx.arc(originX, originY, shieldR, 0, Math.PI * 2);
         ctx.stroke();
         ctx.setLineDash([]);
       }
 
-      // Pass 4: Structural `k=2` Nearest-Neighbor Ridge Filaments on GPU-synthesized 3D coordinates
-      if (hasActiveSculpture && morphElapsedS > 0.28) {
-        const edgeFade = smoothstep(0.28, 0.95, morphElapsedS);
-        ctx.strokeStyle = `rgba(${pr}, ${pg}, ${pb}, ${(0.14 * edgeFade).toFixed(3)})`;
+      // Pass 3: Structural `k=2` Nearest-Neighbor Ridge Filaments on GPU-synthesized 3D coordinates
+      if (morphW > 0.32) {
+        const edgeFade = smoothstep(0.32, 0.92, morphW);
+        ctx.strokeStyle = `rgba(${pr}, ${pg}, ${pb}, ${(0.16 * edgeFade).toFixed(3)})`;
         ctx.lineWidth = 0.72;
         ctx.beginPath();
         const { nbrA, nbrB, distA, distB } = edgeGraph;
@@ -551,55 +533,29 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
       // Sort back-to-front by `depthZ` for true 3D occlusion & volumetric luminance
       drawOrder.sort((a, b) => depthZ[a] - depthZ[b]);
 
-      // Pass 5: Volumetric Bioluminescent Halo + Crisp Core Pinpoints (`1,024` points)
-      const baseAlpha = hasActiveSculpture ? 0.88 : 0.34;
+      // Pass 4: Volumetric Bioluminescent Halo + Crisp Core Pinpoints (`1,024` points)
+      const ptScale = Math.pow(Math.max(0.9, minWH / 214.0), 0.35);
       for (let k = 0; k < NUM_POINTS; k++) {
         const i = drawOrder[k];
-        const zNorm = clamp((depthZ[i] + 1.15) / 2.3, 0.0, 1.0);
+        const zNorm = clamp((depthZ[i] + 1.05) / 2.1, 0.0, 1.0);
         const sal = salArr[i];
-        const alpha = clamp(baseAlpha * (0.28 + 0.72 * zNorm) * (0.55 + 0.45 * sal), 0.06, 0.96);
-        const radius = (hasActiveSculpture ? 1.15 : 0.85) + 1.45 * zNorm * (0.55 + 0.65 * sal);
+        const alpha = clamp(0.90 * (0.26 + 0.74 * zNorm) * (0.52 + 0.48 * sal), 0.06, 0.97);
+        const radius = (0.95 + 1.38 * zNorm * (0.52 + 0.65 * sal)) * ptScale;
 
-        if (sal > 0.64 && zNorm > 0.52 && hasActiveSculpture) {
-          ctx.fillStyle = `rgba(${pr}, ${pg}, ${pb}, ${(alpha * 0.24).toFixed(3)})`;
+        if (sal > 0.62 && zNorm > 0.50) {
+          ctx.fillStyle = `rgba(${pr}, ${pg}, ${pb}, ${(alpha * 0.23).toFixed(3)})`;
           ctx.beginPath();
-          ctx.arc(screenX[i], screenY[i], radius * 2.35, 0, Math.PI * 2);
+          ctx.arc(screenX[i], screenY[i], radius * 2.25, 0, Math.PI * 2);
           ctx.fill();
         }
 
-        const rMix = Math.round(pr + (245 - pr) * zNorm * 0.55);
-        const gMix = Math.round(pg + (250 - pg) * zNorm * 0.55);
-        const bMix = Math.round(pb + (255 - pb) * zNorm * 0.55);
+        const rMix = Math.round(pr + (245 - pr) * zNorm * 0.56);
+        const gMix = Math.round(pg + (250 - pg) * zNorm * 0.56);
+        const bMix = Math.round(pb + (255 - pb) * zNorm * 0.56);
         ctx.fillStyle = `rgba(${rMix}, ${gMix}, ${bMix}, ${alpha.toFixed(3)})`;
         ctx.beginPath();
         ctx.arc(screenX[i], screenY[i], radius, 0, Math.PI * 2);
         ctx.fill();
-      }
-
-      // Pass 6: Subtle Holographic Telemetry Label beneath the GPU-synthesized 3D Sculpture
-      if (hasActiveSculpture) {
-        const labelY = stageAnchorY + desiredRadius * 1.14 + 12;
-        const msTxt = p.pointScarMs !== null ? ` · ${p.pointScarMs.toFixed(1)} ms` : '';
-        const tag =
-          p.lang === 'pt'
-            ? `PointScarFlow VQ4 · 1.024 pts · Fluxo OT 4-Passos${msTxt}`
-            : `PointScarFlow VQ4 · 1,024 pts · 4-Step OT Flow${msTxt}`;
-        ctx.font = '600 9.5px ui-monospace, SFMono-Regular, Menlo, monospace';
-        ctx.textAlign = 'center';
-        const metrics = ctx.measureText(tag);
-        const padX = 8;
-        const boxW = metrics.width + padX * 2;
-        const boxH = 18;
-        ctx.fillStyle = 'rgba(2, 6, 23, 0.72)';
-        ctx.strokeStyle = `rgba(${pr}, ${pg}, ${pb}, 0.35)`;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.roundRect(stageAnchorX - boxW * 0.5, labelY - boxH * 0.68, boxW, boxH, 9);
-        ctx.fill();
-        ctx.stroke();
-
-        ctx.fillStyle = `rgba(${pr}, ${pg}, ${pb}, 0.92)`;
-        ctx.fillText(tag, stageAnchorX, labelY);
       }
 
       ctx.restore();
@@ -618,8 +574,13 @@ export const JarvisFloatingPointStage: React.FC<JarvisFloatingPointStageProps> =
     <canvas
       ref={canvasRef}
       data-testid="jarvis-floating-point-stage"
-      className="fixed inset-0 z-[48] pointer-events-none select-none"
+      style={{ width: '100vw', height: '100vh' }}
+      className="fixed inset-0 w-screen h-screen z-[52] pointer-events-none select-none"
       aria-hidden="true"
     />
   );
 };
+
+function cpSafe(v: number): number {
+  return v;
+}

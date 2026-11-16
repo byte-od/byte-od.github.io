@@ -1041,6 +1041,15 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
   const faceWidth = isExpanded ? expandedFaceW : 214;
   const faceHeight = isExpanded ? Math.round(expandedFaceW * (218 / 214)) : 218;
 
+  const isTypingNextPrompt = !isGenerating && inputMessage.trim().length > 0;
+  const isFaceMorphedToCloud =
+    pointFieldEnabled &&
+    pointScarState.seq > 0 &&
+    pointScarState.finalF32 !== null &&
+    (hasCaptionContent || isGenerating || unlearnShockActive) &&
+    !isTypingNextPrompt &&
+    !engineLoading;
+
   // Minimized Corner Orb State (if user explicitly tucks JARVIS away)
   if (isMinimized) {
     return (
@@ -1067,10 +1076,10 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
 
   return (
     <>
-      {/* FULL-VIEWPORT FLOATING 3D POINT-SCAR GENERATIVE STAGE (VQ4-Scar OT Rectified Flow) */}
+      {/* IN-PLACE FACE-TO-MANIFOLD 3D POINT-SCAR STAGE (VQ4-Scar OT Rectified Flow) */}
       <JarvisFloatingPointStage
         enabled={pointFieldEnabled}
-        stageActive={hasCaptionContent || isGenerating || isExpanded || unlearnShockActive}
+        stageActive={isFaceMorphedToCloud}
         face={jarvisFace}
         isGenerating={isGenerating}
         isExpanded={isExpanded}
@@ -1508,6 +1517,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           isSpeaking={isGenerating}
           isBooting={engineLoading}
           bootPercent={loadPercent}
+          morphDimmed={isFaceMorphedToCloud}
           width={faceWidth}
           height={faceHeight}
           onClick={() => inputRef.current?.focus()}
