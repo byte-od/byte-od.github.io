@@ -644,6 +644,13 @@ async function main() {
   for (const mustHave of expectedEntrypoints) {
     assert(computeMatches.includes(mustHave), `Missing required WGSL entrypoint: ${mustHave}`);
   }
+  assert(
+    /let\s+max_logit\s*=\s*wg_att_red\[0\];\s*workgroupBarrier\(\);/.test(wgslSrc) &&
+      /let\s+max_lg\s*=\s*wg_sn_ared\[0\];\s*workgroupBarrier\(\);/.test(wgslSrc) &&
+      /let\s+err_norm\s*=\s*sqrt\(wg_v6_red\[0\]\);\s*workgroupBarrier\(\);/.test(wgslSrc) &&
+      /let\s+max_lg\s*=\s*wg_v6_ared\[0\];\s*workgroupBarrier\(\);/.test(wgslSrc),
+    'Missing 2-SIMDGroup WAR workgroupBarrier() after shared-memory scalar reduction read in mos_scache.wgsl!'
+  );
   console.log(
     `[PASS 7/13] 26/26 WGSL 1.0 Compute Shaders Byte-Identical across all Native/HF/Web copies (${wgslSrc.length} B)`
   );
@@ -879,8 +886,20 @@ async function main() {
     `Expected cleanprobeIds.slice(qEnd) to match exact <|im_end|>\\n<|im_start|>assistant\\n suffix!`
   );
   assert(
-    engineCode.includes('runFullLayersOnLastToken') && engineCode.includes('out_of_cone_guarded'),
-    'Missing causal split runFullLayersOnLastToken or out_of_cone_guarded in mosWebgpuEngine.ts!'
+    engineCode.includes('runFullLayersOnLastToken') &&
+      engineCode.includes('out_of_cone_guarded') &&
+      engineCode.includes('waitForIdle') &&
+      engineCode.includes('_activeGpuLock') &&
+      engineCode.includes('stepStateBufs') &&
+      engineCode.includes('layerOpsSlots'),
+    'Missing causal split, GPU serialization lock, or disjoint stepStateBufs in mosWebgpuEngine.ts!'
+  );
+  assert(
+    /Astronomia/i.test(OUT_OF_CONE_EPISTEMIC_GATES.pt) &&
+      /Astronomy/i.test(OUT_OF_CONE_EPISTEMIC_GATES.en) &&
+      /Astronomía/i.test(OUT_OF_CONE_EPISTEMIC_GATES.es) &&
+      /Astronomie/i.test(OUT_OF_CONE_EPISTEMIC_GATES.fr),
+    'OUT_OF_CONE_EPISTEMIC_GATES must explicitly welcome Astronomy / Science queries across PT/EN/ES/FR!'
   );
   console.log(
     '[PASS 10/11] Out-of-Cone Epistemic Guard (PT/EN/ES/FR Zero-Cheat Gate · OUT_OF_CONE_GUARD Posture · Bit-Exact Causal Split)'

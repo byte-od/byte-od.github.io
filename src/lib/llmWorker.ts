@@ -135,7 +135,7 @@ self.onmessage = async (e: MessageEvent) => {
       return;
     }
     // If an aborted turn is finishing its ~80ms GPU readback, abort & await cleanly instead of failing
-    if (isGenerating && activeGeneratePromise) {
+    while (activeGeneratePromise) {
       currentAbort?.abort();
       try {
         await activeGeneratePromise;
@@ -272,9 +272,18 @@ self.onmessage = async (e: MessageEvent) => {
     return;
   }
 
-  // 5. Reset SCache O(1) Conversation State
+  // 5. Reset SCache O(1) Conversation State (serialized after any in-flight GPU turn)
   if (type === 'reset_scache') {
+    while (activeGeneratePromise) {
+      currentAbort?.abort();
+      try {
+        await activeGeneratePromise;
+      } catch {
+        // Ignore aborted turn
+      }
+    }
     if (engine) {
+      await engine.waitForIdle();
       engine.resetSCache();
     }
     self.postMessage({
@@ -311,7 +320,16 @@ self.onmessage = async (e: MessageEvent) => {
 
   // 7. Unload Engine from VRAM
   if (type === 'unload') {
+    while (activeGeneratePromise) {
+      currentAbort?.abort();
+      try {
+        await activeGeneratePromise;
+      } catch {
+        // Ignore aborted turn
+      }
+    }
     if (engine) {
+      await engine.waitForIdle();
       engine.destroy();
       engine = null;
     }

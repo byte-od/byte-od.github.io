@@ -680,6 +680,7 @@ fn scache_o1_gqa_attention(
         workgroupBarrier();
     }
     let max_logit = wg_att_red[0];
+    workgroupBarrier();
 
     // Phase 2: Numerically stable Softmax
     var local_sum: f32 = 0.0;
@@ -1885,6 +1886,7 @@ fn scarnative_o1_hybrid_gqa_attention(
         workgroupBarrier();
     }
     let max_lg = wg_sn_ared[0];
+    workgroupBarrier();
 
     var local_sum: f32 = 0.0;
     for (var idx = tid; idx < total_keys; idx += 64u) {
@@ -2311,6 +2313,7 @@ fn scarnative_v6_hierarchical_evict_update(
         workgroupBarrier();
     }
     let err_norm = sqrt(wg_v6_red[0]);
+    workgroupBarrier();
 
     // Step 3: Gate `g_tau = sigmoid(dot(w_gate, k_raw_ev) + b_gate)` and surprise `s_tau = g_tau * ||err||_2`
     let gate_stride = head_dim + 3u;
@@ -2550,6 +2553,7 @@ fn scarnative_v6_hierarchical_o1_gqa_attention(
         workgroupBarrier();
     }
     let max_lg = wg_v6_ared[0];
+    workgroupBarrier();
 
     var local_sum: f32 = 0.0;
     for (var idx = tid; idx < total_keys; idx += 64u) {

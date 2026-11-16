@@ -294,7 +294,9 @@ export class BrowserMoSWebGPUEngine {
   private turnSuffixIds: number[] = [];
   public sessionPos = 0;
   public turnCount = 0;
+  private _activeGpuLock: Promise<void> = Promise.resolve();
 
+  private stepStateBufs: any[] = [];
   private stepStateBuf: any;
   private prefillStepsBuf: any;
   private prefillXInReadBuf: any;
@@ -343,6 +345,8 @@ export class BrowserMoSWebGPUEngine {
   private scarInjectUniform: any;
   private currentMActive = 0;
 
+  private embedOpsSlots: DispatchOp[][] = [];
+  private layerOpsSlots: DispatchOp[][][] = [];
   private embedOps: DispatchOp[] = [];
   private layerOps: DispatchOp[][] = [];
   private finalNormOp!: DispatchOp;
@@ -625,10 +629,22 @@ export class BrowserMoSWebGPUEngine {
     return `${(this.scacheGpuBytes / 1024).toFixed(1)} KB`;
   }
 
+  public async waitForIdle(): Promise<void> {
+    await this._activeGpuLock;
+    if (this.device?.queue && typeof this.device.queue.onSubmittedWorkDone === 'function') {
+      try {
+        await Promise.race([this.device.queue.onSubmittedWorkDone(), this._deviceLostPromise]);
+      } catch (_) {
+        // Ignore device-lost errors while draining idle queue
+      }
+    }
+  }
+
   public destroy(): void {
     try {
       this.pointScarFlow?.destroy();
       for (const b of this.shardBuffers) b?.destroy?.();
+      for (const b of this.stepStateBufs) b?.destroy?.();
       this.scacheKvBuf?.destroy?.();
       this.scacheWScarBuf?.destroy?.();
       this.scacheSalienceBuf?.destroy?.();
@@ -708,7 +724,11 @@ export class BrowserMoSWebGPUEngine {
     const qDim = this.numQHeads * this.headDim;
     const kvDim = this.numKvHeads * this.headDim;
 
-    this.stepStateBuf = this.device.createBuffer({ size: 16, usage: U.STORAGE | U.COPY_DST });
+    this.stepStateBufs = [];
+    for (let s = 0; s < PREFILL_BATCH_TOKENS; s++) {
+      this.stepStateBufs.push(this.device.createBuffer({ size: 16, usage: U.STORAGE | U.COPY_DST }));
+    }
+    this.stepStateBuf = this.stepStateBufs[0];
     this.prefillStepsBuf = this.device.createBuffer({
       size: PREFILL_BATCH_TOKENS * 16,
       usage: U.COPY_SRC | U.COPY_DST,
@@ -1011,7 +1031,7 @@ export class BrowserMoSWebGPUEngine {
   }
 
   private _prebuildDispatchPlan(): void {
-    this.embedOps = [];
+    this.embedOpsSlots = Array.from({ length: PREFILL_BATCH_TOKENS }, () => []);
     for (const ch of this.manifest.embed_chunks) {
       const sb = this.shardBuffers[ch.shard_index];
       const u = this._makeUniform(
@@ -1023,25 +1043,31 @@ export class BrowserMoSWebGPUEngine {
           p4: ch.vocab_rows,
         })
       );
-      this.embedOps.push([
-        'embed_int4_lookup',
-        this._bg('embed_int4_lookup', { 0: u, 1: sb, 2: this.stepStateBuf, 6: this.hCurBuf }),
-        Math.ceil(this.hiddenDim / 256),
-      ]);
+      const wgs = Math.ceil(this.hiddenDim / 256);
+      for (let s = 0; s < PREFILL_BATCH_TOKENS; s++) {
+        this.embedOpsSlots[s].push([
+          'embed_int4_lookup',
+          this._bg('embed_int4_lookup', { 0: u, 1: sb, 2: this.stepStateBufs[s], 6: this.hCurBuf }),
+          wgs,
+        ]);
+      }
     }
+    this.embedOps = this.embedOpsSlots[0];
 
     const qDim = this.numQHeads * this.headDim;
     const totalRopePairs = (this.numQHeads + this.numKvHeads) * (this.headDim >> 1);
     const uRope = this._makeUniform(
       packKernelParams({ p0: this.numQHeads, p1: this.numKvHeads, p2: this.headDim })
     );
-    const bgRope = this._bg('qwen_rope_inplace', {
-      0: uRope,
-      2: this.stepStateBuf,
-      3: this.invFreqBuf,
-      6: this.qBuf,
-      7: this.kBuf,
-    });
+    const bgRopeSlots = this.stepStateBufs.map((ssBuf) =>
+      this._bg('qwen_rope_inplace', {
+        0: uRope,
+        2: ssBuf,
+        3: this.invFreqBuf,
+        6: this.qBuf,
+        7: this.kBuf,
+      })
+    );
 
     const uAddH = this._makeUniform(packKernelParams({ p0: this.hiddenDim }));
     const bgAddH = this._bg('vec_add_inplace_f32', { 0: uAddH, 3: this.projOutBuf, 6: this.hCurBuf });
@@ -1054,27 +1080,23 @@ export class BrowserMoSWebGPUEngine {
 
     const attnScale = 1.0 / Math.sqrt(this.headDim);
 
-    this.layerOps = [];
+    this.layerOpsSlots = Array.from({ length: PREFILL_BATCH_TOKENS }, () => []);
     for (let lIdx = 0; lIdx < this.manifest.layers.length; lIdx++) {
       const lMeta = this.manifest.layers[lIdx];
       const sb = this.shardBuffers[lMeta.shard_index];
       const projs = lMeta.projections;
-      const ops: DispatchOp[] = [];
 
       const uLn1 = this._makeUniform(
         packKernelParams({ p0: this.hiddenDim, p1: lMeta.input_layernorm_u32_off }, { f0: this.rmsNormEps })
       );
-      ops.push(['rmsnorm_f32', this._bg('rmsnorm_f32', { 0: uLn1, 1: sb, 3: this.hCurBuf, 6: this.normBuf }), 1]);
-
-      ops.push(...this._makeLinearOps(sb, projs['self_attn.q_proj'], this.normBuf, this.qBuf));
-      ops.push(...this._makeLinearOps(sb, projs['self_attn.k_proj'], this.normBuf, this.kBuf));
-      ops.push(...this._makeLinearOps(sb, projs['self_attn.v_proj'], this.normBuf, this.vBuf));
-
-      if (lIdx === this.numLayers - 1) {
-        ops.push(['vec_copy_f32', bgCopyQ, Math.ceil(qDim / 256)]);
-      }
-
-      ops.push(['qwen_rope_inplace', bgRope, Math.ceil(totalRopePairs / 64)]);
+      const ln1Op: DispatchOp = [
+        'rmsnorm_f32',
+        this._bg('rmsnorm_f32', { 0: uLn1, 1: sb, 3: this.hCurBuf, 6: this.normBuf }),
+        1,
+      ];
+      const qOps = this._makeLinearOps(sb, projs['self_attn.q_proj'], this.normBuf, this.qBuf);
+      const kOps = this._makeLinearOps(sb, projs['self_attn.k_proj'], this.normBuf, this.kBuf);
+      const vOps = this._makeLinearOps(sb, projs['self_attn.v_proj'], this.normBuf, this.vBuf);
 
       const uScUpd = this._makeUniform(
         packKernelParams({
@@ -1087,19 +1109,6 @@ export class BrowserMoSWebGPUEngine {
           p6: this.countsU32Total,
         })
       );
-      ops.push([
-        'scache_o1_update_widrow_hoff',
-        this._bg('scache_o1_update_widrow_hoff', {
-          0: uScUpd,
-          2: this.stepStateBuf,
-          3: this.kBuf,
-          4: this.vBuf,
-          6: this.scacheWScarBuf,
-          7: this.scacheSalienceBuf,
-          8: this.scacheKvBuf,
-        }),
-        this.numKvHeads,
-      ]);
 
       const uScAtt = this._makeUniform(
         packKernelParams(
@@ -1116,7 +1125,7 @@ export class BrowserMoSWebGPUEngine {
           { f0: attnScale, f1: this.deltaBlend }
         )
       );
-      ops.push([
+      const scAttOp: DispatchOp = [
         'scache_o1_gqa_attention',
         this._bg('scache_o1_gqa_attention', {
           0: uScAtt,
@@ -1126,23 +1135,47 @@ export class BrowserMoSWebGPUEngine {
           6: this.attnOutBuf,
         }),
         this.numQHeads,
-      ]);
-
-      ops.push(...this._makeLinearOps(sb, projs['self_attn.o_proj'], this.attnOutBuf, this.projOutBuf));
-      ops.push(['vec_add_inplace_f32', bgAddH, Math.ceil(this.hiddenDim / 256)]);
+      ];
+      const oOps = this._makeLinearOps(sb, projs['self_attn.o_proj'], this.attnOutBuf, this.projOutBuf);
+      const addHOp: DispatchOp = ['vec_add_inplace_f32', bgAddH, Math.ceil(this.hiddenDim / 256)];
 
       const uLn2 = this._makeUniform(
         packKernelParams({ p0: this.hiddenDim, p1: lMeta.post_attention_layernorm_u32_off }, { f0: this.rmsNormEps })
       );
-      ops.push(['rmsnorm_f32', this._bg('rmsnorm_f32', { 0: uLn2, 1: sb, 3: this.hCurBuf, 6: this.normBuf }), 1]);
-      ops.push(...this._makeLinearOps(sb, projs['mlp.gate_proj'], this.normBuf, this.gateBuf));
-      ops.push(...this._makeLinearOps(sb, projs['mlp.up_proj'], this.normBuf, this.upBuf));
-      ops.push(['swiglu_mul_f32', bgSwiglu, Math.ceil(this.interDim / 256)]);
-      ops.push(...this._makeLinearOps(sb, projs['mlp.down_proj'], this.gateBuf, this.projOutBuf));
-      ops.push(['vec_add_inplace_f32', bgAddH, Math.ceil(this.hiddenDim / 256)]);
+      const ln2Op: DispatchOp = [
+        'rmsnorm_f32',
+        this._bg('rmsnorm_f32', { 0: uLn2, 1: sb, 3: this.hCurBuf, 6: this.normBuf }),
+        1,
+      ];
+      const gateOps = this._makeLinearOps(sb, projs['mlp.gate_proj'], this.normBuf, this.gateBuf);
+      const upOps = this._makeLinearOps(sb, projs['mlp.up_proj'], this.normBuf, this.upBuf);
+      const swigluOp: DispatchOp = ['swiglu_mul_f32', bgSwiglu, Math.ceil(this.interDim / 256)];
+      const downOps = this._makeLinearOps(sb, projs['mlp.down_proj'], this.gateBuf, this.projOutBuf);
 
-      this.layerOps.push(ops);
+      for (let s = 0; s < PREFILL_BATCH_TOKENS; s++) {
+        const ops: DispatchOp[] = [ln1Op, ...qOps, ...kOps, ...vOps];
+        if (lIdx === this.numLayers - 1) {
+          ops.push(['vec_copy_f32', bgCopyQ, Math.ceil(qDim / 256)]);
+        }
+        ops.push(['qwen_rope_inplace', bgRopeSlots[s], Math.ceil(totalRopePairs / 64)]);
+        ops.push([
+          'scache_o1_update_widrow_hoff',
+          this._bg('scache_o1_update_widrow_hoff', {
+            0: uScUpd,
+            2: this.stepStateBufs[s],
+            3: this.kBuf,
+            4: this.vBuf,
+            6: this.scacheWScarBuf,
+            7: this.scacheSalienceBuf,
+            8: this.scacheKvBuf,
+          }),
+          this.numKvHeads,
+        ]);
+        ops.push(scAttOp, ...oOps, addHOp, ln2Op, ...gateOps, ...upOps, swigluOp, ...downOps, addHOp);
+        this.layerOpsSlots[s].push(ops);
+      }
     }
+    this.layerOps = this.layerOpsSlots[0];
 
     const fnMeta = this.manifest.final_norm;
     const fnSb = this.shardBuffers[fnMeta.shard_index];
@@ -1389,23 +1422,24 @@ export class BrowserMoSWebGPUEngine {
     const sysIds = dummyProbe.slice(0, prefixLen);
     this.resetSCache();
 
+    const slotArr = new Uint32Array(4);
     for (let batchStart = 0; batchStart < prefixLen; batchStart += PREFILL_BATCH_TOKENS) {
       const batchEnd = Math.min(prefixLen, batchStart + PREFILL_BATCH_TOKENS);
       const batchLen = batchEnd - batchStart;
-      const stepsU32 = new Uint32Array(batchLen * 4);
       for (let i = 0; i < batchLen; i++) {
         const pos = batchStart + i;
-        stepsU32[i * 4 + 0] = sysIds[pos];
-        stepsU32[i * 4 + 1] = pos;
+        slotArr[0] = sysIds[pos];
+        slotArr[1] = pos;
+        slotArr[2] = 0;
+        slotArr[3] = 0;
+        this.device.queue.writeBuffer(this.stepStateBufs[i], 0, slotArr);
       }
-      this.device.queue.writeBuffer(this.prefillStepsBuf, 0, stepsU32);
       const enc = this.device.createCommandEncoder();
       for (let i = 0; i < batchLen; i++) {
-        enc.copyBufferToBuffer(this.prefillStepsBuf, i * 16, this.stepStateBuf, 0, 16);
         const cpass = enc.beginComputePass();
-        this._recordOps(cpass, this.embedOps);
+        this._recordOps(cpass, this.embedOpsSlots[i]);
         for (let l = 0; l < this.numLayers; l++) {
-          this._recordOps(cpass, this.layerOps[l]);
+          this._recordOps(cpass, this.layerOpsSlots[i][l]);
         }
         cpass.end();
       }
@@ -1437,12 +1471,13 @@ export class BrowserMoSWebGPUEngine {
     return true;
   }
 
-  private _restoreSysSnapToActiveSCache(): void {
+  private async _restoreSysSnapToActiveSCache(): Promise<void> {
     const enc = this.device.createCommandEncoder();
     enc.copyBufferToBuffer(this.scacheKvSysSnapBuf, 0, this.scacheKvBuf, 0, this.scacheKvBuf.size);
     enc.copyBufferToBuffer(this.scacheWScarSysSnapBuf, 0, this.scacheWScarBuf, 0, this.scacheWScarBuf.size);
     enc.copyBufferToBuffer(this.scacheSalSysSnapBuf, 0, this.scacheSalienceBuf, 0, this.scacheSalienceBuf.size);
     this.device.queue.submit([enc.finish()]);
+    await this._waitQueueSafe(null);
   }
 
   private async _submitPrefillSequence(
@@ -1459,30 +1494,33 @@ export class BrowserMoSWebGPUEngine {
     if (lp === 0) return;
     const effQEnd = qEnd === null ? lp : Math.min(lp, Math.max(qStart + 1, qEnd));
     const splitIdx = this.isGoldenSliceV4 ? this.midLayerIdx : this.numLayers - 2;
+    const slotArr = new Uint32Array(4);
 
     for (let batchStart = 0; batchStart < lp; batchStart += PREFILL_BATCH_TOKENS) {
       if (signal?.aborted) throw createAbortError();
       const batchEnd = Math.min(lp, batchStart + PREFILL_BATCH_TOKENS);
       const batchLen = batchEnd - batchStart;
-      const stepsU32 = new Uint32Array(batchLen * 4);
       for (let i = 0; i < batchLen; i++) {
         const relPos = batchStart + i;
-        stepsU32[i * 4 + 0] = tokenIds[relPos];
-        stepsU32[i * 4 + 1] = basePos + relPos;
+        slotArr[0] = tokenIds[relPos];
+        slotArr[1] = basePos + relPos;
+        slotArr[2] = 0;
+        slotArr[3] = 0;
+        this.device.queue.writeBuffer(this.stepStateBufs[i], 0, slotArr);
       }
-      this.device.queue.writeBuffer(this.prefillStepsBuf, 0, stepsU32);
 
       const enc = this.device.createCommandEncoder();
       for (let i = 0; i < batchLen; i++) {
         const relPos = batchStart + i;
-        enc.copyBufferToBuffer(this.prefillStepsBuf, i * 16, this.stepStateBuf, 0, 16);
+        const slotEmbed = this.embedOpsSlots[i];
+        const slotLayers = this.layerOpsSlots[i];
 
         if (relPos < lp - 1 || runFullLayersOnLastToken) {
           if (captureXIn && relPos >= qStart && relPos < effQEnd) {
             const cpassPre = enc.beginComputePass();
-            this._recordOps(cpassPre, this.embedOps);
+            this._recordOps(cpassPre, slotEmbed);
             for (let l = 0; l <= splitIdx; l++) {
-              this._recordOps(cpassPre, this.layerOps[l]);
+              this._recordOps(cpassPre, slotLayers[l]);
             }
             cpassPre.end();
 
@@ -1497,22 +1535,22 @@ export class BrowserMoSWebGPUEngine {
 
             const cpassUpper = enc.beginComputePass();
             for (let l = splitIdx + 1; l < this.numLayers; l++) {
-              this._recordOps(cpassUpper, this.layerOps[l]);
+              this._recordOps(cpassUpper, slotLayers[l]);
             }
             cpassUpper.end();
           } else {
             const cpass = enc.beginComputePass();
-            this._recordOps(cpass, this.embedOps);
+            this._recordOps(cpass, slotEmbed);
             for (let l = 0; l < this.numLayers; l++) {
-              this._recordOps(cpass, this.layerOps[l]);
+              this._recordOps(cpass, slotLayers[l]);
             }
             cpass.end();
           }
         } else {
           const cpassPre = enc.beginComputePass();
-          this._recordOps(cpassPre, this.embedOps);
+          this._recordOps(cpassPre, slotEmbed);
           for (let l = 0; l <= splitIdx; l++) {
-            this._recordOps(cpassPre, this.layerOps[l]);
+            this._recordOps(cpassPre, slotLayers[l]);
           }
           cpassPre.end();
 
@@ -1534,29 +1572,31 @@ export class BrowserMoSWebGPUEngine {
     }
   }
 
-  private _flushClosingTokensToSCache(closingIds: number[], startPos: number): number {
+  private async _flushClosingTokensToSCache(closingIds: number[], startPos: number): Promise<number> {
     if (!closingIds || closingIds.length === 0) return startPos;
     const len = closingIds.length;
+    const slotArr = new Uint32Array(4);
     for (let batchStart = 0; batchStart < len; batchStart += PREFILL_BATCH_TOKENS) {
       const batchEnd = Math.min(len, batchStart + PREFILL_BATCH_TOKENS);
       const batchLen = batchEnd - batchStart;
-      const stepsU32 = new Uint32Array(batchLen * 4);
       for (let i = 0; i < batchLen; i++) {
-        stepsU32[i * 4 + 0] = closingIds[batchStart + i];
-        stepsU32[i * 4 + 1] = startPos + batchStart + i;
+        slotArr[0] = closingIds[batchStart + i];
+        slotArr[1] = startPos + batchStart + i;
+        slotArr[2] = 0;
+        slotArr[3] = 0;
+        this.device.queue.writeBuffer(this.stepStateBufs[i], 0, slotArr);
       }
-      this.device.queue.writeBuffer(this.prefillStepsBuf, 0, stepsU32);
       const enc = this.device.createCommandEncoder();
       for (let i = 0; i < batchLen; i++) {
-        enc.copyBufferToBuffer(this.prefillStepsBuf, i * 16, this.stepStateBuf, 0, 16);
         const cpass = enc.beginComputePass();
-        this._recordOps(cpass, this.embedOps);
+        this._recordOps(cpass, this.embedOpsSlots[i]);
         for (let l = 0; l < this.numLayers; l++) {
-          this._recordOps(cpass, this.layerOps[l]);
+          this._recordOps(cpass, this.layerOpsSlots[i][l]);
         }
         cpass.end();
       }
       this.device.queue.submit([enc.finish()]);
+      await this._waitQueueSafe(null);
     }
     return startPos + len;
   }
@@ -1576,6 +1616,40 @@ export class BrowserMoSWebGPUEngine {
   }
 
   public async generate(
+    userQuery: string,
+    options: {
+      maxNewTokens?: number;
+      enableScarStore?: boolean;
+      enableEpistemicGuard?: boolean;
+      resetCache?: boolean;
+      systemPrompt?: string | null;
+      onPrefillProgress?: (done: number, total: number) => void;
+      onToken?: (u: TokenStreamUpdate) => void;
+      onRouting?: (r: {
+        active: ActiveCapsuleRuntime[];
+        turnBytesFetched: number;
+        httpEvents: Http206Event[];
+        diagnostics?: GoldenSliceRoutingDiagnostics;
+        pointScarSample?: PointScarSampleResult | null;
+        epistemicMode?: 'scar_grounded' | 'out_of_cone_guarded' | 'base_trunk';
+      }) => void;
+      signal?: AbortSignal | null;
+    } = {}
+  ): Promise<EngineGenerationResult> {
+    const prev = this._activeGpuLock;
+    let releaseLock!: () => void;
+    this._activeGpuLock = new Promise<void>((resolve) => {
+      releaseLock = resolve;
+    });
+    await prev;
+    try {
+      return await this._runGenerateUnlocked(userQuery, options);
+    } finally {
+      releaseLock();
+    }
+  }
+
+  private async _runGenerateUnlocked(
     userQuery: string,
     options: {
       maxNewTokens?: number;
@@ -1670,9 +1744,10 @@ export class BrowserMoSWebGPUEngine {
       encSave.copyBufferToBuffer(this.scacheWScarBuf, 0, this.scacheWScarSnapBuf, 0, this.scacheWScarBuf.size);
       encSave.copyBufferToBuffer(this.scacheSalienceBuf, 0, this.scacheSalSnapBuf, 0, this.scacheSalienceBuf.size);
       this.device.queue.submit([encSave.finish()]);
+      await this._waitQueueSafe(signal);
     }
 
-    const restorePreTurnSCache = () => {
+    const restorePreTurnSCache = async (): Promise<void> => {
       if (basePos === 0) {
         this.resetSCache();
       } else {
@@ -1683,6 +1758,7 @@ export class BrowserMoSWebGPUEngine {
         this.device.queue.submit([encRest.finish()]);
         this.sessionPos = basePos;
       }
+      await this._waitQueueSafe(null);
     };
 
     const t0 = performance.now();
@@ -1713,7 +1789,7 @@ export class BrowserMoSWebGPUEngine {
 
         if (canSplitAtQueryEnd && this.scarStore) {
           if (canUseSysSnap) {
-            this._restoreSysSnapToActiveSCache();
+            await this._restoreSysSnapToActiveSCache();
             await this._submitPrefillSequence(
               cleanProbeIds.slice(sysPrefixLen, qEndProbe),
               sysPrefixLen,
@@ -1768,6 +1844,7 @@ export class BrowserMoSWebGPUEngine {
             encSnapQ.copyBufferToBuffer(this.scacheWScarBuf, 0, this.scacheWScarSnapBuf, 0, this.scacheWScarBuf.size);
             encSnapQ.copyBufferToBuffer(this.scacheSalienceBuf, 0, this.scacheSalSnapBuf, 0, this.scacheSalienceBuf.size);
             this.device.queue.submit([encSnapQ.finish()]);
+            await this._waitQueueSafe(signal);
             guardedCleanRollbackPos = qEndProbe;
             guardedCleanPrefixIds = cleanProbeIds.slice(qEndProbe);
 
@@ -1781,7 +1858,7 @@ export class BrowserMoSWebGPUEngine {
             );
             effectiveLp = guardedFullIds.length;
             if (canUseSysSnap && this._matchesSysSnapPrefix(guardedFullIds)) {
-              this._restoreSysSnapToActiveSCache();
+              await this._restoreSysSnapToActiveSCache();
               await this._submitPrefillSequence(
                 guardedFullIds.slice(sysPrefixLen),
                 sysPrefixLen,
@@ -1801,7 +1878,7 @@ export class BrowserMoSWebGPUEngine {
           }
         } else {
           if (canUseSysSnap) {
-            this._restoreSysSnapToActiveSCache();
+            await this._restoreSysSnapToActiveSCache();
             await this._submitPrefillSequence(
               promptIds.slice(sysPrefixLen),
               sysPrefixLen,
@@ -1844,7 +1921,7 @@ export class BrowserMoSWebGPUEngine {
               ? qEndProbe
               : cleanProbeIds.length;
           if (canUseSysSnap) {
-            this._restoreSysSnapToActiveSCache();
+            await this._restoreSysSnapToActiveSCache();
             await this._submitPrefillSequence(
               cleanProbeIds.slice(sysPrefixLen, probeEnd),
               sysPrefixLen,
@@ -1865,6 +1942,7 @@ export class BrowserMoSWebGPUEngine {
           encRestore.copyBufferToBuffer(this.scacheWScarSnapBuf, 0, this.scacheWScarBuf, 0, this.scacheWScarBuf.size);
           encRestore.copyBufferToBuffer(this.scacheSalSnapBuf, 0, this.scacheSalienceBuf, 0, this.scacheSalienceBuf.size);
           this.device.queue.submit([encRestore.finish()]);
+          await this._waitQueueSafe(signal);
 
           const readBytes = luProbe * this.hiddenDim * 4;
           const xinRaw = await this._mapReadSafe(this.prefillXInReadBuf, readBytes);
@@ -1895,7 +1973,7 @@ export class BrowserMoSWebGPUEngine {
         await this._submitPrefillSequence(turnPromptIds, basePos, 0, false, null, signal, onPrefillProgress);
       }
     } catch (prefillErr) {
-      restorePreTurnSCache();
+      await restorePreTurnSCache();
       throw prefillErr;
     }
 
@@ -1937,7 +2015,7 @@ export class BrowserMoSWebGPUEngine {
 
     const firstStep = await this._readTop2AndTelemetry();
     if (signal?.aborted) {
-      restorePreTurnSCache();
+      await restorePreTurnSCache();
       throw createAbortError();
     }
     const prefillMs = performance.now() - t0;
@@ -2119,7 +2197,7 @@ export class BrowserMoSWebGPUEngine {
     this._setActiveCapsulesGpu([]);
     if (signal?.aborted) {
       if (guardedCleanRollbackPos !== null) {
-        restorePreTurnSCache();
+        await restorePreTurnSCache();
       } else {
         const closingAbortIds: number[] = [];
         if (generatedIds.length > 0 && !lastGenTokenFed) {
@@ -2128,7 +2206,7 @@ export class BrowserMoSWebGPUEngine {
         for (let i = 0; i < this.turnSuffixIds.length; i++) {
           closingAbortIds.push(this.turnSuffixIds[i]);
         }
-        this.sessionPos = this._flushClosingTokensToSCache(closingAbortIds, curPos);
+        this.sessionPos = await this._flushClosingTokensToSCache(closingAbortIds, curPos);
         this.turnCount += 1;
       }
       throw createAbortError();
@@ -2140,6 +2218,7 @@ export class BrowserMoSWebGPUEngine {
       encCleanRest.copyBufferToBuffer(this.scacheWScarSnapBuf, 0, this.scacheWScarBuf, 0, this.scacheWScarBuf.size);
       encCleanRest.copyBufferToBuffer(this.scacheSalSnapBuf, 0, this.scacheSalienceBuf, 0, this.scacheSalienceBuf.size);
       this.device.queue.submit([encCleanRest.finish()]);
+      await this._waitQueueSafe(null);
 
       const cleanFlushIds = [...guardedCleanPrefixIds, ...generatedIds, ...this.turnSuffixIds];
       await this._submitPrefillSequence(
@@ -2161,7 +2240,7 @@ export class BrowserMoSWebGPUEngine {
       for (let i = 0; i < this.turnSuffixIds.length; i++) {
         closingIds.push(this.turnSuffixIds[i]);
       }
-      this.sessionPos = this._flushClosingTokensToSCache(closingIds, curPos);
+      this.sessionPos = await this._flushClosingTokensToSCache(closingIds, curPos);
     }
     this.turnCount += 1;
 
