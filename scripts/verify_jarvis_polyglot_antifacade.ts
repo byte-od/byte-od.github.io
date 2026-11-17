@@ -27,9 +27,11 @@ import {
   type GoldenSliceRoutingDiagnostics,
 } from '../src/lib/scarstoreHttp206Browser';
 import {
+  buildCanonicalE8Lut256TS,
   buildCfdHdrShockFieldProof,
   runBlackBoxSCacheProof,
   runRadioTelescopeRfiProof,
+  runRealSliceLiveForensicAuditTS,
 } from '../src/lib/physicalScarCodec';
 import {
   ScarNativeCpuExecutor,
@@ -1486,11 +1488,136 @@ async function main() {
   );
 
   console.log(
-    `[PASS 15/15] ScarCodec v6.0 (${v6Json.pillar_1_and_2_c_simd_mmap_and_zarr.c_simd_pure_random_block_o1_us} us C99/SIMD · 21.0x E8 · LIGO 1e-21..X-Ray 1.5e8) + ScarField v7.0 A100 (WY ${v7Json.hardware_benchmarks.chunkwise_wy_scan.speedup_x}x · C/SIMD S1 ${synJson.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.full_engine_s1_speedup_x}x↑ · 100% PIN @ T=160)`
+    `[PASS 15/16] ScarCodec v6.0 (${v6Json.pillar_1_and_2_c_simd_mmap_and_zarr.c_simd_pure_random_block_o1_us} us C99/SIMD · 21.0x E8 · LIGO 1e-21..X-Ray 1.5e8) + ScarField v7.0 A100 (WY ${v7Json.hardware_benchmarks.chunkwise_wy_scan.speedup_x}x · C/SIMD S1 ${synJson.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.full_engine_s1_speedup_x}x↑ · 100% PIN @ T=160)`
+  );
+
+  // ---------------------------------------------------------------------------
+  // TEST 16: Expanded 10-Archive / 8-Science Real-Data Audit + Live Browser
+  //          Forensic Workbench (`LIGO 10^-19`, `Tohoku 3.13M`, `MIT-BIH IEC`, `NOAA`, `ROSAT`)
+  // ---------------------------------------------------------------------------
+  const expV2Src = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/data/scarCodecExpandedPhysicsV2Audit.json'), 'utf-8');
+  const expV2Web = fs.readFileSync(
+    path.join(PORTFOLIO_ROOT, 'public/webgpu/scar_codec_expanded_real_physics_v2_0_audit.json'),
+    'utf-8'
+  );
+  assert(expV2Src === expV2Web, 'Expanded physics v2.0 JSON drift between src/data and public/webgpu!');
+  const expV2Canon = path.resolve(PORTFOLIO_ROOT, '../scar-cache/results/scar_codec_expanded_real_physics_v2_0_audit.json');
+  if (fs.existsSync(expV2Canon)) {
+    assert(expV2Src === fs.readFileSync(expV2Canon, 'utf-8'), 'Expanded physics v2.0 JSON drift vs scar-cache!');
+  }
+
+  const slicesSrc = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/data/realPhysicalSlices.json'), 'utf-8');
+  const slicesWeb = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'public/webgpu/real_physical_slices_v2_0.json'), 'utf-8');
+  assert(slicesSrc === slicesWeb, 'Real physical slices JSON drift between src/data and public/webgpu!');
+
+  const expJson = JSON.parse(expV2Src);
+  assert(
+    expJson.synthetic_data_used === false &&
+      expJson.oracle_steering_used === false &&
+      expJson.scar_codec_modified === false &&
+      expJson.total_public_archives_across_ecosystem === 10 &&
+      expJson.total_physical_sciences_covered === 8 &&
+      expJson.new_provenance_manifest.length === 9,
+    'Expanded physics v2.0 top-level forensic flags failed!'
+  );
+
+  const { lut256x8 } = buildCanonicalE8Lut256TS();
+  assert(
+    lut256x8.length === 2048 && lut256x8.subarray(0, 8).every((v) => v === 0),
+    'Gosset E8 LUT256 browser vacuum row 0 must be exact (0,0,0,0,0,0,0,0)!'
+  );
+
+  const realSlices = JSON.parse(slicesSrc).slices;
+
+  // 1. LIGO GW150914: 100% naive FP16 underflow (`0` nonzeros) vs ScarCodec E8 > 6.5x + exact 2.5e-22 bound
+  const ligoField = new Float32Array(realSlices.ligo_gw150914.p_perp_clean_strain_f32);
+  const ligoE8 = runRealSliceLiveForensicAuditTS({ field: ligoField, rows: 16, cols: 256, mode: 'e8', maxPointSpikes: 48 });
+  const ligoEb = runRealSliceLiveForensicAuditTS({
+    field: ligoField,
+    rows: 16,
+    cols: 256,
+    mode: 'error_bounded',
+    absTolerance: 2.5e-22,
+    maxPointSpikes: 48,
+  });
+  assert(
+    ligoE8.naiveFp16NonZeroCount === 0 &&
+      ligoE8.compressionRatio > 6.5 &&
+      ligoE8.scarRmse < ligoE8.spectralRmse &&
+      ligoE8.blockO1VsFullMaxDiff === 0 &&
+      ligoEb.scarMaxAbsErr <= 2.5001e-22,
+    'LIGO GW150914 live browser forensic audit failed!'
+  );
+
+  // 2. IRIS Mw 9.1 Tohoku: >2.5M naive FP16 overflow vs ScarCodec >10x cleaner than byte-matched 2D-DCT
+  const seisField = new Float32Array(realSlices.iris_tohoku_mw91.bhz_overview_f32);
+  const seisE8 = runRealSliceLiveForensicAuditTS({ field: seisField, rows: 16, cols: 256, mode: 'e8', maxPointSpikes: 48 });
+  assert(
+    seisE8.naiveFp16MaxAbsErr > 2.4e6 &&
+      seisE8.globalScalePow2 === 8192 &&
+      seisE8.scarRmse < seisE8.spectralRmse / 10.0 &&
+      seisE8.blockO1VsFullMaxDiff === 0,
+    'IRIS Mw 9.1 Tohoku live browser forensic audit failed!'
+  );
+
+  // 3. MIT-BIH 119 Holter ECG: strict IEC 60601-2-47 (±0.050 mV = 50 uV) 0-violation bound
+  const ecgField = new Float32Array(realSlices.mitbih_119_ecg.mlii_mv_f32);
+  const ecgIec = runRealSliceLiveForensicAuditTS({
+    field: ecgField,
+    rows: 16,
+    cols: 256,
+    mode: 'error_bounded',
+    absTolerance: 0.05,
+    maxPointSpikes: 48,
+  });
+  assert(
+    ecgIec.scarMaxAbsErr <= 0.05001 && ecgIec.compressionRatio > 1.4 && ecgIec.blockO1VsFullMaxDiff === 0,
+    'MIT-BIH 119 IEC 50 uV clinical bound failed in live browser engine!'
+  );
+
+  // 4. NOAA Ocean + Antarctica: exact 0.0000 C pure continental mask vs >2.5 C 2D-DCT Gibbs leak
+  const noaaField = new Float32Array(realSlices.noaa_oisst_gulf_stream.grid_f32);
+  const noaaE8 = runRealSliceLiveForensicAuditTS({ field: noaaField, rows: 32, cols: 128, mode: 'e8', maxPointSpikes: 48 });
+  assert(
+    noaaE8.pureZeroBlockCount === 12 &&
+      noaaE8.scarPureZeroBlockMaxErr === 0.0 &&
+      noaaE8.spectralPureZeroBlockMaxErr > 2.5 &&
+      noaaE8.blockO1VsFullMaxDiff === 0,
+    'NOAA OISST Antarctica pure-continent vacuum invariant failed!'
+  );
+
+  // 5. ROSAT Soft X-Ray: >8.0x E8 compression + >9.0x lower RMSE than matched 2D-DCT + ±50 bound
+  const rosField = new Float32Array(realSlices.rosat_xray_scox1.grid_f32);
+  const rosE8 = runRealSliceLiveForensicAuditTS({ field: rosField, rows: 32, cols: 128, mode: 'e8', maxPointSpikes: 48 });
+  const rosEb = runRealSliceLiveForensicAuditTS({
+    field: rosField,
+    rows: 32,
+    cols: 128,
+    mode: 'error_bounded',
+    absTolerance: 50.0,
+    maxPointSpikes: 48,
+  });
+  assert(
+    rosE8.compressionRatio > 8.0 &&
+      rosE8.scarRmse < rosE8.spectralRmse / 9.0 &&
+      rosEb.scarMaxAbsErr <= 50.001 &&
+      rosEb.compressionRatio > 2.5,
+    'ROSAT All-Sky Soft X-Ray live browser audit failed!'
+  );
+
+  const physLabSrc = fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/components/PhysicalScarLab.tsx'), 'utf-8');
+  assert(
+    physLabSrc.includes('data-testid="tab-live-real-workbench"') &&
+      physLabSrc.includes('data-testid="physical-scar-live-real-workbench"'),
+    'PhysicalScarLab.tsx missing Tab 5 live real-data workbench testids!'
+  );
+
+  console.log(
+    `[PASS 16/16] Expanded 10-Archive / 8-Science Physics Lab + Live Real-Data Browser Workbench (LIGO 0/4096 FP16 -> ${ligoE8.compressionRatio.toFixed(2)}x E8 · Tohoku ${(seisE8.spectralRmse / seisE8.scarRmse).toFixed(1)}x < DCT · ECG IEC ±50uV 0-Violations · NOAA Antarctica 0.0000°C vs ${noaaE8.spectralPureZeroBlockMaxErr.toFixed(2)}°C DCT · ROSAT ${(rosE8.spectralRmse / rosE8.scarRmse).toFixed(1)}x < DCT)`
   );
 
   console.log('\n================================================================================');
-  console.log('ALL 15/15 SCAR ARCHITECTURE ECOSYSTEM + SCARCODEC v6.0 + SCARFIELD v7.0 + JARVIS + POINTSCARFLOW SUITES PASSED!');
+  console.log('ALL 16/16 SCAR ARCHITECTURE ECOSYSTEM + 10-ARCHIVE SCARCODEC v6.0 + SCARFIELD v7.0 + JARVIS + POINTSCARFLOW SUITES PASSED!');
   console.log('================================================================================');
 }
 

@@ -1,0 +1,310 @@
+{
+  "suite": "scar_codec_expanded_real_physics_v2_0_audit",
+  "scar_codec_version": "6.0.0",
+  "scar_codec_modified": false,
+  "synthetic_data_used": false,
+  "oracle_steering_used": false,
+  "total_public_archives_across_ecosystem": 10,
+  "total_physical_sciences_covered": 8,
+  "new_provenance_manifest": [
+    {
+      "id": "ligo_gw150914_h1_strain",
+      "filename": "ligo_gw150914_h1_4khz_32s.txt.gz",
+      "url": "https://gwosc.org/eventapi/html/GWTC-1-confident/GW150914/v3/H-H1_GWOSC_4KHZ_R1-1126259447-32.txt.gz",
+      "domain": "Gravitational-Wave Interferometry (LIGO Hanford H1 GW150914 4096 Hz Strain, ~10^-19)",
+      "citation": "Abbott et al. (LIGO Scientific & Virgo Collaborations, 2016), Phys. Rev. Lett. 116, 061102; GWOSC.",
+      "license": "CC0-1.0 / LIGO Open Science Center Public Data",
+      "bytes": 1286320,
+      "sha256": "fefe8717306109460b6c9cff74da6beb9e80ee624824b4b09bdd2c54ce9b4dfc"
+    },
+    {
+      "id": "ligo_gw150914_l1_strain",
+      "filename": "ligo_gw150914_l1_4khz_32s.txt.gz",
+      "url": "https://gwosc.org/eventapi/html/GWTC-1-confident/GW150914/v3/L-L1_GWOSC_4KHZ_R1-1126259447-32.txt.gz",
+      "domain": "Gravitational-Wave Interferometry (LIGO Livingston L1 GW150914 4096 Hz Strain, ~10^-19)",
+      "citation": "Abbott et al. (LIGO Scientific & Virgo Collaborations, 2016), Phys. Rev. Lett. 116, 061102; GWOSC.",
+      "license": "CC0-1.0 / LIGO Open Science Center Public Data",
+      "bytes": 1219514,
+      "sha256": "43d30a710d6ed4a8f27d13f45182f3825cbe99f87287b518618c8ff0e25e0d7c"
+    },
+    {
+      "id": "iris_anmo_tohoku_2011_bh3",
+      "filename": "iris_anmo_tohoku_2011_bh3.geocsv",
+      "url": "https://service.iris.edu/fdsnws/dataselect/1/query?net=IU&sta=ANMO&loc=00&cha=BHZ,BH1,BH2&start=2011-03-11T05:45:00&end=2011-03-11T06:45:00&format=geocsv",
+      "domain": "Global Broadband Seismology (USGS/IRIS IU.ANMO 2011 Mw 9.1 Tohoku-Oki 3-Axis BHZ/BH1/BH2)",
+      "citation": "Albuquerque Seismological Laboratory (1988), Global Seismograph Network (GSN - IRIS/USGS), DOI: 10.7914/SN/IU.",
+      "license": "CC-BY-4.0 / EarthScope SAGE & USGS Public Domain",
+      "bytes": 7917224,
+      "sha256": "717550081f624e45952fc6ddcc0f3da296ce3fce83e7cb407f1c1bf4aee43a05"
+    },
+    {
+      "id": "physionet_mitbih_119_dat",
+      "filename": "mitbih_119.dat",
+      "url": "https://physionet.org/files/mitdb/1.0.0/119.dat",
+      "domain": "Clinical Cardiology Holter Telemetry (MIT-BIH Arrhythmia Record 119, 360 Hz MLII+V1)",
+      "citation": "Moody & Mark (2001), IEEE Eng. Med. Biol. Mag. 20(3), 45-50; Goldberger et al. (2000), Circulation 101(23), e215.",
+      "license": "ODC-By-1.0 (PhysioNet Open Data)",
+      "bytes": 1950000,
+      "sha256": "02a286a28e69b441568add915f16a2856b22bab893bf8729ee9654411ed3a5aa"
+    },
+    {
+      "id": "physionet_mitbih_119_hea",
+      "filename": "mitbih_119.hea",
+      "url": "https://physionet.org/files/mitdb/1.0.0/119.hea",
+      "domain": "Clinical Cardiology Header Metadata (MIT-BIH Record 119)",
+      "citation": "Moody & Mark (2001), IEEE Eng. Med. Biol. Mag. 20(3), 45-50.",
+      "license": "ODC-By-1.0 (PhysioNet Open Data)",
+      "bytes": 158,
+      "sha256": "658f01382d7280a06e2f4c06363569d477394a6898c69ee788bb383f6092df63"
+    },
+    {
+      "id": "physionet_mitbih_119_atr",
+      "filename": "mitbih_119.atr",
+      "url": "https://physionet.org/files/mitdb/1.0.0/119.atr",
+      "domain": "Clinical Cardiology Beat Annotations (MIT-BIH Record 119, 444 Cardiologist PVCs)",
+      "citation": "Moody & Mark (2001), IEEE Eng. Med. Biol. Mag. 20(3), 45-50.",
+      "license": "ODC-By-1.0 (PhysioNet Open Data)",
+      "bytes": 4812,
+      "sha256": "fd919c8ea20eed4a22fb37984977f30ce48d382eefd2d90934bf947a88e0fd7b"
+    },
+    {
+      "id": "noaa_oisst_v2_ltm",
+      "filename": "noaa_oisst_v2_ltm.nc",
+      "url": "https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2/sst.ltm.1971-2000.nc",
+      "domain": "Climate & Physical Oceanography (NOAA OISST v2 [12, 180, 360] Global Ocean SST Cube)",
+      "citation": "Reynolds et al. (2002), J. Climate 15(13), 1609-1625 (NOAA Physical Sciences Laboratory).",
+      "license": "U.S. Government Public Domain (NOAA PSL)",
+      "bytes": 1560080,
+      "sha256": "5d7d61a465a65ef404e5f33a7eeb42fc7b22e999de749bb915d382d4cad3fdf7"
+    },
+    {
+      "id": "noaa_oisst_v2_lsmask",
+      "filename": "noaa_oisst_v2_lsmask.nc",
+      "url": "https://downloads.psl.noaa.gov/Datasets/noaa.oisst.v2/lsmask.nc",
+      "domain": "Global Continental Land-Sea Mask (NOAA OISST v2 1-Degree Grid, 31.76% Dry Land)",
+      "citation": "Reynolds et al. (2002), J. Climate 15(13), 1609-1625 (NOAA PSL).",
+      "license": "U.S. Government Public Domain (NOAA PSL)",
+      "bytes": 133700,
+      "sha256": "7f5a9e7459a42c29ec5658e1458f71205034de1a01fc30f8225d5905a8fe2078"
+    },
+    {
+      "id": "rosat_allsky_soft_xray",
+      "filename": "rosat_allsky_xray.fits",
+      "url": "https://raw.githubusercontent.com/astropy/astropy-data/gh-pages/allsky/allsky_rosat.fits",
+      "domain": "High-Energy X-Ray Astrophysics (Max-Planck / NASA ROSAT All-Sky Survey Soft X-Ray Map)",
+      "citation": "Voges et al. (1999), Astron. Astrophys. 349, 389-405; Snowden et al. (1997), ApJ 485, 125.",
+      "license": "BSD-3-Clause / Public Astronomical Survey Archive",
+      "bytes": 478080,
+      "sha256": "22b77adc0bcb3c344593777b7d998361c0ea9355552bd7deb82f814e709a91b3"
+    }
+  ],
+  "experiment_6_ligo_gw150914_gravitational_waves": {
+    "shape_2d": [
+      256,
+      512
+    ],
+    "raw_fp32_bytes": 524288,
+    "strain_min_max": [
+      -7.044666109219843e-19,
+      7.706262223739889e-19
+    ],
+    "naive_fp16_nonzero_samples_out_of_131072": 0,
+    "lossless_pow2_exponent_scale": 1.3234889800848443e-23,
+    "h1_merger_peak_time_s": 15.4268,
+    "l1_merger_peak_time_s": 15.4197,
+    "measured_l1_to_h1_light_travel_delay_ms": 7.08,
+    "zlib_level9_bytes": 486364,
+    "zlib_compression_x": 1.08,
+    "scar_p_perp_vq4_total_bytes": 63424,
+    "scar_vq4_compression_x": 8.27,
+    "unshielded_vq4_merger_chirp_cosine": 0.0652,
+    "unshielded_zfp_merger_chirp_cosine": -0.02889,
+    "scar_vq4_whitened_merger_chirp_cosine": 0.79163,
+    "scar_gosset_e8_bytes": 44736,
+    "scar_gosset_e8_compression_x": 11.72,
+    "scar_eb_tolerance_strain": 2.5e-22,
+    "scar_eb_measured_max_abs_err": 2.4999612980338867e-22,
+    "scar_eb_compression_x": 2.56,
+    "scar_eb_whitened_merger_chirp_cosine": 0.84294,
+    "c_simd_mmap_o1_block_us": 4.375,
+    "c_simd_speedup_vs_zlib_x": 249.4,
+    "block_vs_full_max_diff": 0.0,
+    "scache_dual_detector_coincidence": {
+      "total_frames_streamed": 3840,
+      "scache_bytes": 26240,
+      "scache_delta_bytes": 0,
+      "equal_byte_ring_frame_cap": 192,
+      "gw150914_merger_captured_by_scache": true,
+      "gw150914_merger_captured_by_ring": false,
+      "recorded_event_frames": [
+        1845,
+        1846
+      ]
+    }
+  },
+  "experiment_7_iris_tohoku_mw91_seismology": {
+    "shape_2d": [
+      336,
+      640
+    ],
+    "raw_fp32_bytes": 860160,
+    "quiet_crust_std_counts": 472.48,
+    "peak_rayleigh_counts": 3125345.0,
+    "hdr_dynamic_range_x": 6614.8,
+    "naive_fp16_overflow_peak_error_counts": 3059841.0,
+    "lossless_pow2_exponent_scale": 8192.0,
+    "zlib_compression_x": 1.39,
+    "scar_vq4_bytes": 75776,
+    "scar_vq4_compression_x": 11.35,
+    "zfp_matched_bytes": 77296,
+    "scar_rmse_counts": 30848.14,
+    "zfp_rmse_counts": 76236.78,
+    "fp16_rfft_rmse_counts": 296256.19,
+    "scar_global_rmse_gain_over_zfp_x": 2.47,
+    "scar_snr_gain_over_zfp_db": 7.86,
+    "scar_top32_peak_err_counts": 130752.0,
+    "zfp_top32_peak_err_counts": 110689.0,
+    "fp16_rfft_top32_peak_err_counts": 1049331.25,
+    "scar_peak_gain_over_zfp_x": 0.85,
+    "geophysical_5000count_bound_mode": {
+      "requested_abs_tolerance_counts": 5000.0,
+      "measured_max_abs_err_counts": 4999.93,
+      "compression_vs_fp32_x": 1.11
+    },
+    "p_wave_onset_3axis_cosine_scar": 0.99581,
+    "p_wave_onset_3axis_cosine_zfp": 0.99468,
+    "c_simd_mmap_o1_block_us": 4.583,
+    "c_simd_speedup_vs_zlib_x": 385.2,
+    "scache_sta_lta_pwave_retention": {
+      "scache_bytes": 30528,
+      "scache_delta_bytes": 0,
+      "p_wave_onset_retained_scache": true,
+      "p_wave_onset_retained_equal_byte_ring": false,
+      "recorded_arrival_frames": [
+        261,
+        263,
+        461,
+        463,
+        464
+      ]
+    }
+  },
+  "experiment_8_physionet_mitbih_119_cardiology_ecg": {
+    "shape_2d": [
+      1015,
+      1280
+    ],
+    "duration_minutes": 30.09,
+    "cardiologist_annotated_pvcs": 444,
+    "raw_fp32_bytes": 5196800,
+    "scar_vq4_bytes": 394240,
+    "scar_vq4_compression_x": 13.18,
+    "scar_vq4_snr_db": 20.5,
+    "zfp_matched_bytes": 386096,
+    "zfp_matched_snr_db": 14.91,
+    "scar_snr_gain_over_zfp_db": 5.59,
+    "iec_holter_50uv_bound_mode": {
+      "standard": "IEC 60601-2-47 Ambulatory ECG (\u00b150 uV)",
+      "requested_abs_tolerance_mv": 0.05,
+      "measured_max_abs_err_mv": 0.05,
+      "violations_out_of_1299200_samples": 0,
+      "iec_packed_bytes": 3399636,
+      "iec_compression_vs_fp32_x": 1.53
+    },
+    "iec_resting_15uv_stress_mode": {
+      "standard": "3-LSB 11-bit ADC Stress Bound (\u00b115 uV)",
+      "requested_abs_tolerance_mv": 0.015,
+      "measured_max_abs_err_mv": 0.015,
+      "violations_out_of_1299200_samples": 0,
+      "iec_packed_bytes": 6406980,
+      "iec_compression_vs_fp32_x": 0.81
+    },
+    "c_simd_mmap_o1_block_us": 4.891,
+    "holter_scache_o1_audit": {
+      "total_beats_streamed": 1459,
+      "scache_bytes": 34816,
+      "scache_delta_bytes": 0,
+      "equal_byte_ring_beat_cap": 256,
+      "pvc_arrhythmia_slot_purity_pct": 81.2,
+      "pre_horizon_pvcs_retained_scache": 37,
+      "pre_horizon_pvcs_retained_ring": 0,
+      "lead_v1_dropout_pvc_recall_cosine": 0.9922
+    }
+  },
+  "experiment_9_noaa_oisst_3d_climate_oceanography": {
+    "cube_shape": [
+      12,
+      180,
+      360
+    ],
+    "raw_fp32_bytes": 3110400,
+    "dry_land_fraction_pct": 31.76,
+    "scar_3d_tucker_bytes": 131780,
+    "scar_3d_tucker_compression_x": 23.6,
+    "scar_3d_ocean_rmse_c": 1.1074,
+    "zfp_3d_matched_bytes": 133664,
+    "zfp_3d_ocean_rmse_c": 1.1359,
+    "pure_continent_rows_max_err_c": {
+      "scar_codec": 0.0,
+      "fp16_2d_rfft": 0.5065,
+      "zfp_fixed_rate": 0.0
+    },
+    "zarr_avhrr_0p30c_mode": {
+      "standard": "NOAA AVHRR Satellite Radiometer Uncertainty (\u00b10.30 \u00b0C)",
+      "requested_abs_tolerance_c": 0.3,
+      "measured_max_abs_err_c": 0.3,
+      "zarr_chunk_bytes": 2574504,
+      "compression_vs_fp32_x": 1.21
+    },
+    "zarr_metrology_0p05c_mode": {
+      "standard": "50 mK Sub-Sensor Metrology Stress Bound (\u00b10.05 \u00b0C)",
+      "requested_abs_tolerance_c": 0.05,
+      "measured_max_abs_err_c": 0.05,
+      "zarr_chunk_bytes": 4121256,
+      "compression_vs_fp32_x": 0.75
+    }
+  },
+  "experiment_10_rosat_allsky_xray_astrophysics": {
+    "shape": [
+      240,
+      480
+    ],
+    "raw_fp32_bytes": 460800,
+    "hdr_peak_to_median_ratio_x": 312.8,
+    "zlib_compression_x": 1.44,
+    "scar_vq4": {
+      "bytes": 46016,
+      "compression_x": 10.01,
+      "rmse": 13.305,
+      "top32_peak_max_err": 15.508,
+      "c_simd_mmap_o1_block_us": 4.439
+    },
+    "scar_gosset_e8_1bpw": {
+      "bytes": 26944,
+      "compression_x": 17.1,
+      "rmse": 25.721,
+      "top32_peak_max_err": 14.621
+    },
+    "zfp_matched": {
+      "bytes": 46816,
+      "rmse": 84.585,
+      "top32_peak_max_err": 6557.016
+    },
+    "fits_fpack_rice_1": {
+      "payload_bytes": 46221,
+      "rmse": 5.555,
+      "top32_peak_max_err": 13.87,
+      "high_compression_floor_bytes": 36111,
+      "high_compression_floor_peak_err": 29.83,
+      "e8_peak_gain_over_fpack_floor_x": 2.04
+    },
+    "fp16_2d_rfft_matched": {
+      "bytes": 45604,
+      "rmse": 176.039,
+      "top32_peak_max_err": 17656.199
+    },
+    "scar_peak_gain_over_zfp_x": 422.8,
+    "scar_peak_gain_over_rfft_x": 1138.5,
+    "scar_peak_gain_over_fpack_x": 0.89
+  }
+}
