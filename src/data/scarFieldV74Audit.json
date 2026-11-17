@@ -1,0 +1,578 @@
+{
+  "suite": "scar_field_v7_4_turbo_scouts_audit",
+  "version": "7.4.0",
+  "hardware": "NVIDIA A100-SXM4-80GB",
+  "warm_started_from_v7_3_tensors": 48,
+  "completed_v7_4_steps": 2000,
+  "streamed_v7_4_selected_bytes": 14755840,
+  "scouted_candidate_frontier_bytes": 59632640,
+  "scarfield_v7_4_config": {
+    "vocab_size": 256,
+    "d_form": 384,
+    "d_world": 512,
+    "d_bus": 384,
+    "d_key": 128,
+    "num_subspaces": 8,
+    "ring_len": 64,
+    "repulsive_len": 12,
+    "base_rank": 12,
+    "num_scars": 96,
+    "s1_steps": 1,
+    "s2_steps": 4,
+    "s2_surprise_theta": 0.45,
+    "shock_write_theta": 0.5,
+    "vacuum_kappa": 0.36,
+    "uncertainty_margin_thresh": 0.24,
+    "ghost_jump_candidates": 3,
+    "ghost_jump_gamma": 0.35,
+    "wy_chunk_size": 64,
+    "enable_kalman_fast": true,
+    "wave_lags": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      8,
+      12,
+      16,
+      24
+    ],
+    "num_macro_cycles": 2,
+    "biorth_slots": 48,
+    "biorth_lambda": 0.04,
+    "enable_biorth_uscar": true,
+    "enable_adaptive_cap": true,
+    "scout_g0_theta": 0.36,
+    "antiloop_weight": 0.12
+  },
+  "a100_speed_and_scout_telemetry": {
+    "v7_3_measured_step_ms": 1836.4,
+    "v7_3_measured_bytes_per_sec": 3507.0,
+    "v7_4_turbo_step_ms_b16_t384": 1127.54,
+    "v7_4_turbo_avg_mixed_step_ms": 1243.82,
+    "v7_4_turbo_bytes_per_sec_b16_t384": 5449.0,
+    "v7_4_periodic_e8_heal_ms": 87.61,
+    "wall_clock_step_speedup_vs_v7_3_x": 1.63,
+    "scout_fleet_6to1_overhead_ms": 200.58,
+    "mean_scout_epistemic_shock_gain_x": 1.025,
+    "effective_frontier_shock_speedup_vs_v7_3_x": 1.67,
+    "degenerate_windows_filtered_total": 487,
+    "record_curriculum": false
+  },
+  "architecture_comparison": {
+    "scarfield_v7_4_spherical_params": 59984935,
+    "scarfield_v7_4_sfield_scar_bytes": 9990016,
+    "scarfield_v7_4_sfield_scar_mib": 9.527,
+    "scarfield_v7_4_o1_state_bytes": 455503,
+    "dense_transformer_params": 33434112,
+    "dense_transformer_fp16_mib": 63.771,
+    "weight_compression_vs_dense_fp16_x": 6.69,
+    "mmap_c_simd_forward_cosine": 0.999958,
+    "v7_4_train_seconds": 2487.6,
+    "dense_train_seconds": 87.6
+  },
+  "step_1_heldout_open_domain_metrics": {
+    "pt": {
+      "scarfield_v7_4_turbo": {
+        "eval_bytes": 30640,
+        "calibrated_bpb": 2.493,
+        "train_escape_lambda": 0.01708,
+        "in_cap_coverage_pct": 95.27,
+        "top1_byte_acc_pct": 54.61,
+        "top5_byte_acc_pct": 82.02,
+        "exact_zero_sparsity_pct": 95.75
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 30640,
+        "bpb": 3.5302,
+        "top1_byte_acc_pct": 27.09,
+        "top5_byte_acc_pct": 67.34,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    },
+    "en": {
+      "scarfield_v7_4_turbo": {
+        "eval_bytes": 30640,
+        "calibrated_bpb": 2.3048,
+        "train_escape_lambda": 0.0211,
+        "in_cap_coverage_pct": 96.04,
+        "top1_byte_acc_pct": 58.25,
+        "top5_byte_acc_pct": 83.24,
+        "exact_zero_sparsity_pct": 95.55
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 30640,
+        "bpb": 3.6053,
+        "top1_byte_acc_pct": 26.74,
+        "top5_byte_acc_pct": 66.3,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    },
+    "es": {
+      "scarfield_v7_4_turbo": {
+        "eval_bytes": 30640,
+        "calibrated_bpb": 2.4676,
+        "train_escape_lambda": 0.02154,
+        "in_cap_coverage_pct": 94.98,
+        "top1_byte_acc_pct": 55.87,
+        "top5_byte_acc_pct": 82.08,
+        "exact_zero_sparsity_pct": 95.72
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 30640,
+        "bpb": 3.4955,
+        "top1_byte_acc_pct": 27.1,
+        "top5_byte_acc_pct": 69.79,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    },
+    "fr": {
+      "scarfield_v7_4_turbo": {
+        "eval_bytes": 30640,
+        "calibrated_bpb": 2.2903,
+        "train_escape_lambda": 0.0161,
+        "in_cap_coverage_pct": 95.85,
+        "top1_byte_acc_pct": 58.64,
+        "top5_byte_acc_pct": 84.15,
+        "exact_zero_sparsity_pct": 95.91
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 30640,
+        "bpb": 3.5101,
+        "top1_byte_acc_pct": 28.22,
+        "top5_byte_acc_pct": 66.78,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    },
+    "code": {
+      "scarfield_v7_4_turbo": {
+        "eval_bytes": 30640,
+        "calibrated_bpb": 1.5406,
+        "train_escape_lambda": 0.03894,
+        "in_cap_coverage_pct": 97.88,
+        "top1_byte_acc_pct": 74.23,
+        "top5_byte_acc_pct": 89.78,
+        "exact_zero_sparsity_pct": 95.75
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 30640,
+        "bpb": 3.7238,
+        "top1_byte_acc_pct": 33.36,
+        "top5_byte_acc_pct": 60.81,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    }
+  },
+  "step_1_biorthogonal_passkey_recall_up_to_t2048": {
+    "scarfield_v7_4_biorthogonal": {
+      "T=128": {
+        "seq_len_bytes": 128,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=256": {
+        "seq_len_bytes": 256,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=512": {
+        "seq_len_bytes": 512,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=768": {
+        "seq_len_bytes": 768,
+        "exact_3digit_acc": 0.8125,
+        "per_digit_acc": 0.9271
+      },
+      "T=1024": {
+        "seq_len_bytes": 1024,
+        "exact_3digit_acc": 0.7812,
+        "per_digit_acc": 0.9167
+      },
+      "T=1536": {
+        "seq_len_bytes": 1536,
+        "exact_3digit_acc": 0.0625,
+        "per_digit_acc": 0.5417
+      },
+      "T=2048": {
+        "seq_len_bytes": 2048,
+        "exact_3digit_acc": 0.0312,
+        "per_digit_acc": 0.3125
+      }
+    },
+    "scarfield_ablation_no_biorth_bank": {
+      "T=128": {
+        "seq_len_bytes": 128,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=256": {
+        "seq_len_bytes": 256,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=512": {
+        "seq_len_bytes": 512,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=768": {
+        "seq_len_bytes": 768,
+        "exact_3digit_acc": 0.8125,
+        "per_digit_acc": 0.9271
+      },
+      "T=1024": {
+        "seq_len_bytes": 1024,
+        "exact_3digit_acc": 0.75,
+        "per_digit_acc": 0.8958
+      },
+      "T=1536": {
+        "seq_len_bytes": 1536,
+        "exact_3digit_acc": 0.0312,
+        "per_digit_acc": 0.5104
+      },
+      "T=2048": {
+        "seq_len_bytes": 2048,
+        "exact_3digit_acc": 0.0312,
+        "per_digit_acc": 0.2708
+      }
+    },
+    "dense_fp16_ot": {
+      "T=128": {
+        "seq_len_bytes": 128,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0208
+      },
+      "T=256": {
+        "seq_len_bytes": 256,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0521
+      },
+      "T=512": {
+        "seq_len_bytes": 512,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0208
+      },
+      "T=768": {
+        "seq_len_bytes": 768,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0104
+      },
+      "T=1024": {
+        "seq_len_bytes": 1024,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0521
+      },
+      "T=1536": {
+        "seq_len_bytes": 1536,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0104
+      },
+      "T=2048": {
+        "seq_len_bytes": 2048,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0312
+      }
+    }
+  },
+  "step_1_biorthogonal_uscar_and_epistemic": {
+    "sibling_pole_raw_cosine_overlap": 0.9981,
+    "orthogonal_pole_sibling_bleed_ratio": 0.995,
+    "biorthogonal_pole_sibling_bleed_ratio": 0.852389,
+    "cross_lingual_en_to_pt_uscar_resonance": 0.9401,
+    "post_0x00_gdpr_wipe_residual": 0.0,
+    "cross_lingual_s_world_cosine_zero_procrustes": {
+      "pt_en": 0.9897,
+      "es_en": 0.99133,
+      "fr_en": 0.98856
+    },
+    "out_of_cone_0x00_vacuum_abstention": "8/8"
+  },
+  "step_2_multilingual_chat_and_code_sft": {
+    "sft_dialogue_bank_size": 2192,
+    "multi_turn_o1_unseen_pin_exact_acc": 0.2083,
+    "multi_turn_o1_unseen_pin_digit_acc": 0.1667,
+    "multi_turn_state_bytes_delta": 0,
+    "multi_turn_examples": [
+      {
+        "lang": "pt",
+        "unseen_pin": "905",
+        "turn1_reply": "Chave registrada: PIN=905.",
+        "turn2_reply_excerpt": "A segunda ley de los estados están relacionados con la luz de la relatividad general está ",
+        "turn3_reply": "A segunda ley de la gravitación se conoce como una masa de chave de cha",
+        "state_bytes_delta": 0
+      },
+      {
+        "lang": "en",
+        "unseen_pin": "800",
+        "turn1_reply": "Session key stored: PIN=800.",
+        "turn2_reply_excerpt": "The stored: PIN=80000000000000000000000000000000000000000000000000000000000000000000000000",
+        "turn3_reply": "The stored session key is PIN=800000000000000000000000000000000000000000",
+        "state_bytes_delta": 0
+      },
+      {
+        "lang": "es",
+        "unseen_pin": "702",
+        "turn1_reply": "Clave registrada: PIN=702.",
+        "turn2_reply_excerpt": "Este principio de campos está gravitacionalmente considerado como una arquitectura neurona",
+        "turn3_reply": "La estructura de la estructura de la estructura de la estructura de la e",
+        "state_bytes_delta": 0
+      },
+      {
+        "lang": "fr",
+        "unseen_pin": "533",
+        "turn1_reply": "Clé enregistrée : PIN=533.",
+        "turn2_reply_excerpt": "La relativité générale est une précision est une précision entre les précisions et les pré",
+        "turn3_reply": "La mecénarios précédentes se référencent à l'autre par le tenseur",
+        "state_bytes_delta": 0
+      }
+    ],
+    "heldout_chat_and_code_generations": {
+      "pt": [
+        {
+          "prompt": "O que é o ScarField e como sua memória opera?",
+          "reply": "O exemplo mais complexo da matéria escura e magnética com o equilíbrio magnético com o equilíbrio magnético do sistema isolado nunca diminui, definindo a seta irreversível do tempo.",
+          "bytes_generated": 188,
+          "mean_confidence": 0.8173,
+          "s2_deliberation_fraction": 0.9628,
+          "state_bytes": 455503,
+          "keyword_hits": "0/3"
+        },
+        {
+          "prompt": "Qual a diferença entre base ortogonal e biortogonal?",
+          "reply": "A biortogonal usa ortogonal usa um único conjunto perpendicular U^T U = I; uma base biortogonal usa um único conjunto perpendicular U^T U = I que anulam a separação da energia interna de um sistema isolado nunca dimi",
+          "bytes_generated": 220,
+          "mean_confidence": 0.8664,
+          "s2_deliberation_fraction": 0.9455,
+          "state_bytes": 455503,
+          "keyword_hits": "2/3"
+        }
+      ],
+      "en": [
+        {
+          "prompt": "What is ScarField and how does its memory scale?",
+          "reply": "The speed of light in vacuum. The speed of light in vacuum is an exact physical constant equal to 299,792,458 meters per second.",
+          "bytes_generated": 128,
+          "mean_confidence": 0.8929,
+          "s2_deliberation_fraction": 0.9609,
+          "state_bytes": 455503,
+          "keyword_hits": "0/3"
+        },
+        {
+          "prompt": "Explain how biorthogonal memory improves recall.",
+          "reply": "Biorthogonal memory computes dual read keys K_tilde = (K K^T + lambda I)^-1 K inside a fixed O(1) slot bank, canceling oblique key crosstalk across thousands of bytes.",
+          "bytes_generated": 167,
+          "mean_confidence": 0.951,
+          "s2_deliberation_fraction": 0.9581,
+          "state_bytes": 455503,
+          "keyword_hits": "3/3"
+        }
+      ],
+      "es": [
+        {
+          "prompt": "¿Qué es ScarField y cómo funciona su memoria?",
+          "reply": "La memoria biortogonal resuelve la base dual K_tilde K^T = I sobre ranuras fijas de choque causal, eliminando la interferencia oblicua sin crecer con la longitud del texto.",
+          "bytes_generated": 172,
+          "mean_confidence": 0.8883,
+          "s2_deliberation_fraction": 0.9535,
+          "state_bytes": 455503,
+          "keyword_hits": "0/3"
+        }
+      ],
+      "fr": [
+        {
+          "prompt": "Qu'est-ce que ScarField et comment fonctionne sa mémoire ?",
+          "reply": "La mémoire biologique spécialiste des mémoires étant des états de l'état de son étant des états de l'état d'une particule.",
+          "bytes_generated": 131,
+          "mean_confidence": 0.75,
+          "s2_deliberation_fraction": 0.9313,
+          "state_bytes": 455503,
+          "keyword_hits": "0/3"
+        }
+      ],
+      "code": [
+        {
+          "prompt": "Write a Python function to compute cosine similarity between two lists of floats.",
+          "reply": "def mathematical_thread(a: list[float]) -> float:\n    return sum(x * y for x, y in zip(a, b))",
+          "bytes_generated": 93,
+          "mean_confidence": 0.8608,
+          "s2_deliberation_fraction": 0.9247,
+          "state_bytes": 455503,
+          "keyword_hits": "2/2",
+          "python_ast_valid": true
+        },
+        {
+          "prompt": "Escreva uma função Python para calcular o máximo divisor comum (MDC) de dois inteiros.",
+          "reply": "def mdc(a: list[float]) -> float:\n    return sum(x * y for x, y in zip(a, b))",
+          "bytes_generated": 77,
+          "mean_confidence": 0.8824,
+          "s2_deliberation_fraction": 0.9091,
+          "state_bytes": 455503,
+          "keyword_hits": "2/2",
+          "python_ast_valid": true
+        }
+      ]
+    }
+  },
+  "corpus_provenance": [
+    {
+      "domain": "pt",
+      "title": "Wikimedia Wikipedia Deep Open Corpus (PT, 119 topics)",
+      "bytes": 4249767,
+      "sha256": "ea460f0d0fd8573e1560c94c406222e7671e321443034d9deb70030cbd792c2d"
+    },
+    {
+      "domain": "en",
+      "title": "Wikimedia Wikipedia Deep Open Corpus (EN, 119 topics)",
+      "bytes": 5151697,
+      "sha256": "757f946630ac9e3a6cbf17fbf1b83173806228b30d1258a48049c015a8477602"
+    },
+    {
+      "domain": "es",
+      "title": "Wikimedia Wikipedia Deep Open Corpus (ES, 119 topics)",
+      "bytes": 4354322,
+      "sha256": "8ba64aaa8ad3f03098902c3db7c79a0b10160bf75c57e5c53eebe9180c1b0f96"
+    },
+    {
+      "domain": "fr",
+      "title": "Wikimedia Wikipedia Deep Open Corpus (FR, 119 topics)",
+      "bytes": 4752458,
+      "sha256": "5ff44ab2eb6a339d4a20da33e1404c10dda0eef1026d9f890797739ae8bcda79"
+    },
+    {
+      "source": "scar_ecosystem",
+      "bytes": 7482707,
+      "sha256": "8fab235edb2a7752f18a7d50a97444113d077170b059d16409e1573297c81e25"
+    },
+    {
+      "source": "python_stdlib",
+      "bytes": 3023058,
+      "sha256": "410d48fe7fbbf71932c0d324e8d8c99030231acd48c0bb84bc53f2a9214c62d4"
+    }
+  ],
+  "training_curve": [
+    {
+      "step": 1,
+      "lr": 0.0012,
+      "loss_cap": 0.3097,
+      "loss_reflex": 0.6926,
+      "loss_antiloop": 0.00098,
+      "biorth_gain": 1.0782,
+      "cap_adapt_gain": 0.3694,
+      "scout_epistemic_gain_x": 1.018,
+      "elapsed_s": 1.1
+    },
+    {
+      "step": 200,
+      "lr": 0.001176,
+      "loss_cap": 0.5106,
+      "loss_reflex": 0.8984,
+      "loss_antiloop": 0.00074,
+      "biorth_gain": 0.8283,
+      "cap_adapt_gain": 0.3462,
+      "scout_epistemic_gain_x": 1.028,
+      "elapsed_s": 235.0
+    },
+    {
+      "step": 400,
+      "lr": 0.001105,
+      "loss_cap": 0.4686,
+      "loss_reflex": 0.8644,
+      "loss_antiloop": 0.00103,
+      "biorth_gain": 0.6074,
+      "cap_adapt_gain": 0.3289,
+      "scout_epistemic_gain_x": 1.025,
+      "elapsed_s": 469.5
+    },
+    {
+      "step": 600,
+      "lr": 0.000994,
+      "loss_cap": 0.4938,
+      "loss_reflex": 0.8878,
+      "loss_antiloop": 0.0008,
+      "biorth_gain": 0.4284,
+      "cap_adapt_gain": 0.3121,
+      "scout_epistemic_gain_x": 1.026,
+      "elapsed_s": 703.6
+    },
+    {
+      "step": 800,
+      "lr": 0.000855,
+      "loss_cap": 0.4894,
+      "loss_reflex": 0.8913,
+      "loss_antiloop": 0.00074,
+      "biorth_gain": 0.2939,
+      "cap_adapt_gain": 0.3143,
+      "scout_epistemic_gain_x": 1.024,
+      "elapsed_s": 958.5
+    },
+    {
+      "step": 1000,
+      "lr": 0.0007,
+      "loss_cap": 0.4776,
+      "loss_reflex": 0.8795,
+      "loss_antiloop": 0.00087,
+      "biorth_gain": 0.2461,
+      "cap_adapt_gain": 0.3168,
+      "scout_epistemic_gain_x": 1.025,
+      "elapsed_s": 1213.4
+    },
+    {
+      "step": 1200,
+      "lr": 0.000546,
+      "loss_cap": 0.4981,
+      "loss_reflex": 0.8825,
+      "loss_antiloop": 0.00094,
+      "biorth_gain": 0.2155,
+      "cap_adapt_gain": 0.3276,
+      "scout_epistemic_gain_x": 1.023,
+      "elapsed_s": 1468.3
+    },
+    {
+      "step": 1400,
+      "lr": 0.000406,
+      "loss_cap": 0.4903,
+      "loss_reflex": 0.8843,
+      "loss_antiloop": 0.00076,
+      "biorth_gain": 0.2389,
+      "cap_adapt_gain": 0.3531,
+      "scout_epistemic_gain_x": 1.024,
+      "elapsed_s": 1722.9
+    },
+    {
+      "step": 1600,
+      "lr": 0.000296,
+      "loss_cap": 0.4848,
+      "loss_reflex": 0.8764,
+      "loss_antiloop": 0.00083,
+      "biorth_gain": 0.1848,
+      "cap_adapt_gain": 0.3915,
+      "scout_epistemic_gain_x": 1.023,
+      "elapsed_s": 1978.2
+    },
+    {
+      "step": 1800,
+      "lr": 0.000224,
+      "loss_cap": 0.4481,
+      "loss_reflex": 0.8556,
+      "loss_antiloop": 0.00128,
+      "biorth_gain": 0.2066,
+      "cap_adapt_gain": 0.4273,
+      "scout_epistemic_gain_x": 1.025,
+      "elapsed_s": 2233.1
+    },
+    {
+      "step": 2000,
+      "lr": 0.0002,
+      "loss_cap": 0.4784,
+      "loss_reflex": 0.8731,
+      "loss_antiloop": 0.00101,
+      "biorth_gain": 0.1879,
+      "cap_adapt_gain": 0.4686,
+      "scout_epistemic_gain_x": 1.026,
+      "elapsed_s": 2487.6
+    }
+  ]
+}
