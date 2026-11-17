@@ -1,0 +1,318 @@
+{
+  "suite": "scar_field_v7_1_open_corpus_audit",
+  "version": "7.1.0",
+  "mode": "full_open_corpus_a100",
+  "hardware": "NVIDIA A100-SXM4-40GB",
+  "elapsed_seconds": 1950.11,
+  "corpus_summary": {
+    "total_train_utf8_bytes": 11479180,
+    "total_heldout_val_utf8_bytes": 1277742,
+    "total_streamed_training_token_bytes": 12902400,
+    "guard_gap_bytes": 4096,
+    "num_sha256_verified_sources": 6,
+    "provenance_sources": [
+      {
+        "domain": "pt",
+        "title": "Wikimedia Wikipedia Full Scientific Articles (PT, 40 topics)",
+        "bytes": 1519567,
+        "sha256": "39287ca936762e4cc7186cc13e20576ef45aa82822eac079e1fdad77428b6067"
+      },
+      {
+        "domain": "en",
+        "title": "Wikimedia Wikipedia Full Scientific Articles (EN, 40 topics)",
+        "bytes": 1798999,
+        "sha256": "d252ecac3dbb2f6f3786dc8d020662556c1ff6211a690d0fd81cee1b7849ab20"
+      },
+      {
+        "domain": "es",
+        "title": "Wikimedia Wikipedia Full Scientific Articles (ES, 40 topics)",
+        "bytes": 1369805,
+        "sha256": "cf18d369c68f40d873d0030847245bebff8fb5dc6de99797440deb1f5be47f22"
+      },
+      {
+        "domain": "fr",
+        "title": "Wikimedia Wikipedia Full Scientific Articles (FR, 40 topics)",
+        "bytes": 1580994,
+        "sha256": "9c964fed6e98bfa5fbfb88e8ce276960b9ae269b1cd5cfd2449c47c170be1736"
+      },
+      {
+        "source": "scar_ecosystem",
+        "bytes": 312753,
+        "sha256": "483e7531b84c3a943788de82645444ddabcf3064f5221d9032a3c9d4cd49342d"
+      },
+      {
+        "source": "python_stdlib",
+        "bytes": 6195284,
+        "sha256": "492b1f46b86a7f6a6fa5ced57b1789f524e55f71daa2abfb268f78eff0464581"
+      }
+    ]
+  },
+  "scarfield_v7_1_config": {
+    "vocab_size": 256,
+    "d_form": 320,
+    "d_world": 448,
+    "d_bus": 320,
+    "d_key": 128,
+    "num_subspaces": 8,
+    "ring_len": 16,
+    "repulsive_len": 8,
+    "base_rank": 10,
+    "num_scars": 64,
+    "s1_steps": 2,
+    "s2_steps": 4,
+    "s2_surprise_theta": 0.45,
+    "shock_write_theta": 0.5,
+    "vacuum_kappa": 0.36,
+    "uncertainty_margin_thresh": 0.24,
+    "ghost_jump_candidates": 3,
+    "ghost_jump_gamma": 0.35,
+    "wy_chunk_size": 64,
+    "enable_kalman_fast": true
+  },
+  "architecture_comparison": {
+    "scarfield_v7_1_spherical_params": 25075610,
+    "scarfield_v7_1_sfield_scar_bytes": 4623296,
+    "scarfield_v7_1_sfield_scar_mib": 4.409,
+    "scarfield_v7_1_kalman_scache_o1_bytes": 210970,
+    "dense_transformer_params": 19733952,
+    "dense_transformer_fp16_bytes": 39467904,
+    "dense_transformer_fp16_mib": 37.64,
+    "dense_kv_cache_t2048_bytes": 29360128,
+    "weight_compression_vs_dense_fp16_x": 8.54,
+    "state_reduction_at_t2048_x": 139.17,
+    "mmap_c_simd_forward_cosine": 1.0,
+    "scarfield_train_seconds": 1824.8,
+    "dense_train_seconds": 67.4
+  },
+  "heldout_open_domain_metrics": {
+    "pt": {
+      "scarfield_v7_1": {
+        "eval_bytes": 24512,
+        "calibrated_bpb": 1.9326,
+        "train_escape_lambda": 0.0075,
+        "in_cap_coverage_pct": 99.01,
+        "top1_byte_acc_pct": 60.68,
+        "top5_byte_acc_pct": 87.85,
+        "exact_zero_sparsity_pct": 94.97
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 24512,
+        "bpb": 1.5766,
+        "top1_byte_acc_pct": 65.95,
+        "top5_byte_acc_pct": 90.14,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    },
+    "en": {
+      "scarfield_v7_1": {
+        "eval_bytes": 24512,
+        "calibrated_bpb": 1.9562,
+        "train_escape_lambda": 0.0082,
+        "in_cap_coverage_pct": 98.97,
+        "top1_byte_acc_pct": 61.31,
+        "top5_byte_acc_pct": 87.31,
+        "exact_zero_sparsity_pct": 94.81
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 24512,
+        "bpb": 1.7164,
+        "top1_byte_acc_pct": 63.3,
+        "top5_byte_acc_pct": 88.69,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    },
+    "es": {
+      "scarfield_v7_1": {
+        "eval_bytes": 24512,
+        "calibrated_bpb": 1.9972,
+        "train_escape_lambda": 0.0069,
+        "in_cap_coverage_pct": 98.61,
+        "top1_byte_acc_pct": 61.61,
+        "top5_byte_acc_pct": 87.34,
+        "exact_zero_sparsity_pct": 94.88
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 24512,
+        "bpb": 1.6341,
+        "top1_byte_acc_pct": 65.03,
+        "top5_byte_acc_pct": 89.67,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    },
+    "fr": {
+      "scarfield_v7_1": {
+        "eval_bytes": 24512,
+        "calibrated_bpb": 1.9887,
+        "train_escape_lambda": 0.0075,
+        "in_cap_coverage_pct": 98.82,
+        "top1_byte_acc_pct": 59.77,
+        "top5_byte_acc_pct": 87.81,
+        "exact_zero_sparsity_pct": 95.03
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 24512,
+        "bpb": 1.6569,
+        "top1_byte_acc_pct": 64.19,
+        "top5_byte_acc_pct": 89.92,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    },
+    "code": {
+      "scarfield_v7_1": {
+        "eval_bytes": 24512,
+        "calibrated_bpb": 1.4959,
+        "train_escape_lambda": 0.0653,
+        "in_cap_coverage_pct": 96.91,
+        "top1_byte_acc_pct": 80.89,
+        "top5_byte_acc_pct": 91.21,
+        "exact_zero_sparsity_pct": 92.86
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 24512,
+        "bpb": 1.8364,
+        "top1_byte_acc_pct": 71.41,
+        "top5_byte_acc_pct": 81.48,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    }
+  },
+  "unseen_passkey_recall_in_open_prose": {
+    "scarfield_v7_1": {
+      "T=128": {
+        "seq_len_bytes": 128,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=256": {
+        "seq_len_bytes": 256,
+        "exact_3digit_acc": 0.9583,
+        "per_digit_acc": 0.9861
+      },
+      "T=384": {
+        "seq_len_bytes": 384,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=640": {
+        "seq_len_bytes": 640,
+        "exact_3digit_acc": 0.9167,
+        "per_digit_acc": 0.9722
+      }
+    },
+    "dense_fp16_ot": {
+      "T=128": {
+        "seq_len_bytes": 128,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.1944
+      },
+      "T=256": {
+        "seq_len_bytes": 256,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.1806
+      },
+      "T=384": {
+        "seq_len_bytes": 384,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.125
+      },
+      "T=640": {
+        "seq_len_bytes": 640,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.1806
+      }
+    }
+  },
+  "polyglot_and_epistemic_metrics": {
+    "cross_lingual_s_world_cosine_zero_procrustes": {
+      "pt_en": 0.99312,
+      "es_en": 0.99343,
+      "fr_en": 0.99132
+    },
+    "unseen_out_of_cone_0x00_vacuum_abstention": "8/8"
+  },
+  "training_curve": [
+    {
+      "step": 1,
+      "seq_len": 192,
+      "loss_cap": 1.2709,
+      "loss_reflex": 2.013,
+      "elapsed_s": 7.1
+    },
+    {
+      "step": 160,
+      "seq_len": 192,
+      "loss_cap": 0.721,
+      "loss_reflex": 0.8599,
+      "elapsed_s": 147.5
+    },
+    {
+      "step": 320,
+      "seq_len": 192,
+      "loss_cap": 0.6387,
+      "loss_reflex": 0.8248,
+      "elapsed_s": 288.5
+    },
+    {
+      "step": 480,
+      "seq_len": 192,
+      "loss_cap": 0.6064,
+      "loss_reflex": 0.8373,
+      "elapsed_s": 430.2
+    },
+    {
+      "step": 640,
+      "seq_len": 192,
+      "loss_cap": 0.6087,
+      "loss_reflex": 0.8348,
+      "elapsed_s": 571.2
+    },
+    {
+      "step": 800,
+      "seq_len": 320,
+      "loss_cap": 0.5591,
+      "loss_reflex": 0.8472,
+      "elapsed_s": 739.9
+    },
+    {
+      "step": 960,
+      "seq_len": 320,
+      "loss_cap": 0.5371,
+      "loss_reflex": 0.8145,
+      "elapsed_s": 934.8
+    },
+    {
+      "step": 1120,
+      "seq_len": 320,
+      "loss_cap": 0.5133,
+      "loss_reflex": 0.8158,
+      "elapsed_s": 1129.5
+    },
+    {
+      "step": 1280,
+      "seq_len": 320,
+      "loss_cap": 0.5358,
+      "loss_reflex": 0.8479,
+      "elapsed_s": 1324.8
+    },
+    {
+      "step": 1440,
+      "seq_len": 448,
+      "loss_cap": 0.5358,
+      "loss_reflex": 0.8395,
+      "elapsed_s": 1574.9
+    },
+    {
+      "step": 1600,
+      "seq_len": 448,
+      "loss_cap": 0.4735,
+      "loss_reflex": 0.8181,
+      "elapsed_s": 1824.8
+    }
+  ],
+  "autoregressive_samples": {
+    "pt_prose": "A teoria da relatividade e a mecânica clássica de algumas de algumas de algumas de al",
+    "en_prose": "In the study of natural selection and the analysis of the study of the study of the st",
+    "python_code": "def compute_norm(x: np.ndarray) -> NO-BREAK SPACE\n    '\\u044c'   #  0xE7 -> NO-BREA",
+    "passkey_o1": "[PASSKEY PIN=947] Natural philosophy studies motion and force. [QUERY PIN=> 947.] th"
+  }
+}
