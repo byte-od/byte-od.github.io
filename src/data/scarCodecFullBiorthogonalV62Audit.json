@@ -1,0 +1,396 @@
+{
+  "suite": "scar_codec_full_biorthogonal_physics_v6_2_audit",
+  "scar_codec_version": "6.0.0",
+  "elapsed_s": 16.45,
+  "provenance_sha256": {
+    "files_verified": 16,
+    "distinct_archives": 10,
+    "scientific_domains": 8,
+    "total_verified_raw_bytes": 26228914,
+    "all_sha256_matched": true
+  },
+  "spatial_and_3d_fields_vs_modern_sota": {
+    "nasa_spitzer_irac": {
+      "shape": [
+        513,
+        1025
+      ],
+      "raw_fp32_bytes": 2103300,
+      "vq4_mode": {
+        "orth_bytes": 178652,
+        "biorth_bytes": 178652,
+        "compression_x": 11.77,
+        "c99_simd_mmap_o1_us": 4.33,
+        "orth_rmse": 5.11552,
+        "biorth_rmse": 4.58188,
+        "biorth_snr_gain_over_orth_db": 0.96,
+        "orth_top32_peak_err": 0.9966,
+        "biorth_top32_peak_err": 0.9985,
+        "sz3_matched_rmse": 0.36182,
+        "sz3_matched_top32_peak_err": 0.6311,
+        "sperr_cdf97_matched_rmse": 0.52045,
+        "sperr_cdf97_matched_top32_peak_err": 1.2354,
+        "zfp_matched_rmse": 20.34208,
+        "zfp_matched_top32_peak_err": 1314.2493
+      },
+      "gosset_e8_1bpw_mode": {
+        "orth_bytes": 98624,
+        "biorth_bytes": 98624,
+        "compression_x": 21.33,
+        "orth_rmse": 15.16124,
+        "biorth_rmse": 14.96987,
+        "biorth_snr_gain_over_orth_db": 0.11,
+        "orth_top32_peak_err": 0.9812,
+        "biorth_top32_peak_err": 0.9995,
+        "sz3_matched_rmse": 0.97039,
+        "sz3_matched_top32_peak_err": 1.8633,
+        "sperr_cdf97_matched_rmse": 1.30667,
+        "sperr_cdf97_matched_top32_peak_err": 4.1934,
+        "zfp_matched_rmse": 42.87817,
+        "zfp_matched_top32_peak_err": 2724.646
+      },
+      "error_bounded_linf_mode": {
+        "abs_tolerance": 12.0,
+        "measured_max_abs_err": 11.9999437,
+        "violations": 0,
+        "orth_bytes": 286010,
+        "biorth_bytes": 264032,
+        "biorth_compression_x": 7.97,
+        "biorth_byte_savings_pct": 7.68
+      }
+    },
+    "cso_bolocam_sgr_a": {
+      "shape": [
+        638,
+        640
+      ],
+      "raw_fp32_bytes": 1633280,
+      "vq4_mode": {
+        "orth_bytes": 133060,
+        "biorth_bytes": 133060,
+        "compression_x": 12.27,
+        "c99_simd_mmap_o1_us": 4.448,
+        "orth_rmse": 0.03559,
+        "biorth_rmse": 0.02993,
+        "biorth_snr_gain_over_orth_db": 1.51,
+        "orth_top32_peak_err": 0.0019,
+        "biorth_top32_peak_err": 0.0031,
+        "sz3_matched_rmse": 0.01396,
+        "sz3_matched_top32_peak_err": 0.0244,
+        "sperr_cdf97_matched_rmse": 0.01381,
+        "sperr_cdf97_matched_top32_peak_err": 0.0335,
+        "zfp_matched_rmse": 0.05545,
+        "zfp_matched_top32_peak_err": 1.6098
+      },
+      "gosset_e8_1bpw_mode": {
+        "orth_bytes": 73164,
+        "biorth_bytes": 73164,
+        "compression_x": 22.32,
+        "orth_rmse": 0.08174,
+        "biorth_rmse": 0.07469,
+        "biorth_snr_gain_over_orth_db": 0.79,
+        "orth_top32_peak_err": 0.0033,
+        "biorth_top32_peak_err": 0.0019,
+        "sz3_matched_rmse": 0.03358,
+        "sz3_matched_top32_peak_err": 0.06,
+        "sperr_cdf97_matched_rmse": 0.02613,
+        "sperr_cdf97_matched_top32_peak_err": 0.0675,
+        "zfp_matched_rmse": 0.0941,
+        "zfp_matched_top32_peak_err": 1.5398
+      },
+      "pure_vacuum_rows_max_err": {
+        "scar_biorth_vq4": 0.0,
+        "scar_biorth_e8": 0.0,
+        "sz3": 0.05994,
+        "sperr_cdf97": 0.07223,
+        "zfp": 0.6875
+      }
+    },
+    "rosat_allsky_xray": {
+      "shape": [
+        240,
+        480
+      ],
+      "raw_fp32_bytes": 460800,
+      "vq4_mode": {
+        "orth_bytes": 45920,
+        "biorth_bytes": 45920,
+        "compression_x": 10.03,
+        "c99_simd_mmap_o1_us": 4.506,
+        "orth_rmse": 13.30482,
+        "biorth_rmse": 11.83738,
+        "biorth_snr_gain_over_orth_db": 1.02,
+        "orth_top32_peak_err": 15.5078,
+        "biorth_top32_peak_err": 7.582,
+        "sz3_matched_rmse": 2.93582,
+        "sz3_matched_top32_peak_err": 5.084,
+        "sperr_cdf97_matched_rmse": 3.11788,
+        "sperr_cdf97_matched_top32_peak_err": 4.9902,
+        "zfp_matched_rmse": 84.58478,
+        "zfp_matched_top32_peak_err": 6557.0156
+      },
+      "gosset_e8_1bpw_mode": {
+        "orth_bytes": 26944,
+        "biorth_bytes": 26944,
+        "compression_x": 17.1,
+        "orth_rmse": 25.72072,
+        "biorth_rmse": 24.1238,
+        "biorth_snr_gain_over_orth_db": 0.55,
+        "orth_top32_peak_err": 14.6211,
+        "biorth_top32_peak_err": 7.7969,
+        "sz3_matched_rmse": 9.3497,
+        "sz3_matched_top32_peak_err": 17.0566,
+        "sperr_cdf97_matched_rmse": 8.48679,
+        "sperr_cdf97_matched_top32_peak_err": 24.6758,
+        "zfp_matched_rmse": 181.60022,
+        "zfp_matched_top32_peak_err": 15405.3486
+      }
+    },
+    "fcrao_l1448_3d_cube": {
+      "cube_shape": [
+        53,
+        105,
+        105
+      ],
+      "raw_fp32_bytes": 2337300,
+      "orth_3d_bytes": 90428,
+      "biorth_3d_bytes": 90428,
+      "compression_x": 25.85,
+      "orth_3d_rmse_k": 0.13921,
+      "biorth_3d_rmse_k": 0.13154,
+      "biorth_snr_gain_over_orth_db": 0.49,
+      "orth_top32_peak_err_k": 0.1333,
+      "biorth_top32_peak_err_k": 0.1173,
+      "zfp_3d_matched_rmse_k": 0.17977,
+      "zfp_3d_matched_top32_peak_err_k": 0.4555
+    },
+    "noaa_oisst_3d_climate": {
+      "cube_shape": [
+        12,
+        180,
+        360
+      ],
+      "orth_3d_ocean_rmse_c": 1.1074,
+      "biorth_3d_ocean_rmse_c": 0.8821,
+      "zfp_3d_ocean_rmse_c": 1.2346,
+      "compression_3d_x": 23.6,
+      "jan_2d_and_antarctica_audit": {
+        "shape": [
+          180,
+          360
+        ],
+        "raw_fp32_bytes": 259200,
+        "vq4_mode": {
+          "orth_bytes": 28088,
+          "biorth_bytes": 28088,
+          "compression_x": 9.23,
+          "c99_simd_mmap_o1_us": 4.591,
+          "orth_rmse": 0.71735,
+          "biorth_rmse": 0.58057,
+          "biorth_snr_gain_over_orth_db": 1.84,
+          "orth_top32_peak_err": 1.4866,
+          "biorth_top32_peak_err": 1.8416,
+          "sz3_matched_rmse": 0.0072,
+          "sz3_matched_top32_peak_err": 0.013,
+          "sperr_cdf97_matched_rmse": 0.00886,
+          "sperr_cdf97_matched_top32_peak_err": 0.0305,
+          "zfp_matched_rmse": 0.72344,
+          "zfp_matched_top32_peak_err": 7.3
+        },
+        "gosset_e8_1bpw_mode": {
+          "orth_bytes": 15048,
+          "biorth_bytes": 15048,
+          "compression_x": 17.22,
+          "orth_rmse": 1.52986,
+          "biorth_rmse": 1.40288,
+          "biorth_snr_gain_over_orth_db": 0.76,
+          "orth_top32_peak_err": 4.9746,
+          "biorth_top32_peak_err": 9.5555,
+          "sz3_matched_rmse": 0.04016,
+          "sz3_matched_top32_peak_err": 0.0746,
+          "sperr_cdf97_matched_rmse": 0.04824,
+          "sperr_cdf97_matched_top32_peak_err": 0.2057,
+          "zfp_matched_rmse": 2.17792,
+          "zfp_matched_top32_peak_err": 36.04
+        },
+        "pure_vacuum_rows_max_err": {
+          "scar_biorth_vq4": 0.0,
+          "scar_biorth_e8": 0.0,
+          "sz3": 0.07909,
+          "sperr_cdf97": 0.15929,
+          "zfp": 0.0
+        },
+        "error_bounded_linf_mode": {
+          "abs_tolerance": 0.3,
+          "measured_max_abs_err": 0.2999382,
+          "violations": 0,
+          "orth_bytes": 210038,
+          "biorth_bytes": 180998,
+          "biorth_compression_x": 1.43,
+          "biorth_byte_savings_pct": 13.83
+        }
+      }
+    },
+    "iris_tohoku_mw91_3axis": {
+      "shape": [
+        336,
+        640
+      ],
+      "raw_fp32_bytes": 860160,
+      "vq4_mode": {
+        "orth_bytes": 75680,
+        "biorth_bytes": 75680,
+        "compression_x": 11.37,
+        "c99_simd_mmap_o1_us": 4.343,
+        "orth_rmse": 30848.14346,
+        "biorth_rmse": 11517.84254,
+        "biorth_snr_gain_over_orth_db": 8.56,
+        "orth_top32_peak_err": 130752.0,
+        "biorth_top32_peak_err": 56264.5,
+        "sz3_matched_rmse": 983.65434,
+        "sz3_matched_top32_peak_err": 1986.5,
+        "sperr_cdf97_matched_rmse": 299.8338,
+        "sperr_cdf97_matched_top32_peak_err": 689.75,
+        "zfp_matched_rmse": 83478.19898,
+        "zfp_matched_top32_peak_err": 110689.0
+      },
+      "gosset_e8_1bpw_mode": {
+        "orth_bytes": 43184,
+        "biorth_bytes": 43184,
+        "compression_x": 19.92,
+        "orth_rmse": 32470.91763,
+        "biorth_rmse": 23246.81132,
+        "biorth_snr_gain_over_orth_db": 2.91,
+        "orth_top32_peak_err": 201403.75,
+        "biorth_top32_peak_err": 227729.25,
+        "sz3_matched_rmse": 11405.60779,
+        "sz3_matched_top32_peak_err": 22816.0,
+        "sperr_cdf97_matched_rmse": 4028.48203,
+        "sperr_cdf97_matched_top32_peak_err": 10395.5,
+        "zfp_matched_rmse": 344859.1689,
+        "zfp_matched_top32_peak_err": 766049.0
+      },
+      "error_bounded_linf_mode": {
+        "abs_tolerance": 5000.0,
+        "measured_max_abs_err": 5000.0,
+        "violations": 0,
+        "orth_bytes": 773228,
+        "biorth_bytes": 474074,
+        "biorth_compression_x": 1.81,
+        "biorth_byte_savings_pct": 38.69
+      }
+    },
+    "mitbih_119_holter_ecg": {
+      "shape": [
+        1015,
+        1280
+      ],
+      "raw_fp32_bytes": 5196800,
+      "vq4_mode": {
+        "orth_bytes": 394110,
+        "biorth_bytes": 394110,
+        "compression_x": 13.19,
+        "c99_simd_mmap_o1_us": 4.352,
+        "orth_rmse": 0.08036,
+        "biorth_rmse": 0.069,
+        "biorth_snr_gain_over_orth_db": 1.33,
+        "orth_top32_peak_err": 0.3019,
+        "biorth_top32_peak_err": 0.2915,
+        "sz3_matched_rmse": 0.01333,
+        "sz3_matched_top32_peak_err": 0.0266,
+        "sperr_cdf97_matched_rmse": 0.00825,
+        "sperr_cdf97_matched_top32_peak_err": 0.0234,
+        "zfp_matched_rmse": 0.13258,
+        "zfp_matched_top32_peak_err": 1.055
+      },
+      "gosset_e8_1bpw_mode": {
+        "orth_bytes": 223376,
+        "biorth_bytes": 223376,
+        "compression_x": 23.26,
+        "orth_rmse": 0.20268,
+        "biorth_rmse": 0.19299,
+        "biorth_snr_gain_over_orth_db": 0.42,
+        "orth_top32_peak_err": 1.1868,
+        "biorth_top32_peak_err": 0.7944,
+        "sz3_matched_rmse": 0.04168,
+        "sz3_matched_top32_peak_err": 0.0661,
+        "sperr_cdf97_matched_rmse": 0.02741,
+        "sperr_cdf97_matched_top32_peak_err": 0.073,
+        "zfp_matched_rmse": 0.58121,
+        "zfp_matched_top32_peak_err": 3.165
+      },
+      "error_bounded_linf_mode": {
+        "abs_tolerance": 0.05,
+        "measured_max_abs_err": 0.0499997,
+        "violations": 0,
+        "orth_bytes": 3399642,
+        "biorth_bytes": 2478144,
+        "biorth_compression_x": 2.1,
+        "biorth_byte_savings_pct": 27.11
+      }
+    }
+  },
+  "streaming_34p8kb_scache_biorthogonal_vs_sota": {
+    "physionet_64ch_cortical_eeg": {
+      "physical_bytes": 34816,
+      "minheap_1slot_32odd_cosine": 0.86594,
+      "frequent_directions_32odd_cosine": 0.95698,
+      "orthogonal_scache_32odd_cosine": 0.74329,
+      "biorthogonal_dual_scache_32odd_cosine": 0.98218,
+      "orthogonal_rel_l2_err": 0.6752,
+      "biorthogonal_rel_l2_err": 0.202
+    },
+    "mitbih_119_holter_ecg": {
+      "physical_bytes": 34816,
+      "single_pvc_lead_v1_cosine": {
+        "frequent_directions": 0.99942,
+        "orthogonal_scache": 0.9922,
+        "biorthogonal_dual_scache": 0.99418
+      },
+      "fusion_beat_lead_v1_cosine": {
+        "frequent_directions": 0.88628,
+        "orthogonal_scache": 0.9206,
+        "biorthogonal_dual_scache": 0.98575,
+        "orthogonal_rel_l2_err": 0.5353,
+        "biorthogonal_rel_l2_err": 0.3027
+      }
+    },
+    "nasa_space_shuttle_radiator": {
+      "total_frames": 14500,
+      "physical_bytes": 28384,
+      "delta_bytes": 0,
+      "rare_class5_faults_total": 809,
+      "corrupted_32sensor_fault_recall_orth_cosine": 0.72581,
+      "corrupted_32sensor_fault_recall_biorth_cosine": 0.99994,
+      "orth_rel_l2_err": 1.8168,
+      "biorth_rel_l2_err": 0.0114
+    },
+    "iris_tohoku_3axis_seismogram": {
+      "physical_bytes": 30528,
+      "blind_vertical_bhz_from_horizontal_orth_cosine": 0.98777,
+      "blind_vertical_bhz_from_horizontal_biorth_cosine": 0.9998,
+      "orth_rel_l2_err": 0.9735,
+      "biorth_rel_l2_err": 0.2707
+    }
+  },
+  "subspace_interference_filtering": {
+    "ligo_gw150914_hanford_h1": {
+      "max_sv_overlap_seismic_vs_chirp": 0.7925,
+      "zfp_unshielded_merger_cosine": -0.02889,
+      "orthogonal_p_perp_vq4_merger_cosine": 0.79163,
+      "biorthogonal_vq4_merger_cosine": 0.70481
+    },
+    "oblique_1000x_radio_array_jammer": {
+      "jammer_sir_db": -60.0,
+      "angular_separation_deg": 31.8,
+      "beam_jammer_cosine": 0.85,
+      "nita_gary_spectral_kurtosis_cosine": -0.01032,
+      "orthogonal_p_perp_vq4_cosine": 0.99366,
+      "biorthogonal_p_biorth_vq4_cosine": 0.99448,
+      "orthogonal_p_perp_rel_l2_err": 0.7208,
+      "biorthogonal_p_biorth_rel_l2_err": 0.1056,
+      "orthogonal_amplitude_retention_pct": 28.0,
+      "biorthogonal_amplitude_retention_pct": 100.0
+    }
+  }
+}

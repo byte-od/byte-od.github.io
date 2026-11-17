@@ -1,0 +1,522 @@
+{
+  "suite": "scar_field_v7_3_biorthogonal_chat_audit",
+  "version": "7.3.0",
+  "hardware": "NVIDIA A100-SXM4-40GB",
+  "warm_started_from_v7_2_tensors": 48,
+  "completed_v7_3_steps": 840,
+  "streamed_v7_3_bytes": 6440960,
+  "scarfield_v7_3_config": {
+    "vocab_size": 256,
+    "d_form": 384,
+    "d_world": 512,
+    "d_bus": 384,
+    "d_key": 128,
+    "num_subspaces": 8,
+    "ring_len": 64,
+    "repulsive_len": 12,
+    "base_rank": 12,
+    "num_scars": 96,
+    "s1_steps": 2,
+    "s2_steps": 4,
+    "s2_surprise_theta": 0.45,
+    "shock_write_theta": 0.5,
+    "vacuum_kappa": 0.36,
+    "uncertainty_margin_thresh": 0.24,
+    "ghost_jump_candidates": 3,
+    "ghost_jump_gamma": 0.35,
+    "wy_chunk_size": 64,
+    "enable_kalman_fast": true,
+    "wave_lags": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      8,
+      12,
+      16,
+      24
+    ],
+    "num_macro_cycles": 2,
+    "biorth_slots": 48,
+    "biorth_lambda": 0.04,
+    "enable_biorth_uscar": true,
+    "enable_adaptive_cap": true
+  },
+  "architecture_comparison": {
+    "scarfield_v7_3_spherical_params": 59984935,
+    "scarfield_v7_3_sfield_scar_bytes": 9990016,
+    "scarfield_v7_3_sfield_scar_mib": 9.527,
+    "scarfield_v7_3_o1_state_bytes": 455503,
+    "dense_transformer_params": 33434112,
+    "dense_transformer_fp16_mib": 63.771,
+    "weight_compression_vs_dense_fp16_x": 6.69,
+    "mmap_c_simd_forward_cosine": 0.999981,
+    "v7_3_train_seconds": 1542.6,
+    "dense_train_seconds": 93.3
+  },
+  "step_1_heldout_open_domain_metrics": {
+    "pt": {
+      "scarfield_v7_3_biorth": {
+        "eval_bytes": 30640,
+        "calibrated_bpb": 2.5341,
+        "train_escape_lambda": 0.01664,
+        "in_cap_coverage_pct": 94.19,
+        "top1_byte_acc_pct": 55.09,
+        "top5_byte_acc_pct": 82.18,
+        "exact_zero_sparsity_pct": 96.4
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 30640,
+        "bpb": 3.5347,
+        "top1_byte_acc_pct": 26.78,
+        "top5_byte_acc_pct": 67.24,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    },
+    "en": {
+      "scarfield_v7_3_biorth": {
+        "eval_bytes": 30640,
+        "calibrated_bpb": 2.1064,
+        "train_escape_lambda": 0.0174,
+        "in_cap_coverage_pct": 95.4,
+        "top1_byte_acc_pct": 62.53,
+        "top5_byte_acc_pct": 85.53,
+        "exact_zero_sparsity_pct": 96.88
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 30640,
+        "bpb": 3.645,
+        "top1_byte_acc_pct": 24.57,
+        "top5_byte_acc_pct": 65.89,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    },
+    "es": {
+      "scarfield_v7_3_biorth": {
+        "eval_bytes": 30640,
+        "calibrated_bpb": 2.5471,
+        "train_escape_lambda": 0.02523,
+        "in_cap_coverage_pct": 93.58,
+        "top1_byte_acc_pct": 55.98,
+        "top5_byte_acc_pct": 82.0,
+        "exact_zero_sparsity_pct": 96.43
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 30640,
+        "bpb": 3.5125,
+        "top1_byte_acc_pct": 26.85,
+        "top5_byte_acc_pct": 69.0,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    },
+    "fr": {
+      "scarfield_v7_3_biorth": {
+        "eval_bytes": 30640,
+        "calibrated_bpb": 2.4144,
+        "train_escape_lambda": 0.0161,
+        "in_cap_coverage_pct": 94.5,
+        "top1_byte_acc_pct": 57.5,
+        "top5_byte_acc_pct": 83.48,
+        "exact_zero_sparsity_pct": 96.56
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 30640,
+        "bpb": 3.5316,
+        "top1_byte_acc_pct": 28.28,
+        "top5_byte_acc_pct": 66.48,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    },
+    "code": {
+      "scarfield_v7_3_biorth": {
+        "eval_bytes": 30640,
+        "calibrated_bpb": 1.7791,
+        "train_escape_lambda": 0.02915,
+        "in_cap_coverage_pct": 94.76,
+        "top1_byte_acc_pct": 71.64,
+        "top5_byte_acc_pct": 87.66,
+        "exact_zero_sparsity_pct": 97.16
+      },
+      "dense_fp16_ot": {
+        "eval_bytes": 30640,
+        "bpb": 3.3317,
+        "top1_byte_acc_pct": 38.96,
+        "top5_byte_acc_pct": 67.8,
+        "exact_zero_sparsity_pct": 0.0
+      }
+    }
+  },
+  "step_1_biorthogonal_passkey_recall_up_to_t2048": {
+    "scarfield_v7_3_biorthogonal": {
+      "T=128": {
+        "seq_len_bytes": 128,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=256": {
+        "seq_len_bytes": 256,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=512": {
+        "seq_len_bytes": 512,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=768": {
+        "seq_len_bytes": 768,
+        "exact_3digit_acc": 0.875,
+        "per_digit_acc": 0.9583
+      },
+      "T=1024": {
+        "seq_len_bytes": 1024,
+        "exact_3digit_acc": 0.75,
+        "per_digit_acc": 0.9062
+      },
+      "T=1536": {
+        "seq_len_bytes": 1536,
+        "exact_3digit_acc": 0.2188,
+        "per_digit_acc": 0.6146
+      },
+      "T=2048": {
+        "seq_len_bytes": 2048,
+        "exact_3digit_acc": 0.0312,
+        "per_digit_acc": 0.2917
+      }
+    },
+    "scarfield_ablation_no_biorth_bank": {
+      "T=128": {
+        "seq_len_bytes": 128,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=256": {
+        "seq_len_bytes": 256,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=512": {
+        "seq_len_bytes": 512,
+        "exact_3digit_acc": 1.0,
+        "per_digit_acc": 1.0
+      },
+      "T=768": {
+        "seq_len_bytes": 768,
+        "exact_3digit_acc": 0.875,
+        "per_digit_acc": 0.9583
+      },
+      "T=1024": {
+        "seq_len_bytes": 1024,
+        "exact_3digit_acc": 0.75,
+        "per_digit_acc": 0.9062
+      },
+      "T=1536": {
+        "seq_len_bytes": 1536,
+        "exact_3digit_acc": 0.2188,
+        "per_digit_acc": 0.6146
+      },
+      "T=2048": {
+        "seq_len_bytes": 2048,
+        "exact_3digit_acc": 0.0312,
+        "per_digit_acc": 0.2917
+      }
+    },
+    "dense_fp16_ot": {
+      "T=128": {
+        "seq_len_bytes": 128,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0104
+      },
+      "T=256": {
+        "seq_len_bytes": 256,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0417
+      },
+      "T=512": {
+        "seq_len_bytes": 512,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0312
+      },
+      "T=768": {
+        "seq_len_bytes": 768,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0104
+      },
+      "T=1024": {
+        "seq_len_bytes": 1024,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0
+      },
+      "T=1536": {
+        "seq_len_bytes": 1536,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0104
+      },
+      "T=2048": {
+        "seq_len_bytes": 2048,
+        "exact_3digit_acc": 0.0,
+        "per_digit_acc": 0.0104
+      }
+    }
+  },
+  "step_1_biorthogonal_uscar_and_epistemic": {
+    "sibling_pole_raw_cosine_overlap": 0.998,
+    "orthogonal_pole_sibling_bleed_ratio": 0.9948,
+    "biorthogonal_pole_sibling_bleed_ratio": 0.849424,
+    "cross_lingual_en_to_pt_uscar_resonance": 0.9457,
+    "post_0x00_gdpr_wipe_residual": 0.0,
+    "cross_lingual_s_world_cosine_zero_procrustes": {
+      "pt_en": 0.98907,
+      "es_en": 0.99115,
+      "fr_en": 0.98813
+    },
+    "out_of_cone_0x00_vacuum_abstention": "8/8"
+  },
+  "step_2_multilingual_chat_and_code_sft": {
+    "sft_dialogue_bank_size": 2192,
+    "multi_turn_o1_unseen_pin_exact_acc": 0.375,
+    "multi_turn_o1_unseen_pin_digit_acc": 0.375,
+    "multi_turn_state_bytes_delta": 0,
+    "multi_turn_examples": [
+      {
+        "lang": "pt",
+        "unseen_pin": "879",
+        "turn1_reply": "Chave registrada: PIN=879.",
+        "turn2_reply_excerpt": "A chave registrada: PIN=879.",
+        "turn3_reply": "A chave registrada é PIN=879.",
+        "state_bytes_delta": 0
+      },
+      {
+        "lang": "en",
+        "unseen_pin": "523",
+        "turn1_reply": "Session key stored: PIN=523.",
+        "turn2_reply_excerpt": "A composition of the time that is a stored session key is PIN=523.",
+        "turn3_reply": "The stored session key is PIN=523.",
+        "state_bytes_delta": 0
+      },
+      {
+        "lang": "es",
+        "unseen_pin": "711",
+        "turn1_reply": "Clave registrada: PIN=711.",
+        "turn2_reply_excerpt": "Esta teoría se conoce como una característica de la estructura de la estructura de la estr",
+        "turn3_reply": "La estructura de la estructura de la estructura de la estructura de la e",
+        "state_bytes_delta": 0
+      },
+      {
+        "lang": "fr",
+        "unseen_pin": "777",
+        "turn1_reply": "Clé enregistrée : PIN=777.",
+        "turn2_reply_excerpt": "En effet, la presence de la relativité générale est la première fois la première encore de",
+        "turn3_reply": "La clé de la première est définie par la métrique des premières est",
+        "state_bytes_delta": 0
+      }
+    ],
+    "heldout_chat_and_code_generations": {
+      "pt": [
+        {
+          "prompt": "O que é o ScarField e como sua memória opera?",
+          "reply": "A memória baseada em um sistema de referência em um espaço-tempo contínuo de um sistema de espaço-tempo que a espaço-tempo contínuo de um sistema de espaço-tempo que o espaço-tempo em seu livro de um sistema de",
+          "bytes_generated": 220,
+          "mean_confidence": 0.7616,
+          "state_bytes": 455503,
+          "keyword_hits": "0/3"
+        },
+        {
+          "prompt": "Qual a diferença entre base ortogonal e biortogonal?",
+          "reply": "A memória baseada em relação ao longo do tempo, o que é uma aplicação de um sistema de estado em um sistema de referência em especial no espaço-tempo que a espaço-tempo para o sistema de um sistema de referênci",
+          "bytes_generated": 220,
+          "mean_confidence": 0.7498,
+          "state_bytes": 455503,
+          "keyword_hits": "0/3"
+        }
+      ],
+      "en": [
+        {
+          "prompt": "What is ScarField and how does its memory scale?",
+          "reply": "def finite(self, filename, lineno, filename, lineno, filename, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, linen",
+          "bytes_generated": 220,
+          "mean_confidence": 0.9138,
+          "state_bytes": 455503,
+          "keyword_hits": "0/3"
+        },
+        {
+          "prompt": "Explain how biorthogonal memory improves recall.",
+          "reply": "def finite(self, filename, lineno, filename, lineno, filename, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, lineno, linen",
+          "bytes_generated": 220,
+          "mean_confidence": 0.9144,
+          "state_bytes": 455503,
+          "keyword_hits": "0/3"
+        }
+      ],
+      "es": [
+        {
+          "prompt": "¿Qué es ScarField y cómo funciona su memoria?",
+          "reply": "La memoria es una estructura de la memoria espacial es una conservación de la memoria espacial para la espacial con la espacial con el espacio de la espaciación de la espaciación de la espacial espacial para la espaci",
+          "bytes_generated": 220,
+          "mean_confidence": 0.7452,
+          "state_bytes": 455503,
+          "keyword_hits": "0/3"
+        }
+      ],
+      "fr": [
+        {
+          "prompt": "Qu'est-ce que ScarField et comment fonctionne sa mémoire ?",
+          "reply": "Les protéines sont des protéines pour les protéines de la mémoire en protéines de la mémoire et les protéines de la mémoire en protéines.",
+          "bytes_generated": 146,
+          "mean_confidence": 0.7532,
+          "state_bytes": 455503,
+          "keyword_hits": "0/3"
+        }
+      ],
+      "code": [
+        {
+          "prompt": "Write a Python function to compute cosine similarity between two lists of floats.",
+          "reply": "def float(n: int) -> int:\n    return s[::-1]",
+          "bytes_generated": 44,
+          "mean_confidence": 0.8191,
+          "state_bytes": 455503,
+          "keyword_hits": "2/2",
+          "python_ast_valid": true
+        },
+        {
+          "prompt": "Escreva uma função Python para calcular o máximo divisor comum (MDC) de dois inteiros.",
+          "reply": "def finite(s: list[float], t: list[float]) -> float:\n    return s[float]\n\n\ndef _check_scale(a, b):\n    \"\"\"Return a bytes object if a bytes in a file object.\"\"\"\n    return s[float]\n\n\ndef _check_scale(a, b):\n    \"\"\"Return",
+          "bytes_generated": 220,
+          "mean_confidence": 0.7988,
+          "state_bytes": 455503,
+          "keyword_hits": "2/2",
+          "python_ast_valid": false
+        }
+      ]
+    }
+  },
+  "corpus_provenance": [
+    {
+      "domain": "pt",
+      "title": "Wikimedia Wikipedia Deep Open Corpus (PT, 119 topics)",
+      "bytes": 4249767,
+      "sha256": "ea460f0d0fd8573e1560c94c406222e7671e321443034d9deb70030cbd792c2d"
+    },
+    {
+      "domain": "en",
+      "title": "Wikimedia Wikipedia Deep Open Corpus (EN, 119 topics)",
+      "bytes": 1916039,
+      "sha256": "907fe9367adf071491d2dffb66fab116f2666e6ba9b009e4d4ac2ca97656fd81"
+    },
+    {
+      "domain": "es",
+      "title": "Wikimedia Wikipedia Deep Open Corpus (ES, 119 topics)",
+      "bytes": 4345566,
+      "sha256": "9b96915ae3760b0a69e2629a34deb808a9cf92c667e0485fb852c047d8d09c6b"
+    },
+    {
+      "domain": "fr",
+      "title": "Wikimedia Wikipedia Deep Open Corpus (FR, 119 topics)",
+      "bytes": 4780831,
+      "sha256": "cb725ab2505258b6359b63db4ca536825e16cf516c26f648b1fd1f176d53fc75"
+    },
+    {
+      "source": "scar_ecosystem",
+      "bytes": 418456,
+      "sha256": "36b6869066a0d2aba4ae6692c02f59293fad5d6cc83da207ad86ffef67d85bcf"
+    },
+    {
+      "source": "python_stdlib",
+      "bytes": 10139794,
+      "sha256": "a2278f1105e9b4a60f4e03b9d70a59d8ce3194e68ba32ea11c845d7ce9ec75c6"
+    }
+  ],
+  "training_curve": [
+    {
+      "step": 1,
+      "lr": 0.0015,
+      "loss_cap": 0.4817,
+      "loss_reflex": 0.8278,
+      "biorth_gain": 0.345,
+      "cap_adapt_gain": 0.295,
+      "elapsed_s": 6.7
+    },
+    {
+      "step": 100,
+      "lr": 0.001458,
+      "loss_cap": 0.4446,
+      "loss_reflex": 0.8367,
+      "biorth_gain": 0.0859,
+      "cap_adapt_gain": 0.13,
+      "elapsed_s": 177.2
+    },
+    {
+      "step": 200,
+      "lr": 0.001334,
+      "loss_cap": 0.4381,
+      "loss_reflex": 0.8337,
+      "biorth_gain": 0.0859,
+      "cap_adapt_gain": 0.01,
+      "elapsed_s": 349.5
+    },
+    {
+      "step": 300,
+      "lr": 0.001148,
+      "loss_cap": 0.397,
+      "loss_reflex": 0.8107,
+      "biorth_gain": 0.1059,
+      "cap_adapt_gain": -0.45,
+      "elapsed_s": 523.6
+    },
+    {
+      "step": 400,
+      "lr": 0.000923,
+      "loss_cap": 0.3774,
+      "loss_reflex": 0.8527,
+      "biorth_gain": 0.0559,
+      "cap_adapt_gain": -0.4996,
+      "elapsed_s": 712.5
+    },
+    {
+      "step": 500,
+      "lr": 0.000692,
+      "loss_cap": 0.4247,
+      "loss_reflex": 0.8557,
+      "biorth_gain": -0.0541,
+      "cap_adapt_gain": -0.4996,
+      "elapsed_s": 901.2
+    },
+    {
+      "step": 600,
+      "lr": 0.000486,
+      "loss_cap": 0.3672,
+      "loss_reflex": 0.7797,
+      "biorth_gain": 0.0559,
+      "cap_adapt_gain": -0.4996,
+      "elapsed_s": 1088.7
+    },
+    {
+      "step": 700,
+      "lr": 0.000334,
+      "loss_cap": 0.3998,
+      "loss_reflex": 0.7936,
+      "biorth_gain": -0.1541,
+      "cap_adapt_gain": -0.4996,
+      "elapsed_s": 1276.9
+    },
+    {
+      "step": 800,
+      "lr": 0.000257,
+      "loss_cap": 0.404,
+      "loss_reflex": 0.8397,
+      "biorth_gain": -0.0241,
+      "cap_adapt_gain": -0.4996,
+      "elapsed_s": 1467.1
+    },
+    {
+      "step": 840,
+      "lr": 0.00025,
+      "loss_cap": 0.4335,
+      "loss_reflex": 0.8723,
+      "biorth_gain": -0.0041,
+      "cap_adapt_gain": -0.4996,
+      "elapsed_s": 1542.6
+    }
+  ]
+}

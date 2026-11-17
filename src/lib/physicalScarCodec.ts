@@ -1042,6 +1042,164 @@ export class OrthogonalSubspaceProjectorTS {
   }
 }
 
+function solveLinearSystemF64(mat: Float64Array, rhs: Float64Array, n: number, rhsCols: number): Float64Array {
+  const a = new Float64Array(mat);
+  const x = new Float64Array(rhs);
+  for (let k = 0; k < n; k++) {
+    let piv = k;
+    let maxVal = Math.abs(a[k * n + k]);
+    for (let r = k + 1; r < n; r++) {
+      const av = Math.abs(a[r * n + k]);
+      if (av > maxVal) {
+        maxVal = av;
+        piv = r;
+      }
+    }
+    if (piv !== k) {
+      for (let c = k; c < n; c++) {
+        const tmp = a[k * n + c];
+        a[k * n + c] = a[piv * n + c];
+        a[piv * n + c] = tmp;
+      }
+      for (let c = 0; c < rhsCols; c++) {
+        const tmp = x[k * rhsCols + c];
+        x[k * rhsCols + c] = x[piv * rhsCols + c];
+        x[piv * rhsCols + c] = tmp;
+      }
+    }
+    const diag = Math.abs(a[k * n + k]) > 1e-15 ? a[k * n + k] : 1e-15;
+    for (let r = k + 1; r < n; r++) {
+      const f = a[r * n + k] / diag;
+      for (let c = k; c < n; c++) a[r * n + c] -= f * a[k * n + c];
+      for (let c = 0; c < rhsCols; c++) x[r * rhsCols + c] -= f * x[k * rhsCols + c];
+    }
+  }
+  for (let k = n - 1; k >= 0; k--) {
+    const diag = Math.abs(a[k * n + k]) > 1e-15 ? a[k * n + k] : 1e-15;
+    for (let c = 0; c < rhsCols; c++) {
+      let s = x[k * rhsCols + c];
+      for (let j = k + 1; j < n; j++) s -= a[k * n + j] * x[j * rhsCols + c];
+      x[k * rhsCols + c] = s / diag;
+    }
+  }
+  return x;
+}
+
+function orthonormalizeColumnsF32(colsMat: Float32Array, rows: number, cols: number): Float32Array {
+  const q = new Float64Array(rows * cols);
+  for (let i = 0; i < rows * cols; i++) q[i] = colsMat[i];
+  for (let k = 0; k < cols; k++) {
+    for (let j = 0; j < k; j++) {
+      let dot = 0;
+      for (let r = 0; r < rows; r++) dot += q[r * cols + j] * q[r * cols + k];
+      for (let r = 0; r < rows; r++) q[r * cols + k] -= dot * q[r * cols + j];
+    }
+    let n2 = 0;
+    for (let r = 0; r < rows; r++) n2 += q[r * cols + k] * q[r * cols + k];
+    const inv = n2 > 1e-24 ? 1.0 / Math.sqrt(n2) : 0.0;
+    for (let r = 0; r < rows; r++) q[r * cols + k] *= inv;
+  }
+  const out = new Float32Array(rows * cols);
+  for (let i = 0; i < out.length; i++) out[i] = q[i];
+  return out;
+}
+
+/**
+ * Behrens-Scharf Biorthogonal Oblique Subspace Projector (`P_biorth = I - U_J U_tilde_J^T`).
+ * Cancels structured interference `U_J` (`U_tilde_J^T U_J ≈ I`) while preserving `100%` of
+ * obliquely overlapping desired signal `U_S` (`U_tilde_J^T U_S == 0 -> P_biorth U_S == U_S`)!
+ */
+export class BiorthogonalObliqueProjectorTS {
+  readonly basisUJ: Float32Array;     // [channels * rankJ]
+  readonly dualUTildeJ: Float32Array; // [channels * rankJ]
+  readonly channels: number;
+  readonly rankJ: number;
+
+  constructor(
+    interferenceBasis: Float32Array,
+    signalPriorBasis: Float32Array,
+    channels: number,
+    rankJ: number,
+    rankS: number,
+    ridgeLambda = 1e-4
+  ) {
+    if (ridgeLambda <= 0 || !Number.isFinite(ridgeLambda)) {
+      throw new RangeError(`ridgeLambda must be > 0, got ${ridgeLambda}`);
+    }
+    this.channels = channels;
+    this.rankJ = rankJ;
+    const uj = orthonormalizeColumnsF32(interferenceBasis, channels, rankJ);
+    const wj = new Float64Array(channels * rankJ);
+    for (let i = 0; i < wj.length; i++) wj[i] = uj[i];
+
+    if (rankS > 0 && signalPriorBasis.length >= channels * rankS) {
+      const us = orthonormalizeColumnsF32(signalPriorBasis, channels, rankS);
+      for (let k = 0; k < rankJ; k++) {
+        for (let s = 0; s < rankS; s++) {
+          let dot = 0;
+          for (let c = 0; c < channels; c++) dot += us[c * rankS + s] * uj[c * rankJ + k];
+          for (let c = 0; c < channels; c++) wj[c * rankJ + k] -= dot * us[c * rankS + s];
+        }
+      }
+    }
+
+    const gram = new Float64Array(rankJ * rankJ);
+    for (let i = 0; i < rankJ; i++) {
+      for (let j = 0; j < rankJ; j++) {
+        let acc = i === j ? ridgeLambda : 0.0;
+        for (let c = 0; c < channels; c++) acc += wj[c * rankJ + i] * wj[c * rankJ + j];
+        gram[i * rankJ + j] = acc;
+      }
+    }
+    const wjT = new Float64Array(rankJ * channels);
+    for (let i = 0; i < rankJ; i++) {
+      for (let c = 0; c < channels; c++) wjT[i * channels + c] = wj[c * rankJ + i];
+    }
+    const uTildeT = solveLinearSystemF64(gram, wjT, rankJ, channels);
+    const uTilde = new Float32Array(channels * rankJ);
+    for (let c = 0; c < channels; c++) {
+      for (let i = 0; i < rankJ; i++) uTilde[c * rankJ + i] = uTildeT[i * channels + c];
+    }
+    this.basisUJ = uj;
+    this.dualUTildeJ = uTilde;
+  }
+
+  static fitFromCalibration(
+    calSignal: Float32Array,
+    signalPriorBasis: Float32Array,
+    channels: number,
+    samples: number,
+    rankJ: number,
+    rankS: number,
+    ridgeLambda = 1e-4
+  ): BiorthogonalObliqueProjectorTS {
+    const orth = OrthogonalSubspaceProjectorTS.fitFromCalibration(calSignal, channels, samples, rankJ);
+    return new BiorthogonalObliqueProjectorTS(orth.basisU, signalPriorBasis, channels, rankJ, rankS, ridgeLambda);
+  }
+
+  projectClean(arraySignal: Float32Array, channels: number, samples: number): Float32Array {
+    const out = new Float32Array(arraySignal);
+    const coeff = new Float64Array(this.rankJ);
+    for (let t = 0; t < samples; t++) {
+      for (let k = 0; k < this.rankJ; k++) {
+        let dot = 0;
+        for (let c = 0; c < channels; c++) {
+          dot += this.dualUTildeJ[c * this.rankJ + k] * out[c * samples + t];
+        }
+        coeff[k] = dot;
+      }
+      for (let c = 0; c < channels; c++) {
+        let proj = 0;
+        for (let k = 0; k < this.rankJ; k++) {
+          proj += this.basisUJ[c * this.rankJ + k] * coeff[k];
+        }
+        out[c * samples + t] -= proj;
+      }
+    }
+    return out;
+  }
+}
+
 /**
  * Exact `34,816 B` (`34.8 KB`) Constant-Space `SCache O(1)` Black-Box & Satellite Recorder.
  *
@@ -1182,6 +1340,79 @@ export class SurpriseGatedAnomalySCacheTS {
       const rowOff = r * 64;
       for (let c = 0; c < 64; c++) acc += this.wScarF32[rowOff + c] * (query64[c] * inv);
       out[r] = acc;
+    }
+    return out;
+  }
+
+  recallFromPartialCue(
+    partialFrame64: Float32Array,
+    observedMask64: Uint8Array | boolean[],
+    opts?: { inputIsDeviation?: boolean; biorthogonal?: boolean; ridgeLambda?: number }
+  ): Float32Array {
+    const isDev = opts?.inputIsDeviation ?? false;
+    const biorth = opts?.biorthogonal ?? false;
+    const lam = opts?.ridgeLambda ?? 1e-2;
+
+    const devObs = new Float32Array(64);
+    const cue = new Float32Array(64);
+    const obsIndices: number[] = [];
+    for (let c = 0; c < 64; c++) {
+      const v = isDev ? partialFrame64[c] : partialFrame64[c] - this.emaMeanF32[c];
+      devObs[c] = v;
+      if (observedMask64[c]) {
+        cue[c] = v;
+        obsIndices.push(c);
+      }
+    }
+    if (!biorth || obsIndices.length === 0) {
+      const rec = this.queryAssociative(cue);
+      if (!isDev) for (let c = 0; c < 64; c++) rec[c] += this.emaMeanF32[c];
+      return rec;
+    }
+
+    const activeSlots: number[] = [];
+    for (let s = 0; s < 48; s++) {
+      if (Number(this.slotTsI64[s]) >= 0) activeSlots.push(s);
+    }
+    if (activeSlots.length === 0) {
+      const rec = this.queryAssociative(cue);
+      if (!isDev) for (let c = 0; c < 64; c++) rec[c] += this.emaMeanF32[c];
+      return rec;
+    }
+
+    const kAct = activeSlots.length;
+    const uAct = new Float64Array(64 * kAct);
+    for (let k = 0; k < kAct; k++) {
+      const sOff = activeSlots[k] * 64;
+      let n2 = 0;
+      for (let c = 0; c < 64; c++) {
+        const val = float16BitsToFloat32(this.slotValsF16[sOff + c]);
+        uAct[c * kAct + k] = val;
+        n2 += val * val;
+      }
+      const inv = 1.0 / Math.sqrt(Math.max(1e-16, n2));
+      for (let c = 0; c < 64; c++) uAct[c * kAct + k] *= inv;
+    }
+
+    const gram = new Float64Array(kAct * kAct);
+    const rhs = new Float64Array(kAct);
+    for (let i = 0; i < kAct; i++) {
+      let bSum = 0;
+      for (const c of obsIndices) bSum += uAct[c * kAct + i] * devObs[c];
+      rhs[i] = bSum;
+      for (let j = 0; j < kAct; j++) {
+        let gSum = i === j ? lam : 0.0;
+        for (const c of obsIndices) gSum += uAct[c * kAct + i] * uAct[c * kAct + j];
+        gram[i * kAct + j] = gSum;
+      }
+    }
+    const alpha = solveLinearSystemF64(gram, rhs, kAct, 1);
+    const out = new Float32Array(64);
+    for (let c = 0; c < 64; c++) {
+      let s = 0;
+      for (let k = 0; k < kAct; k++) s += uAct[c * kAct + k] * alpha[k];
+      out[c] = observedMask64[c] ? devObs[c] : s;
+      if (!isDev) out[c] += this.emaMeanF32[c];
     }
     return out;
   }

@@ -26,6 +26,7 @@ import {
   computeFrontierV6ByteBudget,
 } from '../lib/scarNativeV6Engine';
 import scarFieldV7Audit from '../data/scarFieldV7Audit.json';
+import scarFieldV73Audit from '../data/scarFieldV73Audit.json';
 import forensicSynergyAudit from '../data/scarCodecForensicSynergyAudit.json';
 
 type LabTab = 'live_o1' | 'cartridges_gdpr' | 'ablation_curves';
@@ -1249,6 +1250,26 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
                     : `vs ${forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.legacy_torch_pt_bundle_mib.toFixed(1)} MiB .pt · ${forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.mmap_cold_start_load_ms} ms mmap load`}
                 </span>
               </div>
+            </div>
+
+            {/* Scaled ScarField v7.3-Biorthogonal-Chat Summary Strip */}
+            <div className="p-3 rounded-xl bg-zinc-950/90 border border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] font-mono text-zinc-300">
+              <div>
+                <span className="text-amber-300 font-bold">
+                  {lang === 'pt' ? 'Escala v7.3 Biortogonal-Chat (59,98M -> 9,53 MiB E8):' : 'Scaled v7.3 Biorthogonal-Chat (59.98M -> 9.53 MiB E8):'}
+                </span>{' '}
+                {lang === 'pt'
+                  ? `5/5 domínios (Code ${scarFieldV73Audit.step_1_heldout_open_domain_metrics.code.scarfield_v7_3_biorth.calibrated_bpb} BPB / ${scarFieldV73Audit.step_1_heldout_open_domain_metrics.code.scarfield_v7_3_biorth.top1_byte_acc_pct}% Top-1 · EN ${scarFieldV73Audit.step_1_heldout_open_domain_metrics.en.scarfield_v7_3_biorth.calibrated_bpb} BPB) · Passkey T=512 ${(scarFieldV73Audit.step_1_biorthogonal_passkey_recall_up_to_t2048.scarfield_v7_3_biorthogonal['T=512'].exact_3digit_acc * 100).toFixed(0)}% / T=1024 ${(scarFieldV73Audit.step_1_biorthogonal_passkey_recall_up_to_t2048.scarfield_v7_3_biorthogonal['T=1024'].exact_3digit_acc * 100).toFixed(0)}% · Chat 3-Turnos Δ=${scarFieldV73Audit.step_2_multilingual_chat_and_code_sft.multi_turn_state_bytes_delta} B · Vácuo 0x00 ${scarFieldV73Audit.step_1_biorthogonal_uscar_and_epistemic.out_of_cone_0x00_vacuum_abstention}`
+                  : `5/5 domains (Code ${scarFieldV73Audit.step_1_heldout_open_domain_metrics.code.scarfield_v7_3_biorth.calibrated_bpb} BPB / ${scarFieldV73Audit.step_1_heldout_open_domain_metrics.code.scarfield_v7_3_biorth.top1_byte_acc_pct}% Top-1 · EN ${scarFieldV73Audit.step_1_heldout_open_domain_metrics.en.scarfield_v7_3_biorth.calibrated_bpb} BPB) · Passkey T=512 ${(scarFieldV73Audit.step_1_biorthogonal_passkey_recall_up_to_t2048.scarfield_v7_3_biorthogonal['T=512'].exact_3digit_acc * 100).toFixed(0)}% / T=1024 ${(scarFieldV73Audit.step_1_biorthogonal_passkey_recall_up_to_t2048.scarfield_v7_3_biorthogonal['T=1024'].exact_3digit_acc * 100).toFixed(0)}% · 3-Turn Chat Δ=${scarFieldV73Audit.step_2_multilingual_chat_and_code_sft.multi_turn_state_bytes_delta} B · 0x00 Vacuum ${scarFieldV73Audit.step_1_biorthogonal_uscar_and_epistemic.out_of_cone_0x00_vacuum_abstention}`}
+              </div>
+              <a
+                href="/webgpu/scar_field_v7_3_biorth_chat_audit.json"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 text-amber-300 hover:text-white underline"
+              >
+                {lang === 'pt' ? 'JSON v7.3 A100 ↗' : 'v7.3 A100 JSON ↗'}
+              </a>
             </div>
           </div>
         </div>

@@ -27,8 +27,11 @@ import {
   type GoldenSliceRoutingDiagnostics,
 } from '../src/lib/scarstoreHttp206Browser';
 import {
+  BiorthogonalObliqueProjectorTS,
+  OrthogonalSubspaceProjectorTS,
   PhysicalVQ4ScarCodecTS,
   ScarCodecE8TS,
+  SurpriseGatedAnomalySCacheTS,
   buildCanonicalE8Lut256TS,
   buildCfdHdrShockFieldProof,
   computeMatchedByte2dWaveletCdf97Fp16,
@@ -1766,11 +1769,146 @@ async function main() {
   );
 
   console.log(
-    `[PASS 17/17] Production Forensic Fuzzing & Modern 2026 SOTA Suite (Bolocam ${bolSz3Gain.toFixed(2)}x < SZ3 & ${bolSperrGain.toFixed(2)}x < SPERR · ${Math.round(ccsdsSpeedup)}x > CCSDS-121 · FD cos ${sotaJson.pillar_4_modern_streaming_sketching_and_spectral_kurtosis.streaming_34p8kb_scache_vs_frequent_directions.frequent_directions_lead_v1_pvc_recall_cosine} -> SCache ${sotaJson.pillar_4_modern_streaming_sketching_and_spectral_kurtosis.streaming_34p8kb_scache_vs_frequent_directions.scache_lead_v1_pvc_recall_cosine} · Prime Shapes (1,1)..(7,131) + 0-ULP Lossless + CDF 9/7 Wavelet)`
+    `[PASS 17/18] Production Forensic Fuzzing & Modern 2026 SOTA Suite (Bolocam ${bolSz3Gain.toFixed(2)}x < SZ3 & ${bolSperrGain.toFixed(2)}x < SPERR · ${Math.round(ccsdsSpeedup)}x > CCSDS-121 · FD cos ${sotaJson.pillar_4_modern_streaming_sketching_and_spectral_kurtosis.streaming_34p8kb_scache_vs_frequent_directions.frequent_directions_lead_v1_pvc_recall_cosine} -> SCache ${sotaJson.pillar_4_modern_streaming_sketching_and_spectral_kurtosis.streaming_34p8kb_scache_vs_frequent_directions.scache_lead_v1_pvc_recall_cosine} · Prime Shapes (1,1)..(7,131) + 0-ULP Lossless + CDF 9/7 Wavelet)`
+  );
+
+  // ---------------------------------------------------------------------------
+  // TEST 18: Biorthogonal Physics Lab (v6.1/v6.2, 10 Archives) & ScarField v7.3 Audit
+  // ---------------------------------------------------------------------------
+  const biorthSyncPairs = [
+    [
+      path.join(PORTFOLIO_ROOT, 'src/data/scarCodecBiorthogonalV61Audit.json'),
+      path.join(PORTFOLIO_ROOT, 'public/webgpu/scar_codec_biorthogonal_v6_1_audit.json'),
+      '/Users/juliocesarreisfilho/Projects/scar-cache/results/scar_codec_biorthogonal_v6_1_audit.json',
+    ],
+    [
+      path.join(PORTFOLIO_ROOT, 'src/data/scarCodecFullBiorthogonalV62Audit.json'),
+      path.join(PORTFOLIO_ROOT, 'public/webgpu/scar_codec_full_biorthogonal_physics_v6_2_audit.json'),
+      '/Users/juliocesarreisfilho/Projects/scar-cache/results/scar_codec_full_biorthogonal_physics_v6_2_audit.json',
+    ],
+    [
+      path.join(PORTFOLIO_ROOT, 'src/data/scarFieldV73Audit.json'),
+      path.join(PORTFOLIO_ROOT, 'public/webgpu/scar_field_v7_3_biorth_chat_audit.json'),
+      '/Users/juliocesarreisfilho/Projects/scar-cache/results/scar_field_v7_3_biorth_chat_audit.json',
+    ],
+  ];
+  for (const [srcP, pubP, canonP] of biorthSyncPairs) {
+    assert(fs.existsSync(srcP) && fs.existsSync(pubP) && fs.existsSync(canonP), `Missing synced Biorthogonal JSON: ${srcP}`);
+    const b1 = fs.readFileSync(srcP, 'utf-8');
+    const b2 = fs.readFileSync(pubP, 'utf-8');
+    const b3 = fs.readFileSync(canonP, 'utf-8');
+    assert(b1 === b2 && b1 === b3, `Byte-for-byte sync drift detected on ${path.basename(srcP)}`);
+  }
+
+  const v62Json = JSON.parse(fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/data/scarCodecFullBiorthogonalV62Audit.json'), 'utf-8'));
+  const v73Json = JSON.parse(fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/data/scarFieldV73Audit.json'), 'utf-8'));
+  assert(
+    v62Json.provenance_sha256.files_verified === 16 &&
+      v62Json.provenance_sha256.all_sha256_matched === true &&
+      v62Json.spatial_and_3d_fields_vs_modern_sota.iris_tohoku_mw91_3axis.vq4_mode.biorth_snr_gain_over_orth_db > 8.0 &&
+      v62Json.spatial_and_3d_fields_vs_modern_sota.mitbih_119_holter_ecg.error_bounded_linf_mode.biorth_byte_savings_pct > 25.0 &&
+      v62Json.streaming_34p8kb_scache_biorthogonal_vs_sota.physionet_64ch_cortical_eeg.biorthogonal_dual_scache_32odd_cosine > 0.98 &&
+      v62Json.streaming_34p8kb_scache_biorthogonal_vs_sota.nasa_space_shuttle_radiator.corrupted_32sensor_fault_recall_biorth_cosine > 0.999,
+    'v6.2 complete Biorthogonal Physics Lab thresholds failed!'
+  );
+  assert(
+    v73Json.architecture_comparison.scarfield_v7_3_sfield_scar_mib < 9.6 &&
+      v73Json.step_2_multilingual_chat_and_code_sft.multi_turn_state_bytes_delta === 0 &&
+      v73Json.step_1_biorthogonal_uscar_and_epistemic.out_of_cone_0x00_vacuum_abstention === '8/8' &&
+      v73Json.step_1_biorthogonal_uscar_and_epistemic.post_0x00_gdpr_wipe_residual === 0.0,
+    'ScarField v7.3 Biorthogonal-Chat audit invariants failed!'
+  );
+
+  // Live TypeScript execution of `BiorthogonalObliqueProjectorTS` & `SurpriseGatedAnomalySCacheTS` (`biorthogonal: true`)
+  const chBi = 32;
+  const tBi = 256;
+  const uSig = new Float32Array(chBi);
+  uSig[0] = 1.0;
+  const uJam = new Float32Array(chBi);
+  const ovBi = 0.85;
+  uJam[0] = ovBi;
+  uJam[1] = Math.sqrt(1.0 - ovBi * ovBi);
+
+  const obsBi = new Float32Array(chBi * tBi);
+  const pulseGt = new Float32Array(tBi);
+  for (let t = 0; t < tBi; t++) {
+    const s = Math.sin((2.0 * Math.PI * t) / 32.0);
+    const j = 1000.0 * Math.cos((2.0 * Math.PI * t) / 11.0);
+    pulseGt[t] = s;
+    for (let c = 0; c < chBi; c++) obsBi[c * tBi + t] = uSig[c] * s + uJam[c] * j;
+  }
+  const orthProjTs = new OrthogonalSubspaceProjectorTS(uJam, chBi, 1);
+  const biorthProjTs = new BiorthogonalObliqueProjectorTS(uJam, uSig, chBi, 1, 1, 1e-7);
+  const cleanOrthTs = orthProjTs.projectClean(obsBi, chBi, tBi);
+  const cleanBiTs = biorthProjTs.projectClean(obsBi, chBi, tBi);
+
+  let errOrth2 = 0;
+  let errBi2 = 0;
+  let sig2 = 0;
+  let dotBi = 0;
+  let nBi2 = 0;
+  for (let t = 0; t < tBi; t++) {
+    const eo = cleanOrthTs[t] - pulseGt[t]; // channel 0 == uSig^T clean
+    const eb = cleanBiTs[t] - pulseGt[t];
+    errOrth2 += eo * eo;
+    errBi2 += eb * eb;
+    sig2 += pulseGt[t] * pulseGt[t];
+    dotBi += cleanBiTs[t] * pulseGt[t];
+    nBi2 += cleanBiTs[t] * cleanBiTs[t];
+  }
+  const relOrthTs = Math.sqrt(errOrth2 / sig2);
+  const relBiTs = Math.sqrt(errBi2 / sig2);
+  const cosBiTs = dotBi / Math.sqrt(nBi2 * sig2);
+  assert(
+    relOrthTs > 0.70 && relBiTs < 0.01 && cosBiTs > 0.999,
+    `BiorthogonalObliqueProjectorTS failed: relOrth=${relOrthTs}, relBi=${relBiTs}, cosBi=${cosBiTs}`
+  );
+
+  const scBi = new SurpriseGatedAnomalySCacheTS(3.0);
+  assert(scBi.physicalBytes() === 34816, `Expected 34816 B SCache, got ${scBi.physicalBytes()}`);
+  const zeroFrame = new Float32Array(64);
+  for (let t = 0; t < 40; t++) scBi.ingest(zeroFrame, t);
+  const fModes: Float32Array[] = [];
+  for (let m = 0; m < 3; m++) {
+    const v = new Float32Array(64);
+    for (let c = 0; c < 64; c++) v[c] = 8.0 * Math.cos(0.11 * c) + 5.0 * Math.sin((m + 1) * 0.43 * c);
+    fModes.push(v);
+    scBi.ingest(v, 100 + m);
+  }
+  assert(scBi.physicalBytes() === 34816, 'SCache drifted from 34816 B!');
+  const sup64 = new Float32Array(64);
+  const maskEven = new Uint8Array(64);
+  for (let c = 0; c < 64; c++) {
+    sup64[c] = fModes[0][c] + 0.8 * fModes[1][c] + 0.6 * fModes[2][c];
+    maskEven[c] = c % 2 === 0 ? 1 : 0;
+  }
+  const recOrthCue = scBi.recallFromPartialCue(sup64, maskEven, { biorthogonal: false });
+  const recBiCue = scBi.recallFromPartialCue(sup64, maskEven, { biorthogonal: true });
+  let dotOddBi = 0, nSupOdd = 0, nBiOdd = 0, dotOddOrth = 0, nOrthOdd = 0;
+  for (let c = 1; c < 64; c += 2) {
+    dotOddBi += sup64[c] * recBiCue[c];
+    nSupOdd += sup64[c] * sup64[c];
+    nBiOdd += recBiCue[c] * recBiCue[c];
+    dotOddOrth += sup64[c] * recOrthCue[c];
+    nOrthOdd += recOrthCue[c] * recOrthCue[c];
+  }
+  const cosOddBi = dotOddBi / Math.sqrt(nSupOdd * nBiOdd);
+  const cosOddOrth = dotOddOrth / Math.sqrt(nSupOdd * Math.max(1e-12, nOrthOdd));
+  assert(
+    cosOddBi > 0.995 && cosOddBi > cosOddOrth,
+    `Biorthogonal SCache TS failed: cosBi=${cosOddBi}, cosOrth=${cosOddOrth}`
+  );
+  assert(
+    physLabSrc.includes('data-testid="biorthogonal-v61-audit-box"'),
+    'PhysicalScarLab.tsx missing biorthogonal-v61-audit-box!'
+  );
+
+  console.log(
+    `[PASS 18/18] Complete 10-Archive Biorthogonal Physics Lab v6.2 & ScarField v7.3 Suite (Tohoku +${v62Json.spatial_and_3d_fields_vs_modern_sota.iris_tohoku_mw91_3axis.vq4_mode.biorth_snr_gain_over_orth_db} dB · Holter -${v62Json.spatial_and_3d_fields_vs_modern_sota.mitbih_119_holter_ecg.error_bounded_linf_mode.biorth_byte_savings_pct}% bytes · P_biorth TS cos=${cosBiTs.toFixed(5)} · Dual SCache TS cos=${cosOddBi.toFixed(5)} · ScarField v7.3 9.53 MiB)`
   );
 
   console.log('\n================================================================================');
-  console.log('ALL 17/17 SCAR ARCHITECTURE ECOSYSTEM + MODERN 2026 SOTA + FORENSIC PRODUCTION + SCARFIELD v7.0 + JARVIS SUITES PASSED!');
+  console.log('ALL 18/18 SCAR ARCHITECTURE ECOSYSTEM + BIORTHOGONAL v6.2 + MODERN 2026 SOTA + SCARFIELD v7.3 + JARVIS SUITES PASSED!');
   console.log('================================================================================');
 }
 

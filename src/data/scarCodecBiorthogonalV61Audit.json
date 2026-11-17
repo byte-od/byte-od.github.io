@@ -1,0 +1,92 @@
+{
+  "suite": "scar_codec_biorthogonal_v6_1_audit",
+  "version": "6.1.0",
+  "experiment_1_real_physionet_cross_run_biorthogonal_hjorth": {
+    "calibration_run": "physionet_s001r01_eyes_open.edf",
+    "evaluation_run": "physionet_s001r04_motor_task.edf",
+    "sha256_r01": "4743b736131a7e147c150e8b37711029b6cda5e356c4b3e8261a03cdcaaf8b0c",
+    "sha256_r04": "3d161f88e1c00632585287d2ce584c2bc0f08862438eb255ea8723e00fac693d",
+    "oracle_used": false,
+    "unshielded_vq4_motor_laplacian_snr_db": 8.29,
+    "orthogonal_p_perp_vq4_motor_laplacian_snr_db": 6.14,
+    "biorthogonal_oblique_vq4_motor_laplacian_snr_db": 6.04,
+    "orthogonal_p_perp_motor_laplacian_cosine": 0.87317,
+    "biorthogonal_oblique_motor_laplacian_cosine": 0.87078,
+    "biorthogonal_snr_gain_over_orthogonal_db": -0.1
+  },
+  "experiment_2_real_physionet_oblique_scache": {
+    "dataset": "NIH / PhysioNet EEGMMIDB S001R04 (64-Channel Real Cortical EEG)",
+    "sha256": "3d161f88e1c00632585287d2ce584c2bc0f08862438eb255ea8723e00fac693d",
+    "physical_bytes": 34816,
+    "pairwise_mode_cosines": [
+      0.74155,
+      0.74459,
+      0.42283
+    ],
+    "orthogonal_wscar_32odd_blind_cosine": 0.85935,
+    "biorthogonal_dual_32odd_blind_cosine": 0.99076,
+    "orthogonal_wscar_32odd_rel_l2_err": 0.8109,
+    "biorthogonal_dual_32odd_rel_l2_err": 0.136
+  },
+  "experiment_3_oblique_jammer_angle_sweep": {
+    "jammer_sir_db": -60.0,
+    "sweep_by_overlap": [
+      {
+        "beam_jammer_overlap_cosine": 0.0,
+        "angular_separation_deg": 90.0,
+        "orthogonal_p_perp_rel_l2_err": 0.0568,
+        "biorthogonal_oblique_rel_l2_err": 0.0572,
+        "orthogonal_amplitude_retention": 1.0046,
+        "biorthogonal_amplitude_retention": 1.0072,
+        "biorthogonal_cosine": 0.9984
+      },
+      {
+        "beam_jammer_overlap_cosine": 0.5,
+        "angular_separation_deg": 60.0,
+        "orthogonal_p_perp_rel_l2_err": 0.2497,
+        "biorthogonal_oblique_rel_l2_err": 0.0725,
+        "orthogonal_amplitude_retention": 0.7572,
+        "biorthogonal_amplitude_retention": 1.01,
+        "biorthogonal_cosine": 0.99745
+      },
+      {
+        "beam_jammer_overlap_cosine": 0.75,
+        "angular_separation_deg": 41.4,
+        "orthogonal_p_perp_rel_l2_err": 0.5659,
+        "biorthogonal_oblique_rel_l2_err": 0.1204,
+        "orthogonal_amplitude_retention": 0.4371,
+        "biorthogonal_amplitude_retention": 1.0139,
+        "biorthogonal_cosine": 0.99294
+      },
+      {
+        "beam_jammer_overlap_cosine": 0.85,
+        "angular_separation_deg": 31.8,
+        "orthogonal_p_perp_rel_l2_err": 0.7206,
+        "biorthogonal_oblique_rel_l2_err": 0.1761,
+        "orthogonal_amplitude_retention": 0.2815,
+        "biorthogonal_amplitude_retention": 1.0236,
+        "biorthogonal_cosine": 0.98513
+      },
+      {
+        "beam_jammer_overlap_cosine": 0.92,
+        "angular_separation_deg": 23.1,
+        "orthogonal_p_perp_rel_l2_err": 0.8458,
+        "biorthogonal_oblique_rel_l2_err": 0.3018,
+        "orthogonal_amplitude_retention": 0.1565,
+        "biorthogonal_amplitude_retention": 1.0459,
+        "biorthogonal_cosine": 0.95748
+      }
+    ]
+  },
+  "experiment_4_real_ligo_gw150914_candid_orthogonality_check": {
+    "dataset": "LIGO GWOSC GW150914 Hanford H1 (4,096 Hz, 32s)",
+    "sha256": "fefe8717306109460b6c9cff74da6beb9e80ee624824b4b09bdd2c54ce9b4dfc",
+    "oracle_used": false,
+    "max_singular_value_overlap_uj_us": 0.31575,
+    "unshielded_zfp_merger_cosine": -0.02889,
+    "orthogonal_p_perp_vq4_merger_cosine": 0.79163,
+    "biorthogonal_oblique_vq4_merger_cosine": 0.78806,
+    "orthogonal_p_perp_eb_merger_cosine": 0.84294,
+    "biorthogonal_oblique_eb_merger_cosine": 0.83062
+  }
+}
