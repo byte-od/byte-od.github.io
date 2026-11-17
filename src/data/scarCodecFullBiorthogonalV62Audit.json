@@ -1,7 +1,7 @@
 {
   "suite": "scar_codec_full_biorthogonal_physics_v6_2_audit",
   "scar_codec_version": "6.0.0",
-  "elapsed_s": 16.45,
+  "elapsed_s": 11.83,
   "provenance_sha256": {
     "files_verified": 16,
     "distinct_archives": 10,
@@ -20,12 +20,12 @@
         "orth_bytes": 178652,
         "biorth_bytes": 178652,
         "compression_x": 11.77,
-        "c99_simd_mmap_o1_us": 4.33,
-        "orth_rmse": 5.11552,
-        "biorth_rmse": 4.58188,
-        "biorth_snr_gain_over_orth_db": 0.96,
-        "orth_top32_peak_err": 0.9966,
-        "biorth_top32_peak_err": 0.9985,
+        "c99_simd_mmap_o1_us": 4.213,
+        "orth_rmse": 5.11516,
+        "biorth_rmse": 4.58953,
+        "biorth_snr_gain_over_orth_db": 0.94,
+        "orth_top32_peak_err": 0.9905,
+        "biorth_top32_peak_err": 0.9299,
         "sz3_matched_rmse": 0.36182,
         "sz3_matched_top32_peak_err": 0.6311,
         "sperr_cdf97_matched_rmse": 0.52045,
@@ -51,12 +51,12 @@
       },
       "error_bounded_linf_mode": {
         "abs_tolerance": 12.0,
-        "measured_max_abs_err": 11.9999437,
+        "measured_max_abs_err": 11.9996815,
         "violations": 0,
-        "orth_bytes": 286010,
-        "biorth_bytes": 264032,
-        "biorth_compression_x": 7.97,
-        "biorth_byte_savings_pct": 7.68
+        "orth_bytes": 285356,
+        "biorth_bytes": 264398,
+        "biorth_compression_x": 7.96,
+        "biorth_byte_savings_pct": 7.34
       }
     },
     "cso_bolocam_sgr_a": {
@@ -69,7 +69,7 @@
         "orth_bytes": 133060,
         "biorth_bytes": 133060,
         "compression_x": 12.27,
-        "c99_simd_mmap_o1_us": 4.448,
+        "c99_simd_mmap_o1_us": 4.395,
         "orth_rmse": 0.03559,
         "biorth_rmse": 0.02993,
         "biorth_snr_gain_over_orth_db": 1.51,
@@ -116,7 +116,7 @@
         "orth_bytes": 45920,
         "biorth_bytes": 45920,
         "compression_x": 10.03,
-        "c99_simd_mmap_o1_us": 4.506,
+        "c99_simd_mmap_o1_us": 4.369,
         "orth_rmse": 13.30482,
         "biorth_rmse": 11.83738,
         "biorth_snr_gain_over_orth_db": 1.02,
@@ -184,7 +184,7 @@
           "orth_bytes": 28088,
           "biorth_bytes": 28088,
           "compression_x": 9.23,
-          "c99_simd_mmap_o1_us": 4.591,
+          "c99_simd_mmap_o1_us": 4.327,
           "orth_rmse": 0.71735,
           "biorth_rmse": 0.58057,
           "biorth_snr_gain_over_orth_db": 1.84,
@@ -290,12 +290,12 @@
         "orth_bytes": 394110,
         "biorth_bytes": 394110,
         "compression_x": 13.19,
-        "c99_simd_mmap_o1_us": 4.352,
+        "c99_simd_mmap_o1_us": 4.338,
         "orth_rmse": 0.08036,
-        "biorth_rmse": 0.069,
+        "biorth_rmse": 0.06898,
         "biorth_snr_gain_over_orth_db": 1.33,
         "orth_top32_peak_err": 0.3019,
-        "biorth_top32_peak_err": 0.2915,
+        "biorth_top32_peak_err": 0.2935,
         "sz3_matched_rmse": 0.01333,
         "sz3_matched_top32_peak_err": 0.0266,
         "sperr_cdf97_matched_rmse": 0.00825,
@@ -321,12 +321,12 @@
       },
       "error_bounded_linf_mode": {
         "abs_tolerance": 0.05,
-        "measured_max_abs_err": 0.0499997,
+        "measured_max_abs_err": 0.05,
         "violations": 0,
         "orth_bytes": 3399642,
-        "biorth_bytes": 2478144,
+        "biorth_bytes": 2479692,
         "biorth_compression_x": 2.1,
-        "biorth_byte_savings_pct": 27.11
+        "biorth_byte_savings_pct": 27.06
       }
     }
   },
@@ -386,9 +386,9 @@
       "beam_jammer_cosine": 0.85,
       "nita_gary_spectral_kurtosis_cosine": -0.01032,
       "orthogonal_p_perp_vq4_cosine": 0.99366,
-      "biorthogonal_p_biorth_vq4_cosine": 0.99448,
+      "biorthogonal_p_biorth_vq4_cosine": 0.99446,
       "orthogonal_p_perp_rel_l2_err": 0.7208,
-      "biorthogonal_p_biorth_rel_l2_err": 0.1056,
+      "biorthogonal_p_biorth_rel_l2_err": 0.1057,
       "orthogonal_amplitude_retention_pct": 28.0,
       "biorthogonal_amplitude_retention_pct": 100.0
     }
