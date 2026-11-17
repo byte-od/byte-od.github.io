@@ -120,8 +120,15 @@ export function fwhtBlock64Inplace(buf64: Float32Array, colOffset: number, inver
  * Prevents catastrophic IEEE-754 `FP16` underflow on `~10^-19` LIGO gravitational-wave strain AND
  * `FP16` (`65,504`) overflow on `> 3e6`-count Mw 9.1 broadband seismograms with zero mantissa rounding!
  */
-export function computeLosslessPow2ScaleTS(amax: number): number {
-  if (amax <= 0.0 || (amax >= 1.0e-2 && amax <= 4096.0)) {
+export function computeLosslessPow2ScaleTS(amax: number, absTolerance?: number): number {
+  if (amax <= 0.0) {
+    return 1.0;
+  }
+  if (absTolerance !== undefined && absTolerance < 1.0e-6 * amax) {
+    const exp = Math.floor(Math.log2(amax / 2048.0));
+    return Math.pow(2.0, exp);
+  }
+  if (amax >= 1.0e-2 && amax <= 4096.0) {
     return 1.0;
   }
   const exp = Math.floor(Math.log2(amax / 256.0));
@@ -413,7 +420,14 @@ export class PhysicalVQ4ScarCodecTS {
     spikeSigmaThreshold?: number;
     absTolerance?: number;
   }) {
-    this.rank = opts?.rank ?? 8;
+    const r = opts?.rank ?? 8;
+    if (!Number.isInteger(r) || r < 0 || (r > 0 && r % 8 !== 0)) {
+      throw new RangeError(`PhysicalVQ4ScarCodecTS rank must be 0 or a multiple of 8, got ${r}`);
+    }
+    if (opts?.absTolerance !== undefined && (!Number.isFinite(opts.absTolerance) || opts.absTolerance <= 0)) {
+      throw new RangeError(`absTolerance must be finite and > 0, got ${opts.absTolerance}`);
+    }
+    this.rank = r;
     this.kmeansIters = opts?.kmeansIters ?? 5;
     this.maxPointSpikes = opts?.maxPointSpikes ?? 64;
     this.spikeSigmaThreshold = opts?.spikeSigmaThreshold ?? 4.2;
@@ -421,18 +435,30 @@ export class PhysicalVQ4ScarCodecTS {
   }
 
   encode(field: Float32Array, origRows: number, origCols: number): PhysicalVQ4ScarPackageTS {
+    if (!Number.isInteger(origRows) || !Number.isInteger(origCols) || origRows <= 0 || origCols <= 0) {
+      throw new RangeError(`Expected non-empty 2D dimensions [origRows >= 1, origCols >= 1], got [${origRows}, ${origCols}]`);
+    }
+    if (field.length < origRows * origCols) {
+      throw new RangeError(`Field length ${field.length} < origRows * origCols (${origRows * origCols})`);
+    }
     let fieldMaxAbs = 0;
-    for (let i = 0; i < field.length; i++) {
-      const av = Math.abs(field[i]);
+    const totalValid = origRows * origCols;
+    for (let i = 0; i < totalValid; i++) {
+      const v = field[i];
+      if (!Number.isFinite(v)) {
+        throw new RangeError('Input field contains NaN or Infinity; mask non-finite values before encoding');
+      }
+      const av = Math.abs(v);
       if (av > fieldMaxAbs) fieldMaxAbs = av;
     }
-    const globalScale = computeLosslessPow2ScaleTS(fieldMaxAbs);
+    const globalScale = computeLosslessPow2ScaleTS(fieldMaxAbs, this.absTolerance);
     const invGlobalScale = 1.0 / globalScale;
 
     const paddedCols = ((origCols + 63) >>> 6) << 6;
     const nBlkPerRow = paddedCols >>> 6;
     const x = new Float32Array(origRows * paddedCols);
     const zeroRowMask = new Uint8Array(origRows);
+    const zeroRowEps = globalScale !== 1.0 || this.absTolerance !== undefined ? 0.0 : 1e-12;
 
     for (let r = 0; r < origRows; r++) {
       let maxAbs = 0;
@@ -442,7 +468,7 @@ export class PhysicalVQ4ScarCodecTS {
         const av = Math.abs(v);
         if (av > maxAbs) maxAbs = av;
       }
-      zeroRowMask[r] = maxAbs <= (globalScale !== 1.0 ? 0.0 : 1e-12) ? 1 : 0;
+      zeroRowMask[r] = maxAbs <= zeroRowEps ? 1 : 0;
     }
 
     // Step 0: Pre-FWHT robust MAD point-shock peeling
@@ -538,7 +564,8 @@ export class PhysicalVQ4ScarCodecTS {
           const av = Math.abs(v);
           if (av > maxAbs) maxAbs = av;
         }
-        if (zeroRowMask[r] || maxAbs <= 1e-12) {
+        const zeroBlkEps = this.absTolerance !== undefined ? 0.0 : 1e-12;
+        if (zeroRowMask[r] || maxAbs <= zeroBlkEps) {
           zeroBlkMask[blkId] = 1;
           scalesF16[blkId] = 0;
           scalesF32[blkId] = 0;
@@ -646,20 +673,49 @@ export class PhysicalVQ4ScarCodecTS {
       for (let i = 0; i < xApprox.length; i++) xApprox[i] += p2.scarHat[i];
     }
 
+    // Pack 4 x uint8 codes into 1 uint32 (`1 u32 = 16 values`)
+    const codesU32 = new Uint32Array(totalVec4 >>> 2);
+    for (let u = 0; u < codesU32.length; u++) {
+      const off = u << 2;
+      codesU32[u] =
+        (codesU8[off] |
+          (codesU8[off + 1] << 8) |
+          (codesU8[off + 2] << 16) |
+          (codesU8[off + 3] << 24)) >>>
+        0;
+    }
+
     // Sparse point-shock refinement OR 6-pass Dekker FP16 deterministic L_inf error-bounded cascade (`||X - X_hat||_inf <= eps`)
     let spikeFlatIdxI32: Int32Array;
     let spikeResidualF16: Uint16Array;
 
     if (this.absTolerance !== undefined && this.absTolerance > 0) {
-      const tolScaled = this.absTolerance * invGlobalScale;
-      const curErr = new Float32Array(origRows * paddedCols);
+      const basePkg: PhysicalVQ4ScarPackageTS = {
+        origRows,
+        origCols,
+        paddedCols,
+        rank: effRank,
+        codesU32,
+        scalesF16,
+        lut256F16,
+        dEqF16,
+        aScarU8,
+        aScalesF16,
+        bScarU8,
+        bRowScalesF16,
+        spikeFlatIdxI32: new Int32Array(0),
+        spikeResidualF16: new Uint16Array(0),
+        globalScale: 1.0,
+      };
+      const baseDecoded = this.decodeFull(basePkg);
+      const curRec = new Float32Array(origRows * paddedCols);
       for (let r = 0; r < origRows; r++) {
         if (zeroRowMask[r]) continue;
         for (let c = 0; c < origCols; c++) {
-          const idx = r * paddedCols + c;
-          curErr[idx] = x[idx] - xApprox[idx];
+          curRec[r * paddedCols + c] = baseDecoded[r * origCols + c];
         }
       }
+      const tolScaled = this.absTolerance * invGlobalScale;
       const dekkerPairs: Array<{ idx: number; bits: number }> = [];
       for (let pass = 0; pass < 6; pass++) {
         let violations = 0;
@@ -667,12 +723,14 @@ export class PhysicalVQ4ScarCodecTS {
           if (zeroRowMask[r]) continue;
           for (let c = 0; c < origCols; c++) {
             const idx = r * paddedCols + c;
-            const rem = curErr[idx];
+            const rem = x[idx] - curRec[idx];
             if (Math.abs(rem) > tolScaled) {
               const clamped = Math.max(-65504.0, Math.min(65504.0, rem));
               const bits = float32ToFloat16Bits(clamped);
+              const valF32 = float16BitsToFloat32(bits);
+              if (valF32 === 0) continue;
               dekkerPairs.push({ idx, bits });
-              curErr[idx] = rem - float16BitsToFloat32(bits);
+              curRec[idx] = Math.fround(curRec[idx] + valF32);
               violations++;
             }
           }
@@ -722,18 +780,6 @@ export class PhysicalVQ4ScarCodecTS {
       }
     }
 
-    // Pack 4 x uint8 codes into 1 uint32 (`1 u32 = 16 values`)
-    const codesU32 = new Uint32Array(totalVec4 >>> 2);
-    for (let u = 0; u < codesU32.length; u++) {
-      const off = u << 2;
-      codesU32[u] =
-        (codesU8[off] |
-          (codesU8[off + 1] << 8) |
-          (codesU8[off + 2] << 16) |
-          (codesU8[off + 3] << 24)) >>>
-        0;
-    }
-
     return {
       origRows,
       origCols,
@@ -761,6 +807,16 @@ export class PhysicalVQ4ScarCodecTS {
   } {
     const startCol = blockIdx << 6;
     const nBlkPerRow = pkg.paddedCols >>> 6;
+    if (
+      !Number.isInteger(rowIdx) ||
+      !Number.isInteger(blockIdx) ||
+      rowIdx < 0 ||
+      rowIdx >= pkg.origRows ||
+      blockIdx < 0 ||
+      blockIdx >= nBlkPerRow
+    ) {
+      throw new RangeError(`Block (${rowIdx}, ${blockIdx}) out of bounds for [${pkg.origRows}, ${pkg.origCols}]`);
+    }
     const blkFlat = rowIdx * nBlkPerRow + blockIdx;
     const scBits = pkg.scalesF16[blkFlat];
     const tmp64 = new Float32Array(64);
@@ -1926,26 +1982,45 @@ export class ScarCodecE8TS {
     spikeSigmaThreshold?: number;
     absTolerance?: number;
   }) {
-    this.rank = opts?.rank ?? 8;
+    const r = opts?.rank ?? 8;
+    if (!Number.isInteger(r) || r < 0 || (r > 0 && r % 2 !== 0)) {
+      throw new RangeError(`ScarCodecE8TS rank must be 0 or an even integer, got ${r}`);
+    }
+    if (opts?.absTolerance !== undefined && (!Number.isFinite(opts.absTolerance) || opts.absTolerance <= 0)) {
+      throw new RangeError(`absTolerance must be finite and > 0, got ${opts.absTolerance}`);
+    }
+    this.rank = r;
     this.maxPointSpikes = opts?.maxPointSpikes ?? 64;
     this.spikeSigmaThreshold = opts?.spikeSigmaThreshold ?? 4.2;
     this.absTolerance = opts?.absTolerance;
   }
 
   encode(field: Float32Array, origRows: number, origCols: number): ScarE8PackageTS {
+    if (!Number.isInteger(origRows) || !Number.isInteger(origCols) || origRows <= 0 || origCols <= 0) {
+      throw new RangeError(`Expected non-empty 2D dimensions [origRows >= 1, origCols >= 1], got [${origRows}, ${origCols}]`);
+    }
+    if (field.length < origRows * origCols) {
+      throw new RangeError(`Field length ${field.length} < origRows * origCols (${origRows * origCols})`);
+    }
     const { lut256x8, halfNorm2 } = buildCanonicalE8Lut256TS();
     let fieldMaxAbs = 0;
-    for (let i = 0; i < field.length; i++) {
-      const av = Math.abs(field[i]);
+    const totalValid = origRows * origCols;
+    for (let i = 0; i < totalValid; i++) {
+      const v = field[i];
+      if (!Number.isFinite(v)) {
+        throw new RangeError('Input field contains NaN or Infinity; mask non-finite values before encoding');
+      }
+      const av = Math.abs(v);
       if (av > fieldMaxAbs) fieldMaxAbs = av;
     }
-    const globalScale = computeLosslessPow2ScaleTS(fieldMaxAbs);
+    const globalScale = computeLosslessPow2ScaleTS(fieldMaxAbs, this.absTolerance);
     const invG = 1.0 / globalScale;
 
     const paddedCols = ((origCols + 63) >>> 6) << 6;
     const nBlkPerRow = paddedCols >>> 6;
     const x = new Float32Array(origRows * paddedCols);
     const zeroRowMask = new Uint8Array(origRows);
+    const zeroRowEps = globalScale !== 1.0 || this.absTolerance !== undefined ? 0.0 : 1e-12;
 
     for (let r = 0; r < origRows; r++) {
       let maxAbs = 0;
@@ -1955,7 +2030,7 @@ export class ScarCodecE8TS {
         const av = Math.abs(v);
         if (av > maxAbs) maxAbs = av;
       }
-      zeroRowMask[r] = maxAbs <= (globalScale !== 1.0 ? 0.0 : 1e-12) ? 1 : 0;
+      zeroRowMask[r] = maxAbs <= zeroRowEps ? 1 : 0;
     }
 
     const xBase = new Float32Array(x);
@@ -2042,7 +2117,8 @@ export class ScarCodecE8TS {
           const av = Math.abs(v);
           if (av > maxAbs) maxAbs = av;
         }
-        if (zeroRowMask[r] || maxAbs <= 1e-12) {
+        const zeroBlkEps = this.absTolerance !== undefined ? 0.0 : 1e-12;
+        if (zeroRowMask[r] || maxAbs <= zeroBlkEps) {
           scalesF16[blkId] = 0;
           continue;
         }
@@ -2103,15 +2179,31 @@ export class ScarCodecE8TS {
     let spikeFlatIdxI32: Int32Array;
     let spikeResidualF16: Uint16Array;
     if (this.absTolerance !== undefined && this.absTolerance > 0) {
-      const tolScaled = this.absTolerance * invG;
-      const curErr = new Float32Array(origRows * paddedCols);
+      const basePkg: ScarE8PackageTS = {
+        origRows,
+        origCols,
+        paddedCols,
+        rank: effRank,
+        e8CodesU8,
+        scalesF16,
+        dEqF16,
+        aScarU8,
+        aScalesF16,
+        bScarU8,
+        bRowScalesF16,
+        spikeFlatIdxI32: new Int32Array(0),
+        spikeResidualF16: new Uint16Array(0),
+        globalScale: 1.0,
+      };
+      const baseDecoded = this.decodeFull(basePkg);
+      const curRec = new Float32Array(origRows * paddedCols);
       for (let r = 0; r < origRows; r++) {
         if (zeroRowMask[r]) continue;
         for (let c = 0; c < origCols; c++) {
-          const idx = r * paddedCols + c;
-          curErr[idx] = x[idx] - xApprox[idx];
+          curRec[r * paddedCols + c] = baseDecoded[r * origCols + c];
         }
       }
+      const tolScaled = this.absTolerance * invG;
       const dekkerPairs: Array<{ idx: number; bits: number }> = [];
       for (let pass = 0; pass < 6; pass++) {
         let violations = 0;
@@ -2119,11 +2211,13 @@ export class ScarCodecE8TS {
           if (zeroRowMask[r]) continue;
           for (let c = 0; c < origCols; c++) {
             const idx = r * paddedCols + c;
-            const rem = curErr[idx];
+            const rem = x[idx] - curRec[idx];
             if (Math.abs(rem) > tolScaled) {
               const bits = float32ToFloat16Bits(Math.max(-65504.0, Math.min(65504.0, rem)));
+              const valF32 = float16BitsToFloat32(bits);
+              if (valF32 === 0) continue;
               dekkerPairs.push({ idx, bits });
-              curErr[idx] = rem - float16BitsToFloat32(bits);
+              curRec[idx] = Math.fround(curRec[idx] + valF32);
               violations++;
             }
           }
@@ -2199,6 +2293,16 @@ export class ScarCodecE8TS {
     const { lut256x8 } = buildCanonicalE8Lut256TS();
     const startCol = blockIdx << 6;
     const nBlkPerRow = pkg.paddedCols >>> 6;
+    if (
+      !Number.isInteger(rowIdx) ||
+      !Number.isInteger(blockIdx) ||
+      rowIdx < 0 ||
+      rowIdx >= pkg.origRows ||
+      blockIdx < 0 ||
+      blockIdx >= nBlkPerRow
+    ) {
+      throw new RangeError(`Block (${rowIdx}, ${blockIdx}) out of bounds for [${pkg.origRows}, ${pkg.origCols}]`);
+    }
     const blkFlat = rowIdx * nBlkPerRow + blockIdx;
     const scBits = pkg.scalesF16[blkFlat];
     const tmp64 = new Float32Array(64);
@@ -2287,6 +2391,145 @@ export class ScarCodecE8TS {
   }
 }
 
+/**
+ * Modern Wavelet Baseline: 3-Level 2D Cohen–Daubechies–Feauveau `CDF 9/7` Biorthogonal Lifting Wavelet
+ * (the exact mathematical transform core of `SPERR` and `JPEG2000 / HTJ2K`), retaining the top-`M`
+ * largest-magnitude wavelet coefficients (`idx_u16 + val_f16 = 4 bytes/coeff` for `N <= 65,536`)
+ * strictly byte-matched to `targetBytes`, with lossless `2^E` scaling!
+ */
+export function computeMatchedByte2dWaveletCdf97Fp16(
+  field: Float32Array,
+  rows: number,
+  cols: number,
+  targetBytes: number
+): { reconstructed: Float32Array; waveletBytes: number; retainedCoeffs: number } {
+  const alpha = -1.586134342059924;
+  const beta = -0.052980118572961;
+  const gamma = 0.882911075530934;
+  const delta = 0.443506852043971;
+  const kScale = 1.149604398860241;
+  const invK = 1.0 / kScale;
+
+  let maxAbs = 0;
+  for (let i = 0; i < field.length; i++) {
+    const av = Math.abs(field[i]);
+    if (av > maxAbs) maxAbs = av;
+  }
+  const gScale = computeLosslessPow2ScaleTS(maxAbs);
+  const invG = 1.0 / gScale;
+  const headerBytes = gScale !== 1.0 ? 4 : 0;
+
+  const work = new Float32Array(rows * cols);
+  for (let i = 0; i < work.length; i++) work[i] = gScale !== 1.0 ? field[i] * invG : field[i];
+
+  const fwd1d = (buf: Float32Array, n: number) => {
+    if (n < 4 || (n & 1) !== 0) return;
+    const half = n >>> 1;
+    const even = new Float32Array(half);
+    const odd = new Float32Array(half);
+    for (let i = 0; i < half; i++) {
+      even[i] = buf[i * 2];
+      odd[i] = buf[i * 2 + 1];
+    }
+    for (let i = 0; i < half; i++) odd[i] += alpha * (even[i] + even[Math.min(half - 1, i + 1)]);
+    for (let i = 0; i < half; i++) even[i] += beta * (odd[i] + odd[Math.max(0, i - 1)]);
+    for (let i = 0; i < half; i++) odd[i] += gamma * (even[i] + even[Math.min(half - 1, i + 1)]);
+    for (let i = 0; i < half; i++) even[i] += delta * (odd[i] + odd[Math.max(0, i - 1)]);
+    for (let i = 0; i < half; i++) {
+      buf[i] = even[i] * kScale;
+      buf[half + i] = odd[i] * invK;
+    }
+  };
+
+  const inv1d = (buf: Float32Array, n: number) => {
+    if (n < 4 || (n & 1) !== 0) return;
+    const half = n >>> 1;
+    const even = new Float32Array(half);
+    const odd = new Float32Array(half);
+    for (let i = 0; i < half; i++) {
+      even[i] = buf[i] * invK;
+      odd[i] = buf[half + i] * kScale;
+    }
+    for (let i = 0; i < half; i++) even[i] -= delta * (odd[i] + odd[Math.max(0, i - 1)]);
+    for (let i = 0; i < half; i++) odd[i] -= gamma * (even[i] + even[Math.min(half - 1, i + 1)]);
+    for (let i = 0; i < half; i++) even[i] -= beta * (odd[i] + odd[Math.max(0, i - 1)]);
+    for (let i = 0; i < half; i++) odd[i] -= alpha * (even[i] + even[Math.min(half - 1, i + 1)]);
+    for (let i = 0; i < half; i++) {
+      buf[i * 2] = even[i];
+      buf[i * 2 + 1] = odd[i];
+    }
+  };
+
+  const levels = 3;
+  const dims: Array<[number, number]> = [];
+  let curR = rows;
+  let curC = cols;
+  const tmpLine = new Float32Array(Math.max(rows, cols));
+  for (let lv = 0; lv < levels; lv++) {
+    if (curR < 4 || curC < 4 || (curR & 1) !== 0 || (curC & 1) !== 0) break;
+    dims.push([curR, curC]);
+    for (let r = 0; r < curR; r++) {
+      for (let c = 0; c < curC; c++) tmpLine[c] = work[r * cols + c];
+      fwd1d(tmpLine, curC);
+      for (let c = 0; c < curC; c++) work[r * cols + c] = tmpLine[c];
+    }
+    for (let c = 0; c < curC; c++) {
+      for (let r = 0; r < curR; r++) tmpLine[r] = work[r * cols + c];
+      fwd1d(tmpLine, curR);
+      for (let r = 0; r < curR; r++) work[r * cols + c] = tmpLine[r];
+    }
+    curR >>>= 1;
+    curC >>>= 1;
+  }
+
+  // Dense LL coarsest subband stored in FP16 (`2 B`), remaining detail coefficients sparse `(idx_u16, val_f16)` (`4 B`)
+  const llBytes = curR * curC * 2;
+  const remBudget = Math.max(0, targetBytes - headerBytes - llBytes);
+  const maxDetailKeep = Math.floor(remBudget / 4);
+
+  const detailCands: Array<{ idx: number; mag: number }> = [];
+  const qWork = new Float32Array(rows * cols);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const idx = r * cols + c;
+      if (r < curR && c < curC) {
+        qWork[idx] = float16BitsToFloat32(float32ToFloat16Bits(work[idx]));
+      } else {
+        const av = Math.abs(work[idx]);
+        if (av > 0) detailCands.push({ idx, mag: av });
+      }
+    }
+  }
+  detailCands.sort((a, b) => b.mag - a.mag);
+  const kept = detailCands.slice(0, maxDetailKeep);
+  for (const item of kept) {
+    qWork[item.idx] = float16BitsToFloat32(float32ToFloat16Bits(work[item.idx]));
+  }
+
+  for (let lv = dims.length - 1; lv >= 0; lv--) {
+    const [dR, dC] = dims[lv];
+    for (let c = 0; c < dC; c++) {
+      for (let r = 0; r < dR; r++) tmpLine[r] = qWork[r * cols + c];
+      inv1d(tmpLine, dR);
+      for (let r = 0; r < dR; r++) qWork[r * cols + c] = tmpLine[r];
+    }
+    for (let r = 0; r < dR; r++) {
+      for (let c = 0; c < dC; c++) tmpLine[c] = qWork[r * cols + c];
+      inv1d(tmpLine, dC);
+      for (let c = 0; c < dC; c++) qWork[r * cols + c] = tmpLine[c];
+    }
+  }
+
+  if (gScale !== 1.0) {
+    for (let i = 0; i < qWork.length; i++) qWork[i] *= gScale;
+  }
+  return {
+    reconstructed: qWork,
+    waveletBytes: headerBytes + llBytes + kept.length * 4,
+    retainedCoeffs: curR * curC + kept.length,
+  };
+}
+
 export type RealSliceCodecMode = 'vq4' | 'e8' | 'error_bounded';
 
 export interface RealSliceLiveAuditResultTS {
@@ -2305,9 +2548,13 @@ export interface RealSliceLiveAuditResultTS {
   spectralBytes: number;
   spectralRmse: number;
   spectralMaxAbsErr: number;
+  waveletCdf97Bytes: number;
+  waveletCdf97Rmse: number;
+  waveletCdf97MaxAbsErr: number;
   pureZeroBlockCount: number;
   scarPureZeroBlockMaxErr: number;
   spectralPureZeroBlockMaxErr: number;
+  waveletCdf97PureZeroBlockMaxErr: number;
   blockO1Row: number;
   blockO1ColBlock: number;
   blockO1BytesTouched: number;
@@ -2316,6 +2563,7 @@ export interface RealSliceLiveAuditResultTS {
   scarReconstructed: Float32Array;
   naiveFp16Reconstructed: Float32Array;
   spectralReconstructed: Float32Array;
+  waveletCdf97Reconstructed: Float32Array;
 }
 
 /**
@@ -2404,26 +2652,34 @@ export function runRealSliceLiveForensicAuditTS(opts: {
     cols,
     scarBytes
   );
+  const { reconstructed: waveletCdf97Reconstructed, waveletBytes: waveletCdf97Bytes } =
+    computeMatchedByte2dWaveletCdf97Fp16(field, rows, cols, scarBytes);
 
   let sig2 = 0;
   let err2Scar = 0;
   let err2Spec = 0;
+  let err2Wav = 0;
   let scarMaxAbsErr = 0;
   let spectralMaxAbsErr = 0;
+  let waveletCdf97MaxAbsErr = 0;
   for (let i = 0; i < field.length; i++) {
     const gt = field[i];
     const es = Math.abs(gt - scarReconstructed[i]);
     const ef = Math.abs(gt - spectralReconstructed[i]);
+    const ew = Math.abs(gt - waveletCdf97Reconstructed[i]);
     sig2 += gt * gt;
     err2Scar += es * es;
     err2Spec += ef * ef;
+    err2Wav += ew * ew;
     if (es > scarMaxAbsErr) scarMaxAbsErr = es;
     if (ef > spectralMaxAbsErr) spectralMaxAbsErr = ef;
+    if (ew > waveletCdf97MaxAbsErr) waveletCdf97MaxAbsErr = ew;
   }
 
   let pureZeroBlockCount = 0;
   let scarPureZeroBlockMaxErr = 0;
   let spectralPureZeroBlockMaxErr = 0;
+  let waveletCdf97PureZeroBlockMaxErr = 0;
   for (let r = 0; r < rows; r++) {
     for (let b = 0; b < Math.floor(cols / 64); b++) {
       const c0 = b * 64;
@@ -2440,8 +2696,10 @@ export function runRealSliceLiveForensicAuditTS(opts: {
           const idx = r * cols + c0 + t;
           const es = Math.abs(scarReconstructed[idx]);
           const ef = Math.abs(spectralReconstructed[idx]);
+          const ew = Math.abs(waveletCdf97Reconstructed[idx]);
           if (es > scarPureZeroBlockMaxErr) scarPureZeroBlockMaxErr = es;
           if (ef > spectralPureZeroBlockMaxErr) spectralPureZeroBlockMaxErr = ef;
+          if (ew > waveletCdf97PureZeroBlockMaxErr) waveletCdf97PureZeroBlockMaxErr = ew;
         }
       }
     }
@@ -2464,9 +2722,13 @@ export function runRealSliceLiveForensicAuditTS(opts: {
     spectralBytes,
     spectralRmse: Math.sqrt(err2Spec / field.length),
     spectralMaxAbsErr,
+    waveletCdf97Bytes,
+    waveletCdf97Rmse: Math.sqrt(err2Wav / field.length),
+    waveletCdf97MaxAbsErr,
     pureZeroBlockCount,
     scarPureZeroBlockMaxErr,
     spectralPureZeroBlockMaxErr,
+    waveletCdf97PureZeroBlockMaxErr,
     blockO1Row,
     blockO1ColBlock,
     blockO1BytesTouched,
@@ -2475,5 +2737,6 @@ export function runRealSliceLiveForensicAuditTS(opts: {
     scarReconstructed,
     naiveFp16Reconstructed,
     spectralReconstructed,
+    waveletCdf97Reconstructed,
   };
 }

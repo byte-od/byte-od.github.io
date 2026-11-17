@@ -27,8 +27,11 @@ import {
   type GoldenSliceRoutingDiagnostics,
 } from '../src/lib/scarstoreHttp206Browser';
 import {
+  PhysicalVQ4ScarCodecTS,
+  ScarCodecE8TS,
   buildCanonicalE8Lut256TS,
   buildCfdHdrShockFieldProof,
+  computeMatchedByte2dWaveletCdf97Fp16,
   runBlackBoxSCacheProof,
   runRadioTelescopeRfiProof,
   runRealSliceLiveForensicAuditTS,
@@ -1613,11 +1616,161 @@ async function main() {
   );
 
   console.log(
-    `[PASS 16/16] Expanded 10-Archive / 8-Science Physics Lab + Live Real-Data Browser Workbench (LIGO 0/4096 FP16 -> ${ligoE8.compressionRatio.toFixed(2)}x E8 · Tohoku ${(seisE8.spectralRmse / seisE8.scarRmse).toFixed(1)}x < DCT · ECG IEC ±50uV 0-Violations · NOAA Antarctica 0.0000°C vs ${noaaE8.spectralPureZeroBlockMaxErr.toFixed(2)}°C DCT · ROSAT ${(rosE8.spectralRmse / rosE8.scarRmse).toFixed(1)}x < DCT)`
+    `[PASS 16/17] Expanded 10-Archive / 8-Science Physics Lab + Live Real-Data Browser Workbench (LIGO 0/4096 FP16 -> ${ligoE8.compressionRatio.toFixed(2)}x E8 · Tohoku ${(seisE8.spectralRmse / seisE8.scarRmse).toFixed(1)}x < DCT · ECG IEC ±50uV 0-Violations · NOAA Antarctica 0.0000°C vs ${noaaE8.spectralPureZeroBlockMaxErr.toFixed(2)}°C DCT · ROSAT ${(rosE8.spectralRmse / rosE8.scarRmse).toFixed(1)}x < DCT)`
+  );
+
+  // ================================================================================
+  // TEST 17: Production Forensic Fuzzing + Modern 2026 SOTA Benchmark Audit Sync
+  //          (SZ3 · SPERR CDF 9/7+SPECK · Blosc2 4.15 · CCSDS-121 · Frequent Directions)
+  // ================================================================================
+  const sotaSrcPath = path.join(PORTFOLIO_ROOT, 'src/data/scarCodecModernSotaV3Audit.json');
+  const sotaPubPath = path.join(PORTFOLIO_ROOT, 'public/webgpu/scar_codec_modern_sota_v3_0_audit.json');
+  const sotaRepoPath = path.resolve(PORTFOLIO_ROOT, '../scar-cache/results/scar_codec_modern_sota_v3_0_audit.json');
+  assert(fs.existsSync(sotaSrcPath) && fs.existsSync(sotaPubPath), 'Missing Modern 2026 SOTA v3.0 JSON artifacts!');
+  const sotaSrcBuf = fs.readFileSync(sotaSrcPath);
+  const sotaPubBuf = fs.readFileSync(sotaPubPath);
+  assert(sotaSrcBuf.equals(sotaPubBuf), 'Modern SOTA v3.0 JSON mismatch between src/data and public/webgpu!');
+  if (fs.existsSync(sotaRepoPath)) {
+    assert(sotaSrcBuf.equals(fs.readFileSync(sotaRepoPath)), 'Modern SOTA v3.0 JSON out of sync with scar-cache/results!');
+  }
+  const sotaJson = JSON.parse(sotaSrcBuf.toString('utf-8'));
+  const bolSz3Gain =
+    sotaJson.pillar_2_exascale_lossy_sperr_sz3_zfp_byte_matched.cso_bolocam_sgr_a.sz3_lorenzo.top32_peak_max_err /
+    sotaJson.pillar_2_exascale_lossy_sperr_sz3_zfp_byte_matched.cso_bolocam_sgr_a.scar_vq4.top32_peak_max_err;
+  const bolSperrGain =
+    sotaJson.pillar_2_exascale_lossy_sperr_sz3_zfp_byte_matched.cso_bolocam_sgr_a.sperr_cdf97_speck.top32_peak_max_err /
+    sotaJson.pillar_2_exascale_lossy_sperr_sz3_zfp_byte_matched.cso_bolocam_sgr_a.scar_vq4.top32_peak_max_err;
+  const ccsdsSpeedup =
+    sotaJson.pillar_1_modern_chunked_storage_blosc2_bitshuffle_ccsds.random_64float_block_latency_us.ccsds121_libaec_decode_us /
+    sotaJson.pillar_1_modern_chunked_storage_blosc2_bitshuffle_ccsds.random_64float_block_latency_us.scar_c99_simd_ssd_mmap_us;
+  assert(
+    sotaJson.suite === 'scar_codec_modern_sota_v3_0_audit' &&
+      bolSz3Gain > 5.0 &&
+      bolSperrGain > 8.0 &&
+      ccsdsSpeedup > 500.0 &&
+      sotaJson.pillar_4_modern_streaming_sketching_and_spectral_kurtosis.streaming_34p8kb_scache_vs_frequent_directions
+        .scache_lead_v1_pvc_recall_cosine > 0.99,
+    'Modern 2026 SOTA v3.0 invariant regression!'
+  );
+
+  // Adversarial prime & degenerate shapes in TypeScript (`(1,1)`, `(1,63)`, `(1,65)`, `(3,127)`)
+  for (const [rS, cS] of [
+    [1, 1],
+    [1, 63],
+    [1, 64],
+    [1, 65],
+    [3, 127],
+    [7, 131],
+  ] as const) {
+    const primeField = new Float32Array(rS * cS);
+    for (let i = 0; i < primeField.length; i++) {
+      primeField[i] = Math.sin(i * 0.73 + 0.4) * 14.5 + (i === primeField.length - 1 ? -95.0 : 0.0);
+    }
+    const vq4Ts = new PhysicalVQ4ScarCodecTS({ rank: 8, maxPointSpikes: 8 });
+    const vq4Pkg = vq4Ts.encode(primeField, rS, cS);
+    const vq4Full = vq4Ts.decodeFull(vq4Pkg);
+    assert(vq4Full.length === rS * cS, `VQ4 prime shape decode length mismatch for (${rS},${cS})`);
+    const nBlks = Math.ceil(cS / 64);
+    for (let rr = 0; rr < rS; rr++) {
+      for (let bb = 0; bb < nBlks; bb++) {
+        const blk = vq4Ts.decodeBlockO1(vq4Pkg, rr, bb).values;
+        for (let k = 0; k < blk.length; k++) {
+          assert(
+            Math.abs(blk[k] - vq4Full[rr * cS + bb * 64 + k]) === 0,
+            `VQ4 O(1) vs Full mismatch at (${rS},${cS}) blk (${rr},${bb})`
+          );
+        }
+      }
+    }
+
+    const e8Ts = new ScarCodecE8TS({ rank: 8, maxPointSpikes: 8 });
+    const e8Pkg = e8Ts.encode(primeField, rS, cS);
+    const e8Full = e8Ts.decodeFull(e8Pkg);
+    assert(e8Full.length === rS * cS, `E8 prime shape decode length mismatch for (${rS},${cS})`);
+    for (let rr = 0; rr < rS; rr++) {
+      for (let bb = 0; bb < nBlks; bb++) {
+        const blk = e8Ts.decodeBlockO1(e8Pkg, rr, bb).values;
+        for (let k = 0; k < blk.length; k++) {
+          assert(
+            Math.abs(blk[k] - e8Full[rr * cS + bb * 64 + k]) === 0,
+            `E8 O(1) vs Full mismatch at (${rS},${cS}) blk (${rr},${bb})`
+          );
+        }
+      }
+    }
+  }
+
+  // Adversarial RangeError rejection (`NaN`, `Infinity`, empty dims, odd rank, out-of-bounds block)
+  const expectRangeError = (fn: () => unknown, msg: string) => {
+    let threw = false;
+    try {
+      fn();
+    } catch (e) {
+      threw = e instanceof RangeError;
+    }
+    assert(threw, `Expected RangeError for ${msg}`);
+  };
+  expectRangeError(() => new PhysicalVQ4ScarCodecTS({ rank: 3 }), 'odd rank');
+  expectRangeError(() => new ScarCodecE8TS({ absTolerance: 0 }), 'zero absTolerance');
+  const nanBuf = new Float32Array(64);
+  nanBuf[7] = Number.NaN;
+  expectRangeError(() => new PhysicalVQ4ScarCodecTS().encode(nanBuf, 1, 64), 'NaN input');
+  const infBuf = new Float32Array(64);
+  infBuf[3] = Number.POSITIVE_INFINITY;
+  expectRangeError(() => new ScarCodecE8TS().encode(infBuf, 1, 64), 'Inf input');
+  expectRangeError(() => new PhysicalVQ4ScarCodecTS().encode(new Float32Array(0), 0, 64), 'empty rows');
+  const okPkg = new ScarCodecE8TS().encode(new Float32Array(64), 1, 64);
+  expectRangeError(() => new ScarCodecE8TS().decodeBlockO1(okPkg, 1, 0), 'row out of bounds');
+  expectRangeError(() => new ScarCodecE8TS().decodeBlockO1(okPkg, 0, 1), 'block out of bounds');
+
+  // 200 dB mixed dynamic range `[1.0, 5e-10, 0.0]` + 0-ULP bit-exact `float32` lossless on Kelvin field
+  const hdrMix = new Float32Array(4 * 64);
+  for (let c = 0; c < 64; c++) {
+    hdrMix[c] = -1.0 + (2.0 * c) / 63.0;
+    hdrMix[64 + c] = 5.0e-10;
+    hdrMix[128 + c] = 0.0;
+  }
+  for (const modeCodec of [
+    new PhysicalVQ4ScarCodecTS({ rank: 8, absTolerance: 1.0e-10 }),
+    new ScarCodecE8TS({ rank: 8, absTolerance: 1.0e-10 }),
+  ]) {
+    const rec =
+      modeCodec instanceof PhysicalVQ4ScarCodecTS
+        ? modeCodec.decodeFull(modeCodec.encode(hdrMix, 4, 64))
+        : modeCodec.decodeFull(modeCodec.encode(hdrMix, 4, 64));
+    let maxDiff = 0;
+    for (let i = 0; i < hdrMix.length; i++) maxDiff = Math.max(maxDiff, Math.abs(hdrMix[i] - rec[i]));
+    assert(maxDiff <= 1.0001e-10, `200 dB mixed absTolerance failed: ${maxDiff}`);
+    for (let c = 0; c < 64; c++) assert(rec[128 + c] === 0.0, 'Pure vacuum row leaked under absTolerance!');
+  }
+
+  const kelvinField = new Float32Array(8 * 64);
+  for (let i = 0; i < kelvinField.length; i++) kelvinField[i] = Math.fround(273.15 + Math.sin(i * 0.37) * 18.4);
+  const e8Exact = new ScarCodecE8TS({ rank: 8, absTolerance: 1.0e-30 });
+  const kelvinRec = e8Exact.decodeFull(e8Exact.encode(kelvinField, 8, 64));
+  for (let i = 0; i < kelvinField.length; i++) {
+    assert(kelvinRec[i] === kelvinField[i], `Expected 0-ULP bit-exact float32 at ${i}, got ${kelvinRec[i]} vs ${kelvinField[i]}`);
+  }
+
+  // Live CDF 9/7 Wavelet baseline verification (`SPERR / JPEG2000` transform core)
+  assert(
+    noaaE8.waveletCdf97PureZeroBlockMaxErr > 1.5 &&
+      noaaE8.scarPureZeroBlockMaxErr === 0.0 &&
+      seisE8.scarRmse < seisE8.waveletCdf97Rmse / 6.0 &&
+      computeMatchedByte2dWaveletCdf97Fp16(rosField, 32, 128, rosE8.scarBytes).waveletBytes <= rosE8.scarBytes,
+    'CDF 9/7 Wavelet browser baseline check failed!'
+  );
+  assert(
+    physLabSrc.includes('data-testid="modern-2026-sota-audit-box"'),
+    'PhysicalScarLab.tsx missing modern-2026-sota-audit-box!'
+  );
+
+  console.log(
+    `[PASS 17/17] Production Forensic Fuzzing & Modern 2026 SOTA Suite (Bolocam ${bolSz3Gain.toFixed(2)}x < SZ3 & ${bolSperrGain.toFixed(2)}x < SPERR · ${Math.round(ccsdsSpeedup)}x > CCSDS-121 · FD cos ${sotaJson.pillar_4_modern_streaming_sketching_and_spectral_kurtosis.streaming_34p8kb_scache_vs_frequent_directions.frequent_directions_lead_v1_pvc_recall_cosine} -> SCache ${sotaJson.pillar_4_modern_streaming_sketching_and_spectral_kurtosis.streaming_34p8kb_scache_vs_frequent_directions.scache_lead_v1_pvc_recall_cosine} · Prime Shapes (1,1)..(7,131) + 0-ULP Lossless + CDF 9/7 Wavelet)`
   );
 
   console.log('\n================================================================================');
-  console.log('ALL 16/16 SCAR ARCHITECTURE ECOSYSTEM + 10-ARCHIVE SCARCODEC v6.0 + SCARFIELD v7.0 + JARVIS + POINTSCARFLOW SUITES PASSED!');
+  console.log('ALL 17/17 SCAR ARCHITECTURE ECOSYSTEM + MODERN 2026 SOTA + FORENSIC PRODUCTION + SCARFIELD v7.0 + JARVIS SUITES PASSED!');
   console.log('================================================================================');
 }
 

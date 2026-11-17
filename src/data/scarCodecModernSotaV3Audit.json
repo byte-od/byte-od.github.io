@@ -1,0 +1,214 @@
+{
+  "suite": "scar_codec_modern_sota_v3_0_audit",
+  "scar_codec_version": "6.0.0",
+  "modern_baselines_versions": {
+    "blosc2": "4.15.0",
+    "imagecodecs_sz3_sperr_aec": "2026.11.11",
+    "zstandard": "0.25.0",
+    "zfpy": "1.0.1"
+  },
+  "pillar_1_modern_chunked_storage_blosc2_bitshuffle_ccsds": {
+    "dataset": "NASA Spitzer IRAC [513, 1025] (2,103,300 B raw FP32)",
+    "scar_vq4_container_bytes": 178944,
+    "scar_vq4_compression_x": 11.75,
+    "scar_e8_container_bytes": 98944,
+    "scar_e8_compression_x": 21.26,
+    "blosc2_zstd9_bitshuffle_bytes": 1752076,
+    "blosc2_lossless_compression_x": 1.2,
+    "bitshuffle_zstd19_bytes": 1650226,
+    "bitshuffle_zstd19_compression_x": 1.27,
+    "ccsds121_libaec_16bit_bytes": 554517,
+    "ccsds121_16bit_compression_x": 3.79,
+    "random_64float_block_latency_us": {
+      "scar_c99_simd_in_ram_us": 4.449,
+      "scar_c99_simd_ssd_mmap_us": 4.241,
+      "blosc2_chunk16x64_get_slice_us": 9.479,
+      "ccsds121_libaec_decode_us": 3530.03,
+      "bitshuffle_zstd19_decode_us": 1438.93
+    },
+    "scar_speedup_over_blosc2_slice_x": 2.1,
+    "scar_mmap_speedup_over_blosc2_slice_x": 2.2
+  },
+  "pillar_2_exascale_lossy_sperr_sz3_zfp_byte_matched": {
+    "nasa_spitzer_irac": {
+      "budget_bytes_target": 178944,
+      "scar_vq4": {
+        "bytes": 178944,
+        "rmse": 5.1155,
+        "top32_peak_max_err": 0.9966
+      },
+      "sperr_cdf97_speck": {
+        "bytes": 178944,
+        "rmse": 0.5185,
+        "top32_peak_max_err": 1.0212,
+        "random_64float_read_us": 9825.84
+      },
+      "sz3_lorenzo": {
+        "bytes": 178948,
+        "rmse": 0.3605,
+        "top32_peak_max_err": 0.6245,
+        "random_64float_read_us": 2297.62
+      },
+      "zfp_block4x4": {
+        "bytes": 182360,
+        "rmse": 20.3421,
+        "top32_peak_max_err": 1314.2493,
+        "random_64float_read_us": 2953.52
+      }
+    },
+    "cso_bolocam_sgr_a": {
+      "budget_bytes_target": 131648,
+      "scar_vq4": {
+        "bytes": 131648,
+        "rmse": 0.04209,
+        "top32_peak_max_err": 0.00359,
+        "pure_vacuum_row_max_err": 0.0
+      },
+      "sperr_cdf97_speck": {
+        "bytes": 131655,
+        "rmse": 0.01408,
+        "top32_peak_max_err": 0.03348,
+        "pure_vacuum_row_max_err": 0.041115,
+        "random_64float_read_us": 8222.31
+      },
+      "sz3_lorenzo": {
+        "bytes": 131649,
+        "rmse": 0.01438,
+        "top32_peak_max_err": 0.02278,
+        "pure_vacuum_row_max_err": 0.025211,
+        "random_64float_read_us": 1686.44
+      },
+      "zfp_block4x4": {
+        "bytes": 128016,
+        "rmse": 0.05545,
+        "top32_peak_max_err": 1.60976,
+        "pure_vacuum_row_max_err": 0.546875
+      }
+    },
+    "noaa_oisst_continent_mask_gosset_e8": {
+      "budget_bytes_target": 15232,
+      "compression_ratio_x": 17.02,
+      "scar_e8": {
+        "bytes": 15232,
+        "ocean_rmse_c": 1.5114,
+        "antarctica_pure_land_max_err_c": 0.0
+      },
+      "sperr_cdf97_speck": {
+        "bytes": 15230,
+        "ocean_rmse_c": 0.0472,
+        "antarctica_pure_land_max_err_c": 0.169756
+      },
+      "sz3_lorenzo": {
+        "bytes": 15232,
+        "ocean_rmse_c": 0.0387,
+        "antarctica_pure_land_max_err_c": 0.076261
+      }
+    },
+    "rosat_xray_ultra_17x_regime": {
+      "budget_bytes_target": 27072,
+      "compression_ratio_x": 17.02,
+      "scar_gosset_e8": {
+        "bytes": 27072,
+        "rmse": 25.721,
+        "top32_peak_max_err": 14.621
+      },
+      "sperr_cdf97_speck": {
+        "bytes": 27067,
+        "rmse": 8.431,
+        "top32_peak_max_err": 24.676,
+        "random_64float_read_us": 1881.98
+      },
+      "sz3_lorenzo": {
+        "bytes": 27073,
+        "rmse": 9.358,
+        "top32_peak_max_err": 17.169,
+        "random_64float_read_us": 425.12
+      },
+      "zfp_block4x4": {
+        "bytes": 28816,
+        "rmse": 156.31,
+        "top32_peak_max_err": 12950.289
+      }
+    }
+  },
+  "pillar_3_error_bounded_tradeoffs_vs_sz3_sperr_zfp": {
+    "ligo_sub_fp16_2p5e_minus_22_strain": {
+      "scar_codec": {
+        "compression_x": 2.56,
+        "max_abs_err": 2.4999612980338867e-22,
+        "bound_satisfied": true,
+        "supports_sub_us_o1_64float_mmap": true
+      },
+      "sz3_lorenzo": {
+        "compression_x": 10.23,
+        "max_abs_err": 2.4999938622120542e-22,
+        "bound_satisfied": true,
+        "supports_sub_us_o1_64float_mmap": false
+      },
+      "sperr_pwe": {
+        "succeeded": true,
+        "compression_x": 8.66,
+        "max_abs_err": 2.4998878393063925e-22,
+        "bound_satisfied": true,
+        "supports_sub_us_o1_64float_mmap": false
+      },
+      "zfp_tolerance": {
+        "compression_x": 4.28,
+        "max_abs_err": 8.351939247371351e-23,
+        "bound_satisfied": true,
+        "supports_sub_us_o1_64float_mmap": false
+      }
+    },
+    "mitbih_holter_iec_50uv_bound": {
+      "scar_codec": {
+        "compression_x": 1.53,
+        "max_abs_err_mv": 0.05,
+        "random_64sample_strip_us": 4.563,
+        "supports_o1_64sample_gpu_mmap": true
+      },
+      "sz3_lorenzo": {
+        "compression_x": 17.76,
+        "max_abs_err_mv": 0.05,
+        "random_64sample_strip_us": 4051.7,
+        "supports_o1_64sample_gpu_mmap": false
+      },
+      "sperr_pwe": {
+        "compression_x": 17.95,
+        "max_abs_err_mv": 0.05,
+        "random_64sample_strip_us": 23100.1,
+        "supports_o1_64sample_gpu_mmap": false
+      },
+      "zfp_tolerance": {
+        "compression_x": 4.41,
+        "max_abs_err_mv": 0.012432,
+        "supports_o1_64sample_gpu_mmap": false
+      },
+      "architectural_finding": "Variable-length arithmetic/SPECK coders (SZ3, SPERR) achieve higher compression ratios on smooth continuous 1D/2D manifolds when strictly L_inf-bounded, whereas ScarCodec preserves fixed-offset O(1) SIMT/mmap random 64-sample access (887x faster than SZ3 and 4,810x faster than SPERR for random Holter beat seeks)."
+    }
+  },
+  "pillar_4_modern_streaming_sketching_and_spectral_kurtosis": {
+    "shuttle_rare_fault_scache_vs_vitter_reservoir": {
+      "equal_byte_budget": 3120,
+      "scache_rare_bypass_valve_recall_pct": 100.0,
+      "vitter_reservoir_mean_recall_pct_200trials": 0.5,
+      "scache_gain_over_reservoir_x": 200.0
+    },
+    "streaming_34p8kb_scache_vs_frequent_directions": {
+      "dataset": "NIH / PhysioNet MIT-BIH Record 119 (1,459 Real Heartbeats \u00b7 Chest Lead-V1 Dropout on PVC)",
+      "exact_byte_budget": 34816,
+      "frequent_directions_sketch_rows_ell": 16,
+      "scache_lead_v1_pvc_recall_cosine": 0.9922,
+      "frequent_directions_lead_v1_pvc_recall_cosine": 0.89557,
+      "scache_single_gemv_query_us": 3.76,
+      "frequent_directions_linear_solve_query_us": 22.78,
+      "scache_query_speedup_over_fd_x": 6.1,
+      "scache_retained_pvc_count": 48,
+      "frequent_directions_retains_timestamps": false
+    },
+    "rfi_1000x_broadband_jammer_p_perp_vs_spectral_kurtosis": {
+      "nita_gary_spectral_kurtosis_cosine": -0.00684,
+      "scar_p_perp_vq4_cosine": 0.9926,
+      "scar_vq4_compression_x": 4.81
+    }
+  }
+}
