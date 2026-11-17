@@ -20,40 +20,40 @@
     "ccsds121_libaec_16bit_bytes": 554517,
     "ccsds121_16bit_compression_x": 3.79,
     "random_64float_block_latency_us": {
-      "scar_c99_simd_in_ram_us": 4.449,
-      "scar_c99_simd_ssd_mmap_us": 4.241,
-      "blosc2_chunk16x64_get_slice_us": 9.479,
-      "ccsds121_libaec_decode_us": 3530.03,
-      "bitshuffle_zstd19_decode_us": 1438.93
+      "scar_c99_simd_in_ram_us": 4.734,
+      "scar_c99_simd_ssd_mmap_us": 4.336,
+      "blosc2_chunk16x64_get_slice_us": 7.88,
+      "ccsds121_libaec_decode_us": 3325.51,
+      "bitshuffle_zstd19_decode_us": 778.29
     },
-    "scar_speedup_over_blosc2_slice_x": 2.1,
-    "scar_mmap_speedup_over_blosc2_slice_x": 2.2
+    "scar_speedup_over_blosc2_slice_x": 1.7,
+    "scar_mmap_speedup_over_blosc2_slice_x": 1.8
   },
   "pillar_2_exascale_lossy_sperr_sz3_zfp_byte_matched": {
     "nasa_spitzer_irac": {
       "budget_bytes_target": 178944,
       "scar_vq4": {
         "bytes": 178944,
-        "rmse": 5.1155,
-        "top32_peak_max_err": 0.9966
+        "rmse": 5.1152,
+        "top32_peak_max_err": 0.9905
       },
       "sperr_cdf97_speck": {
         "bytes": 178944,
         "rmse": 0.5185,
         "top32_peak_max_err": 1.0212,
-        "random_64float_read_us": 9825.84
+        "random_64float_read_us": 9785.71
       },
       "sz3_lorenzo": {
         "bytes": 178948,
         "rmse": 0.3605,
         "top32_peak_max_err": 0.6245,
-        "random_64float_read_us": 2297.62
+        "random_64float_read_us": 2308.69
       },
       "zfp_block4x4": {
         "bytes": 182360,
         "rmse": 20.3421,
         "top32_peak_max_err": 1314.2493,
-        "random_64float_read_us": 2953.52
+        "random_64float_read_us": 2981.17
       }
     },
     "cso_bolocam_sgr_a": {
@@ -69,14 +69,14 @@
         "rmse": 0.01408,
         "top32_peak_max_err": 0.03348,
         "pure_vacuum_row_max_err": 0.041115,
-        "random_64float_read_us": 8222.31
+        "random_64float_read_us": 8159.42
       },
       "sz3_lorenzo": {
         "bytes": 131649,
         "rmse": 0.01438,
         "top32_peak_max_err": 0.02278,
         "pure_vacuum_row_max_err": 0.025211,
-        "random_64float_read_us": 1686.44
+        "random_64float_read_us": 1713.25
       },
       "zfp_block4x4": {
         "bytes": 128016,
@@ -116,13 +116,13 @@
         "bytes": 27067,
         "rmse": 8.431,
         "top32_peak_max_err": 24.676,
-        "random_64float_read_us": 1881.98
+        "random_64float_read_us": 1857.43
       },
       "sz3_lorenzo": {
         "bytes": 27073,
         "rmse": 9.358,
         "top32_peak_max_err": 17.169,
-        "random_64float_read_us": 425.12
+        "random_64float_read_us": 433.38
       },
       "zfp_block4x4": {
         "bytes": 28816,
@@ -163,19 +163,19 @@
       "scar_codec": {
         "compression_x": 1.53,
         "max_abs_err_mv": 0.05,
-        "random_64sample_strip_us": 4.563,
+        "random_64sample_strip_us": 4.584,
         "supports_o1_64sample_gpu_mmap": true
       },
       "sz3_lorenzo": {
         "compression_x": 17.76,
         "max_abs_err_mv": 0.05,
-        "random_64sample_strip_us": 4051.7,
+        "random_64sample_strip_us": 4189.7,
         "supports_o1_64sample_gpu_mmap": false
       },
       "sperr_pwe": {
         "compression_x": 17.95,
         "max_abs_err_mv": 0.05,
-        "random_64sample_strip_us": 23100.1,
+        "random_64sample_strip_us": 21795.2,
         "supports_o1_64sample_gpu_mmap": false
       },
       "zfp_tolerance": {
@@ -199,9 +199,9 @@
       "frequent_directions_sketch_rows_ell": 16,
       "scache_lead_v1_pvc_recall_cosine": 0.9922,
       "frequent_directions_lead_v1_pvc_recall_cosine": 0.89557,
-      "scache_single_gemv_query_us": 3.76,
-      "frequent_directions_linear_solve_query_us": 22.78,
-      "scache_query_speedup_over_fd_x": 6.1,
+      "scache_single_gemv_query_us": 3.82,
+      "frequent_directions_linear_solve_query_us": 22.58,
+      "scache_query_speedup_over_fd_x": 5.9,
       "scache_retained_pvc_count": 48,
       "frequent_directions_retains_timestamps": false
     },

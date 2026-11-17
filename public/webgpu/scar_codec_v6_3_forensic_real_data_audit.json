@@ -1,0 +1,189 @@
+{
+  "suite": "scar_codec_v6_3_forensic_and_real_data_audit",
+  "version": "6.3.0",
+  "provenance": {
+    "files_verified": 16,
+    "distinct_archives": 10,
+    "scientific_domains": 8,
+    "total_verified_raw_bytes": 26228914,
+    "all_sha256_matched": true
+  },
+  "real_data_v6_3_c99_gate_g0_throughput": {
+    "nasa_spitzer_irac": {
+      "shape": [
+        513,
+        1025
+      ],
+      "raw_fp32_bytes": 2103300,
+      "vq4_biorth_encode_ms": 121.9,
+      "vq4_biorth_encode_mb_per_s": 16.45,
+      "vq4_biorth_ratio_x": 11.77,
+      "vq4_biorth_rmse": 4.58953,
+      "e8_biorth_encode_ms": 33.82,
+      "e8_biorth_encode_mb_per_s": 59.31,
+      "e8_biorth_ratio_x": 21.33,
+      "e8_biorth_rmse": 14.9699
+    },
+    "cso_bolocam_sgr_a": {
+      "shape": [
+        638,
+        640
+      ],
+      "raw_fp32_bytes": 1633280,
+      "vq4_biorth_encode_ms": 102.29,
+      "vq4_biorth_encode_mb_per_s": 15.23,
+      "vq4_biorth_ratio_x": 12.27,
+      "vq4_biorth_rmse": 0.0299326,
+      "e8_biorth_encode_ms": 25.99,
+      "e8_biorth_encode_mb_per_s": 59.92,
+      "e8_biorth_ratio_x": 22.32,
+      "e8_biorth_rmse": 0.0746864
+    },
+    "rosat_allsky_xray": {
+      "shape": [
+        240,
+        480
+      ],
+      "raw_fp32_bytes": 460800,
+      "vq4_biorth_encode_ms": 58.7,
+      "vq4_biorth_encode_mb_per_s": 7.49,
+      "vq4_biorth_ratio_x": 9.71,
+      "vq4_biorth_rmse": 10.8793,
+      "e8_biorth_encode_ms": 9.91,
+      "e8_biorth_encode_mb_per_s": 44.35,
+      "e8_biorth_ratio_x": 18.16,
+      "e8_biorth_rmse": 26.4219
+    },
+    "iris_tohoku_mw91": {
+      "shape": [
+        336,
+        640
+      ],
+      "raw_fp32_bytes": 860160,
+      "vq4_biorth_encode_ms": 65.27,
+      "vq4_biorth_encode_mb_per_s": 12.57,
+      "vq4_biorth_ratio_x": 11.37,
+      "vq4_biorth_rmse": 11517.8,
+      "e8_biorth_encode_ms": 13.21,
+      "e8_biorth_encode_mb_per_s": 62.09,
+      "e8_biorth_ratio_x": 20.9,
+      "e8_biorth_rmse": 24971.0
+    },
+    "mitbih_119_holter_ecg": {
+      "shape": [
+        1015,
+        1280
+      ],
+      "raw_fp32_bytes": 5196800,
+      "vq4_biorth_encode_ms": 250.31,
+      "vq4_biorth_encode_mb_per_s": 19.8,
+      "vq4_biorth_ratio_x": 13.19,
+      "vq4_biorth_rmse": 0.0689835,
+      "e8_biorth_encode_ms": 68.41,
+      "e8_biorth_encode_mb_per_s": 72.45,
+      "e8_biorth_ratio_x": 23.77,
+      "e8_biorth_rmse": 0.210762
+    },
+    "ligo_gw150914_strain": {
+      "shape": [
+        512,
+        512
+      ],
+      "raw_fp32_bytes": 1048576,
+      "vq4_biorth_encode_ms": 70.71,
+      "vq4_biorth_encode_mb_per_s": 14.14,
+      "vq4_biorth_ratio_x": 11.74,
+      "vq4_biorth_rmse": 9.13027e-21,
+      "e8_biorth_encode_ms": 16.52,
+      "e8_biorth_encode_mb_per_s": 60.54,
+      "e8_biorth_ratio_x": 21.5,
+      "e8_biorth_rmse": 1.96198e-20
+    },
+    "fcrao_3d_13co": {
+      "shape": [
+        53,
+        105,
+        105
+      ],
+      "raw_fp32_bytes": 2337300,
+      "nd_biorth_encode_ms": 81.27,
+      "nd_biorth_encode_mb_per_s": 27.43,
+      "nd_biorth_ratio_x": 54.12,
+      "nd_biorth_rmse": 0.149847
+    },
+    "noaa_oisst_3d": {
+      "shape": [
+        12,
+        180,
+        360
+      ],
+      "raw_fp32_bytes": 3110400,
+      "nd_biorth_encode_ms": 117.71,
+      "nd_biorth_encode_mb_per_s": 25.2,
+      "nd_biorth_ratio_x": 22.74,
+      "nd_biorth_rmse": 0.850825
+    }
+  },
+  "forensic_production_guarantees": {
+    "c_simd_mmap_random_64float_block_us": 0.3765,
+    "prime_and_degenerate_shapes_c_vs_numpy_max_diff": 0.0,
+    "intra_block_200db_0ulp_lossless_exact": true,
+    "crc32_tamper_rejections_zero_fd_leak": "32/32",
+    "concurrent_8thread_mmap_max_diff": 0.0
+  },
+  "biorthogonal_vs_modern_2026_sota_highlights": {
+    "iris_tohoku_snr_gain_over_orth_db": 8.56,
+    "mitbih_119_iec_50uv_byte_savings_pct": 27.06,
+    "noaa_oisst_3d_ocean_rmse_c": 0.8821,
+    "noaa_oisst_3d_antarctica_leak_c": 0.0,
+    "rosat_e8_17x_peak_err_vs_sz3_sperr": {
+      "scar_e8_biorth": 7.7969,
+      "sz3": 17.0566,
+      "sperr_cdf97": 24.6758
+    },
+    "scache_34p8kb_physionet_biorth_vs_fd": {
+      "physical_bytes": 34816,
+      "minheap_1slot_32odd_cosine": 0.86594,
+      "frequent_directions_32odd_cosine": 0.95698,
+      "orthogonal_scache_32odd_cosine": 0.74329,
+      "biorthogonal_dual_scache_32odd_cosine": 0.98218,
+      "orthogonal_rel_l2_err": 0.6752,
+      "biorthogonal_rel_l2_err": 0.202
+    },
+    "scache_shuttle_32sensor_fault_recall_cos": 0.99994,
+    "oblique_60db_jammer_biorth_vs_nita_gary_sk": {
+      "jammer_sir_db": -60.0,
+      "angular_separation_deg": 31.8,
+      "beam_jammer_cosine": 0.85,
+      "nita_gary_spectral_kurtosis_cosine": -0.01032,
+      "orthogonal_p_perp_vq4_cosine": 0.99366,
+      "biorthogonal_p_biorth_vq4_cosine": 0.99446,
+      "orthogonal_p_perp_rel_l2_err": 0.7208,
+      "biorthogonal_p_biorth_rel_l2_err": 0.1057,
+      "orthogonal_amplitude_retention_pct": 28.0,
+      "biorthogonal_amplitude_retention_pct": 100.0
+    },
+    "random_read_speedup_vs_blosc2_ccsds121": {
+      "dataset": "NASA Spitzer IRAC [513, 1025] (2,103,300 B raw FP32)",
+      "scar_vq4_container_bytes": 178944,
+      "scar_vq4_compression_x": 11.75,
+      "scar_e8_container_bytes": 98944,
+      "scar_e8_compression_x": 21.26,
+      "blosc2_zstd9_bitshuffle_bytes": 1752076,
+      "blosc2_lossless_compression_x": 1.2,
+      "bitshuffle_zstd19_bytes": 1650226,
+      "bitshuffle_zstd19_compression_x": 1.27,
+      "ccsds121_libaec_16bit_bytes": 554517,
+      "ccsds121_16bit_compression_x": 3.79,
+      "random_64float_block_latency_us": {
+        "scar_c99_simd_in_ram_us": 4.734,
+        "scar_c99_simd_ssd_mmap_us": 4.336,
+        "blosc2_chunk16x64_get_slice_us": 7.88,
+        "ccsds121_libaec_decode_us": 3325.51,
+        "bitshuffle_zstd19_decode_us": 778.29
+      },
+      "scar_speedup_over_blosc2_slice_x": 1.7,
+      "scar_mmap_speedup_over_blosc2_slice_x": 1.8
+    }
+  }
+}
