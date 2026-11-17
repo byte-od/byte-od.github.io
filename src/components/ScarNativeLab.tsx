@@ -25,6 +25,8 @@ import {
   V6PolyglotLang,
   computeFrontierV6ByteBudget,
 } from '../lib/scarNativeV6Engine';
+import scarFieldV7Audit from '../data/scarFieldV7Audit.json';
+import forensicSynergyAudit from '../data/scarCodecForensicSynergyAudit.json';
 
 type LabTab = 'live_o1' | 'cartridges_gdpr' | 'ablation_curves';
 
@@ -1167,6 +1169,86 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
               <span className="text-[10px] text-zinc-500 block mt-0.5">
                 SCache {(frontierBudget.scache_o1_constant_bytes / (1024 * 1024)).toFixed(1)} MiB (Δ +0 B)
               </span>
+            </div>
+          </div>
+
+          {/* Frontier R&D: ScarField v7.0 (NVIDIA A100 Post-Transformer Zero-Legacy Audit + ScarCodec C/SIMD Synergy) */}
+          <div className="p-4 rounded-2xl bg-gradient-to-br from-zinc-900/90 to-zinc-950 border border-amber-400/35 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-xs font-mono font-bold text-amber-300 uppercase tracking-wider">
+                <Sparkles className="w-4 h-4 shrink-0" />
+                <span>
+                  {lang === 'pt'
+                    ? 'P&D de Fronteira · ScarField v7.0 (Pós-Transformer Zero-Legado em NVIDIA A100 + Sinergia ScarCodec C/SIMD)'
+                    : 'Frontier R&D · ScarField v7.0 (Post-Transformer Zero-Legacy on NVIDIA A100 + ScarCodec C/SIMD Synergy)'}
+                </span>
+              </div>
+              <a
+                href="/webgpu/scar_field_v7_0_audit.json"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-mono text-amber-300 hover:text-white px-2.5 py-1 rounded-md bg-amber-500/10 border border-amber-500/30"
+              >
+                {lang === 'pt' ? 'Auditoria A100 v7.0 JSON ↗' : 'A100 v7.0 Audit JSON ↗'}
+              </a>
+            </div>
+            <p className="text-xs text-zinc-300 leading-relaxed">
+              {lang === 'pt'
+                ? `Pré-treinado do zero em ${scarFieldV7Audit.hardware} sem nenhuma relíquia Transformer (0 nn.Linear, 0 ReLU/SwiGLU, 0 Softmax/exp, 0 RMSNorm, 0 RoPE inteiro, 0 BPE fixo, 0 AdamW): substrato Gosset E8 de 1,000 bpw (${scarFieldV7Audit.byte_budget.packed_model_mib} MiB = ${scarFieldV7Audit.byte_budget.weight_compression_vs_fp16_x}x menor que FP16), fluxo simplético reversível de Cayley (${scarFieldV7Audit.hardware_benchmarks.reversible_cayley_activation_memory_mib.k16_memory_savings_x}x menos VRAM de ativação), scan paralelo Chunkwise WY (${scarFieldV7Audit.hardware_benchmarks.chunkwise_wy_scan.speedup_x}x mais rápido na A100) e cicatriz causal de 1 salto no barramento central Kalman-Scar (${(scarFieldV7Audit.byte_budget.central_kalman_scache_o1_bytes / 1024).toFixed(1)} KB, Δ +0 B).`
+                : `Pretrained Tabula Rasa on ${scarFieldV7Audit.hardware} with zero Transformer relics (0 nn.Linear, 0 ReLU/SwiGLU, 0 Softmax/exp, 0 RMSNorm, 0 integer RoPE, 0 static BPE, 0 AdamW): 1.000 bpw Gosset E8 substrate (${scarFieldV7Audit.byte_budget.packed_model_mib} MiB = ${scarFieldV7Audit.byte_budget.weight_compression_vs_fp16_x}x smaller than FP16), reversible symplectic Cayley flow (${scarFieldV7Audit.hardware_benchmarks.reversible_cayley_activation_memory_mib.k16_memory_savings_x}x lower activation VRAM), parallel Chunkwise WY scan (${scarFieldV7Audit.hardware_benchmarks.chunkwise_wy_scan.speedup_x}x faster on A100), and 1-hop causal transition scars in the central Kalman-Scar bus (${(scarFieldV7Audit.byte_budget.central_kalman_scache_o1_bytes / 1024).toFixed(1)} KB, Δ +0 B).`}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 font-mono text-xs">
+              <div className="p-2.5 rounded-xl bg-zinc-950 border border-zinc-800">
+                <span className="text-[10px] text-zinc-500 block">
+                  {lang === 'pt' ? 'PIN Inédito (T=96 / 160 / 512 OOD)' : 'Unseen PIN (T=96 / 160 / 512 OOD)'}
+                </span>
+                <span className="text-[#adff2f] font-bold text-sm">
+                  {(scarFieldV7Audit.passkey_horizon_sweep.scarfield_v7_full['T=96'].unseen_pin_exact_3digit_acc * 100).toFixed(0)}% /{' '}
+                  {(scarFieldV7Audit.passkey_horizon_sweep.scarfield_v7_full['T=160'].unseen_pin_exact_3digit_acc * 100).toFixed(0)}% /{' '}
+                  {(scarFieldV7Audit.passkey_horizon_sweep.scarfield_v7_full['T=512'].unseen_pin_exact_3digit_acc * 100).toFixed(0)}%
+                </span>
+                <span className="text-[10px] text-zinc-500 block mt-0.5">
+                  {lang === 'pt' ? 'vs 0% no DenseByteTransformer FP16' : 'vs 0% in DenseByteTransformer FP16'}
+                </span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-zinc-950 border border-zinc-800">
+                <span className="text-[10px] text-zinc-500 block">
+                  {lang === 'pt' ? 'Simplex Tsallis-1.5 & Vácuo 0x00' : 'Tsallis-1.5 Simplex & 0x00 Vacuum'}
+                </span>
+                <span className="text-emerald-400 font-bold text-sm">
+                  {scarFieldV7Audit.polyglot_and_epistemic_metrics.unseen_out_of_cone_0x00_vacuum_abstention} (100%) ·{' '}
+                  {scarFieldV7Audit.polyglot_and_epistemic_metrics.simplex_exact_zero_sparsity_pct}% Zeros
+                </span>
+                <span className="text-[10px] text-zinc-500 block mt-0.5">
+                  {lang === 'pt' ? 'Zero Softmax · S_world PT/ES/FR > 0,986' : 'Zero Softmax · S_world PT/ES/FR > 0.986'}
+                </span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-zinc-950 border border-zinc-800">
+                <span className="text-[10px] text-zinc-500 block">
+                  {lang === 'pt' ? 'Sinergia ScarCodec C99/SIMD (CPU S1)' : 'ScarCodec C99/SIMD Synergy (CPU S1)'}
+                </span>
+                <span className="text-[#38bdf8] font-bold text-sm">
+                  {forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.full_engine_s1_speedup_x}x↑ ({forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.s1_step_byte_ms_after_scarcodec_c_simd.toFixed(2)} ms)
+                </span>
+                <span className="text-[10px] text-zinc-500 block mt-0.5">
+                  {lang === 'pt'
+                    ? `${forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.e8_operators_ram_reduction_x}x menos RAM E8 · cos=${forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.forward_sequence_score_cosine.toFixed(1)}`
+                    : `${forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.e8_operators_ram_reduction_x}x lower E8 RAM · cos=${forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.forward_sequence_score_cosine.toFixed(1)}`}
+                </span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-zinc-950 border border-zinc-800">
+                <span className="text-[10px] text-zinc-500 block">
+                  {lang === 'pt' ? 'Container Zero-Pickle .sfield.scar' : 'Zero-Pickle .sfield.scar mmap'}
+                </span>
+                <span className="text-[#c4b5fd] font-bold text-sm">
+                  {forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.scarcodec_sfield_scar_container_mib.toFixed(2)} MiB ({forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.disk_footprint_reduction_vs_pt_bundle_x}x↓)
+                </span>
+                <span className="text-[10px] text-zinc-500 block mt-0.5">
+                  {lang === 'pt'
+                    ? `vs ${forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.legacy_torch_pt_bundle_mib.toFixed(1)} MiB .pt · boot mmap ${forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.mmap_cold_start_load_ms} ms`
+                    : `vs ${forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.legacy_torch_pt_bundle_mib.toFixed(1)} MiB .pt · ${forensicSynergyAudit.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.mmap_cold_start_load_ms} ms mmap load`}
+                </span>
+              </div>
             </div>
           </div>
         </div>

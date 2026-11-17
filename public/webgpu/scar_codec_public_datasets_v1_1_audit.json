@@ -1,0 +1,300 @@
+{
+  "suite": "scar_codec_public_datasets_v1_1_zfp_fpack_minheap_audit",
+  "version": "1.1.0",
+  "scar_codec_modified": false,
+  "synthetic_data_used": false,
+  "oracle_steering_used": false,
+  "provenance_manifest": [
+    {
+      "id": "physionet_s001r01_eyes_open",
+      "filename": "physionet_s001r01_eyes_open.edf",
+      "url": "https://physionet.org/files/eegmmidb/1.0.0/S001/S001R01.edf",
+      "domain": "Biomedical 64-Channel Biopotential Array (Baseline Eyes-Open)",
+      "citation": "Schalk et al. (2004), IEEE Trans. Biomed. Eng. 51(6), 1034-1043; Goldberger et al. (2000), Circulation 101(23), e215-e220.",
+      "license": "ODC-By-1.0 (PhysioNet Open Data)",
+      "bytes": 1275936,
+      "sha256": "4743b736131a7e147c150e8b37711029b6cda5e356c4b3e8261a03cdcaaf8b0c"
+    },
+    {
+      "id": "physionet_s001r02_eyes_closed",
+      "filename": "physionet_s001r02_eyes_closed.edf",
+      "url": "https://physionet.org/files/eegmmidb/1.0.0/S001/S001R02.edf",
+      "domain": "Biomedical 64-Channel Biopotential Array (Resting Eyes-Closed)",
+      "citation": "Schalk et al. (2004), IEEE Trans. Biomed. Eng. 51(6), 1034-1043.",
+      "license": "ODC-By-1.0 (PhysioNet Open Data)",
+      "bytes": 1275936,
+      "sha256": "31a95e0a880e6c3d89960d9d62c144f24cc4e9f5d7e93c7f864ef61cd49e847e"
+    },
+    {
+      "id": "physionet_s001r04_motor_task",
+      "filename": "physionet_s001r04_motor_task.edf",
+      "url": "https://physionet.org/files/eegmmidb/1.0.0/S001/S001R04.edf",
+      "domain": "Biomedical 64-Channel Biopotential Array (Held-Out Motor Imagery Task)",
+      "citation": "Schalk et al. (2004), IEEE Trans. Biomed. Eng. 51(6), 1034-1043.",
+      "license": "ODC-By-1.0 (PhysioNet Open Data)",
+      "bytes": 2596896,
+      "sha256": "3d161f88e1c00632585287d2ce584c2bc0f08862438eb255ea8723e00fac693d"
+    },
+    {
+      "id": "nasa_shuttle_statlog",
+      "filename": "nasa_shuttle.zip",
+      "url": "https://archive.ics.uci.edu/static/public/148/statlog+shuttle.zip",
+      "domain": "Aerospace Multi-Sensor Telemetry (NASA Space Shuttle Radiator Control)",
+      "citation": "Catlett, J. (1992) / Michie, Spiegelhalter & Taylor (1994), NASA Space Shuttle Statlog Dataset, UCI ML Repository ID 148.",
+      "license": "CC-BY-4.0 (UCI Machine Learning Repository)",
+      "bytes": 430418,
+      "sha256": "a03e1f23755093eff5b8d9656f944ae3240a376065cf4360d090f5fe0aff9bef"
+    },
+    {
+      "id": "nasa_spitzer_irac",
+      "filename": "spitzer_irac.fits",
+      "url": "https://raw.githubusercontent.com/astropy/astropy-data/gh-pages/photometry/spitzer_example_image.fits",
+      "domain": "Space Infrared Astrophysics (NASA Spitzer Space Telescope IRAC)",
+      "citation": "Fazio et al. (2004), Astrophys. J. Suppl. Ser. 154(1), 10-17; Astropy Collaboration (2022), Astrophys. J. 935, 167.",
+      "license": "BSD-3-Clause / NASA Public Archival Data",
+      "bytes": 2113920,
+      "sha256": "4b9cf15419de311fc683a9c378327a0b28bfee29d01e4fdbb9dc5780417f7ebc"
+    },
+    {
+      "id": "cso_bolocam_galactic_center",
+      "filename": "gc_bolocam_gps.fits",
+      "url": "https://raw.githubusercontent.com/astropy/astropy-data/gh-pages/galactic_center/gc_bolocam_gps.fits",
+      "domain": "Submillimeter Galactic Center Continuum (CSO Bolocam 1.1 mm Sgr A* / Sgr B2)",
+      "citation": "Ginsburg et al. (2013), Astrophys. J. Suppl. Ser. 208(2), 14; Aguirre et al. (2011), ApJS 192, 4.",
+      "license": "BSD-3-Clause / Public Astronomical Survey Archive",
+      "bytes": 1644480,
+      "sha256": "f442e8a6499c461048f8e74fa780dd2098e6e6c9522e8571fffcc8063d0708a9"
+    },
+    {
+      "id": "fcrao_l1448_13co_cube",
+      "filename": "l1448_13co.fits",
+      "url": "https://raw.githubusercontent.com/astropy/astropy-data/gh-pages/l1448/l1448_13co.fits",
+      "domain": "Radio Astronomy Spectral Line Cube (FCRAO 14-m L1448 13CO J=1->0 Outflow)",
+      "citation": "Ridge et al. (2006), Astron. J. 131(6), 2921-2933 (COMPLETE Survey of Star-Forming Regions).",
+      "license": "BSD-3-Clause / Public Radio Astronomy Survey Archive",
+      "bytes": 2341440,
+      "sha256": "de4d44cd2841d34cfe98915ab322f83e302f13b9599ef8629079249e53ad6d49"
+    }
+  ],
+  "experiment_1_physionet_64ch_vs_zfp": {
+    "raw_fp32_bytes": 5111808,
+    "scar_codec_bytes": 488192,
+    "scar_codec_compression_x": 10.47,
+    "zfp_byte_matched_bytes": 489232,
+    "zfp_compression_x": 10.45,
+    "scar_p_perp_array_snr_db": 14.63,
+    "scar_p_perp_array_cosine": 0.98273,
+    "zfp_with_p_perp_array_snr_db": 10.13,
+    "zfp_with_p_perp_array_cosine": 0.95496,
+    "zfp_without_p_perp_array_snr_db": 7.0,
+    "zfp_without_p_perp_array_cosine": 0.91225,
+    "scar_p_perp_raw_c3_laplacian_snr_db": 8.4,
+    "zfp_with_p_perp_raw_c3_laplacian_snr_db": 6.59,
+    "zfp_without_p_perp_raw_c3_laplacian_snr_db": 4.35
+  },
+  "experiment_2_minheap_vs_wscar_telemetry_ablation": {
+    "base_telemetry": {
+      "physionet_64ch_stream": {
+        "chronological_runs": "S001R01 -> S001R02 -> S001R04",
+        "total_frames": 39520,
+        "channels": 64,
+        "raw_fp32_bytes": 10117120,
+        "scache_bytes_initial": 34816,
+        "scache_bytes_mid": 34816,
+        "scache_bytes_final": 34816,
+        "scache_delta_bytes": 0,
+        "circular_ring_budget_bytes": 34816,
+        "circular_ring_frame_capacity": 256,
+        "early_r01_r02_transients_retained_scache": 3,
+        "early_r01_r02_transients_retained_ring": 0,
+        "blind_32even_to_32odd_full_cosine": 0.99618,
+        "blind_32even_to_32odd_masked_cosine": 0.99667,
+        "ingest_fps": 40274.1
+      },
+      "nasa_shuttle_radiator_stream": {
+        "dataset": "shuttle.tst (NASA Space Shuttle Radiator Control)",
+        "total_frames": 14500,
+        "physical_sensors": 8,
+        "raw_fp32_bytes": 464000,
+        "scache_bytes_initial": 3120,
+        "scache_bytes_final": 3120,
+        "scache_delta_bytes": 0,
+        "circular_ring_budget_bytes": 3120,
+        "circular_ring_frame_capacity": 130,
+        "critical_bypass_valve_fault_indices": [
+          2981,
+          5164,
+          6815,
+          7964,
+          9230,
+          11394
+        ],
+        "critical_bypass_valve_prevalence_pct": 0.0414,
+        "scache_bypass_valve_recall": "6/6",
+        "scache_bypass_valve_recall_pct": 100.0,
+        "circular_ring_bypass_valve_recall": "0/6",
+        "circular_ring_bypass_valve_recall_pct": 0.0,
+        "rank8_saturated_1sensor_abs_cosine": 0.3237,
+        "total_high_surprise_writes": 99,
+        "ingest_fps": 41069.2
+      }
+    },
+    "minheap_vs_wscar_ablation": {
+      "minheap_48slot_bytes": 7232,
+      "scache_unified_bytes": 34816,
+      "early_timestamps_retained_minheap": 3,
+      "early_timestamps_retained_scache": 3,
+      "timestamp_retention_identical": true,
+      "compound_superposed_fault_32odd_cosine_w_scar": 0.99965,
+      "compound_superposed_fault_32odd_cosine_minheap_nn": 0.99835,
+      "orthogonal_cortical_modes_pair_abs_cosine": 0.00117,
+      "orthogonal_dual_mode_32odd_cosine_w_scar": 0.88255,
+      "orthogonal_dual_mode_32odd_cosine_minheap_nn": 0.69174,
+      "w_scar_single_gemv_query_us": 5.23,
+      "minheap_48slot_scan_query_us": 18.61
+    }
+  },
+  "experiment_3_fits_vs_zfp_fpack_rfft_zlib": {
+    "nasa_spitzer_irac": {
+      "label": "NASA Spitzer Space Telescope IRAC (MJy/sr)",
+      "shape": [
+        513,
+        1025
+      ],
+      "raw_fp32_bytes": 2103300,
+      "hdr_peak_to_median_ratio_x": 968.9,
+      "scar_codec": {
+        "bytes": 178652,
+        "compression_x": 11.77,
+        "rmse": 5.13495,
+        "top32_peak_max_err": 0.9988,
+        "pure_zero_row_max_err": 0.0,
+        "o1_64float_block_read_us": 138.19
+      },
+      "zfp_fixed_rate_matched": {
+        "bytes": 178216,
+        "compression_x": 11.8,
+        "rmse": 20.80066,
+        "top32_peak_max_err": 1634.2493,
+        "pure_zero_row_max_err": 0.0,
+        "full_array_decompress_us": 2880.26
+      },
+      "fits_fpack_rice_1": {
+        "quantize_level_q": 0.2,
+        "payload_bytes": 175680,
+        "total_fits_bytes": 181440,
+        "payload_compression_x": 11.97,
+        "rmse": 1.5608,
+        "top32_peak_max_err": 2.6685,
+        "pure_zero_row_max_err": 0.0
+      },
+      "fp16_2d_rfft_matched": {
+        "bytes": 177608,
+        "rmse": 30.79907,
+        "top32_peak_max_err": 2091.002,
+        "pure_zero_row_max_err": 0.0
+      },
+      "zlib_level9_lossless": {
+        "bytes": 1842095,
+        "compression_x": 1.14
+      },
+      "scar_peak_gain_over_zfp_x": 1636.21,
+      "scar_peak_gain_over_fpack_x": 2.67,
+      "scar_rmse_ratio_vs_zfp_x": 4.051
+    },
+    "cso_bolocam_sgr_a": {
+      "label": "CSO Bolocam Galactic Center 1.1 mm Sgr A* / Sgr B2 (Jy/Beam)",
+      "shape": [
+        638,
+        640
+      ],
+      "raw_fp32_bytes": 1633280,
+      "hdr_peak_to_median_ratio_x": 217.0,
+      "scar_codec": {
+        "bytes": 133060,
+        "compression_x": 12.27,
+        "rmse": 0.03654,
+        "top32_peak_max_err": 0.0039,
+        "pure_zero_row_max_err": 0.0,
+        "o1_64float_block_read_us": 131.71
+      },
+      "zfp_fixed_rate_matched": {
+        "bytes": 134416,
+        "compression_x": 12.15,
+        "rmse": 0.05176,
+        "top32_peak_max_err": 0.7973,
+        "pure_zero_row_max_err": 0.42188,
+        "full_array_decompress_us": 2009.27
+      },
+      "fits_fpack_rice_1": {
+        "quantize_level_q": 0.35,
+        "payload_bytes": 132480,
+        "total_fits_bytes": 138240,
+        "payload_compression_x": 12.33,
+        "rmse": 0.0407,
+        "top32_peak_max_err": 0.0644,
+        "pure_zero_row_max_err": 0.0
+      },
+      "fp16_2d_rfft_matched": {
+        "bytes": 132096,
+        "rmse": 0.05991,
+        "top32_peak_max_err": 0.1791,
+        "pure_zero_row_max_err": 0.14596
+      },
+      "zlib_level9_lossless": {
+        "bytes": 1452363,
+        "compression_x": 1.12
+      },
+      "scar_peak_gain_over_zfp_x": 204.44,
+      "scar_peak_gain_over_fpack_x": 16.51,
+      "scar_rmse_ratio_vs_zfp_x": 1.417
+    },
+    "fcrao_l1448_13co_cube": {
+      "label": "FCRAO 14-m Radio Telescope L1448 13CO J=1->0 Spectral Cube (K)",
+      "shape": [
+        371,
+        1575
+      ],
+      "raw_fp32_bytes": 2337300,
+      "hdr_peak_to_median_ratio_x": 11.7,
+      "scar_codec": {
+        "bytes": 192580,
+        "compression_x": 12.14,
+        "rmse": 0.06521,
+        "top32_peak_max_err": 0.1902,
+        "pure_zero_row_max_err": 0.0,
+        "o1_64float_block_read_us": 130.74
+      },
+      "zfp_fixed_rate_matched": {
+        "bytes": 192384,
+        "compression_x": 12.15,
+        "rmse": 0.18636,
+        "top32_peak_max_err": 0.8417,
+        "pure_zero_row_max_err": 0.0,
+        "full_array_decompress_us": 2731.89
+      },
+      "fits_fpack_rice_1": {
+        "quantize_level_q": 0.75,
+        "payload_bytes": 204480,
+        "total_fits_bytes": 210240,
+        "payload_compression_x": 11.43,
+        "rmse": 0.06174,
+        "top32_peak_max_err": 0.124,
+        "pure_zero_row_max_err": 0.0
+      },
+      "fp16_2d_rfft_matched": {
+        "bytes": 192200,
+        "rmse": 0.2498,
+        "top32_peak_max_err": 0.8707,
+        "pure_zero_row_max_err": 0.0
+      },
+      "zlib_level9_lossless": {
+        "bytes": 2127628,
+        "compression_x": 1.1
+      },
+      "scar_peak_gain_over_zfp_x": 4.43,
+      "scar_peak_gain_over_fpack_x": 0.65,
+      "scar_rmse_ratio_vs_zfp_x": 2.858
+    }
+  }
+}

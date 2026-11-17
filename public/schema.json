@@ -19,7 +19,7 @@
       "@type": "WebPage",
       "name": "Julio Cesar Reis Filho | Mixture of Scars (MoS) & SCache O(1)",
       "url": "https://byte-od.github.io/",
-      "description": "Official research and live WebGPU showcase of the Scar Architecture Ecosystem: MoS, O(1) SCache (34.8 KB), VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0, PointScarFlow v1.0, and AURA / System One."
+      "description": "Official research and live WebGPU showcase of the Scar Architecture Ecosystem: MoS, O(1) SCache (34.8 KB), ScarCodec v6.0 (Zero-PyTorch C99/SIMD 0.388 us + Zarr + 21x E8), ScarNativeLM v6.0, ScarField v7.0, PointScarFlow v1.0, and AURA / System One."
     },
     {
       "@type": "FAQPage",

@@ -100,23 +100,23 @@ const FAQ_ITEMS: FaqItem[] = [
   },
   {
     id: 'scarcodec-and-aura',
-    categoryEn: 'ScarCodec v4.0 & AURA Origin',
-    categoryPt: 'ScarCodec v4.0 & Origem AURA',
-    questionEn: 'Where did SCache originate, and does the Scar Operator generalize beyond language models?',
-    questionPt: 'Onde nasceu o SCache O(1), e o Operador de Cicatrizes funciona fora de modelos de linguagem?',
+    categoryEn: 'ScarCodec v6.0 & ScarField v7.0 Synergy',
+    categoryPt: 'ScarCodec v6.0 & Sinergia ScarField v7.0',
+    questionEn: 'Where did SCache originate, how does ScarCodec v6.0 perform vs. ZFP/fpack, and does decoupling it help ScarField v7.0?',
+    questionPt: 'Onde nasceu o SCache O(1), como o ScarCodec v6.0 se sai contra ZFP/fpack, e seu desacoplamento beneficia o ScarField v7.0?',
     directAnswerEn:
-      'SCache originated as the constant 34.8 KB GradientScarMemory inside AURA / System One (embodied Deep RL with 0.23 ms CPU S1 reflex and Frontier Ghost-Jump Scouts), and ScarCodec v4.0 proves the exact same operator excels in radio-astronomy RFI excision, aerospace black-box telemetry, and HDR CFD shockwave compression.',
+      'SCache originated as the 34.8 KB GradientScarMemory inside AURA / System One; ScarCodec v6.0 turns those pure mathematical operators into a standalone Zero-PyTorch C99/SIMD + Zarr + Gosset E8 library (0.388 µs O(1) mmap reads, 1,636x lower Spitzer peak error than ZFP, 21.0x E8 compression) whose fused C99/SIMD kernel directly accelerates ScarField v7.0 CPU S1 reflex inference by 58.76x while shrinking live E8 RAM by 31.68x.',
     directAnswerPt:
-      'O SCache nasceu como o GradientScarMemory constante de 34.8 KB dentro do AURA / System One (Deep RL incorporado com reflexo S1 de 0.23 ms em CPU e Batedores de Fronteira Ghost-Jump), e o ScarCodec v4.0 prova que o mesmo operador domina excisão de RFI em radioastronomia, caixas-pretas aeroespaciais e compressão CFD HDR.',
+      'O SCache nasceu como o GradientScarMemory constante de 34.8 KB dentro do AURA / System One; o ScarCodec v6.0 consolida esses operadores em uma biblioteca independente Zero-PyTorch C99/SIMD + Zarr + Gosset E8 (leitura O(1) mmap em 0,388 µs, 1.636x menor erro estelar que o ZFP no Spitzer e 21,0x de compressão em E8), cujo kernel C99/SIMD fundido acelera a inferência S1 do ScarField v7.0 em CPU em 58,76x e reduz a RAM viva dos operadores E8 em 31,68x.',
     detailsEn: [
-      'AURA / System One: Surprise-gated retention (Surprise = R_0 − V(s_0)) stores non-trivial transition shocks in 34.8 KB while solving Rubik’s Cube scrambles up to Depth 10 (232.2B states) without tree search.',
-      'Radio-Astronomy Blind RFI Excision: Estimates P_⊥ from noisy calibration voltages (0 oracle) to recover pulsar trains under 1,000x satellite RFI (cos = 0.9753 at 8.67x on [64, 4096]; cos = 0.9837 at 6.34x live in browser; 2-bit VLBI cos = 0.0252).',
-      'Black-Box Partial-Cue Recall & Rusanov Burgers PDE: Retains 5/5 precursor faults over 50,000 frames in 34,816 B (Δ = 0 B, reconstructing 4 masked channels at cos = 0.9999) and compresses 2D Burgers Rankine-Hugoniot shock fields 12.05x with 188.2x lower RMSE than byte-matched FP16 2D rFFT and exact 0.0 vacuum error.',
+      'Peer-Reviewed Public Archives vs. ZFP & FITS fpack: Beats official ZFP across all 4 public NASA/NIH archives (+4.50 dB on 64-ch PhysioNet EEG, 1,636.2x lower Spitzer peak error), beats both ZFP and FITS fpack on Bolocam Sgr A*, and proves W_scar orthogonal cortical superposition (cos = 0.8826 vs 0.6917 Min-Heap 1/√2 ceiling).',
+      'ScarCodec v6.0 Industrial Consolidation: Zero-PyTorch NumPy + C99/SIMD (0.388 µs O(1) block read = 11,088x faster than zlib), CRC32 .scar mmap + ScarZarrCodec, exact L_∞ bound from 10⁻²¹ LIGO strain to 1.5×10⁸ X-ray counts, 21.0x Gosset E8, and 3D ScarCodecND (0.0566 K FCRAO peak error = 2.03x < FITS fpack).',
+      'ScarField v7.0 Post-Transformer on NVIDIA A100 + C99/SIMD Synergy: Zero ReLU/Softmax/RoPE/BPE/AdamW (306.87x Chunkwise WY, 11.65x Cayley VRAM savings, 100% unseen PIN @ T=160 & 75% @ T=512 OOD vs 0% Dense, 16/16 0x00 vacuum abstention), packaged in a 1.88 MiB zero-pickle .sfield.scar mmap container (9.78x smaller than .pt).',
     ],
     detailsPt: [
-      'AURA / System One: Retenção ponderada por surpresa (Surpresa = R_0 − V(s_0)) grava choques informacionais em 34.8 KB resolvendo o Cubo de Rubik até Profundidade 10 (232.2B estados) sem árvore MCTS.',
-      'Excisão Cega de RFI em Radiointerferometria: Estima P_⊥ por covariância ruidosa (0 oráculo) e recupera pulsos de pulsares sob interferência 1.000x (cos = 0.9753 em 8.67x em [64, 4096]; cos = 0.9837 em 6.34x ao vivo no navegador; VLBI 2-bit cos = 0.0252).',
-      'Caixa-Preta por Pista Parcial & EDP de Burgers (Rusanov): Retém 5/5 falhas precursoras após 50.000 quadros em 34.816 B (Δ = 0 B, reconstruindo 4 canais ocultos com cos = 0.9999) e comprime ondas de choque Rankine-Hugoniot em 12.05x com RMSE 188.2x menor que rFFT 2D FP16 pareada em bytes e erro 0.0 no vácuo.',
+      'Arquivos Públicos SHA-256 vs. ZFP & FITS fpack: Vence o ZFP oficial nas 4 bases públicas da NASA/NIH (+4,50 dB no EEG 64-ch PhysioNet, 1.636,2x menor erro estelar no Spitzer), vence ZFP e FITS fpack juntos no Bolocam Sgr A* e comprova superposição ortogonal em W_scar (cos = 0,8826 vs teto 0,6917 1/√2 do Min-Heap).',
+      'Consolidação Industrial ScarCodec v6.0: NumPy puro + C99/SIMD (leitura O(1) de bloco em 0,388 µs = 11.088x mais rápida que zlib), container .scar CRC32 mmap + ScarZarrCodec, cota exata L_∞ de 10⁻²¹ (LIGO) a 1,5×10⁸ (Raios-X), Gosset E8 21,0x e cubos 3D ScarCodecND (erro de pico 0,0566 K no FCRAO = 2,03x < FITS fpack).',
+      'ScarField v7.0 Pós-Transformer na NVIDIA A100 + Sinergia C99/SIMD: Zero ReLU/Softmax/RoPE/BPE/AdamW (306,87x Chunkwise WY, 11,65x menos VRAM Cayley, 100% PIN inédito @ T=160 e 75% @ T=512 OOD vs 0% Dense, 16/16 abstenção 0x00), empacotado em 1,88 MiB zero-pickle .sfield.scar mmap (9,78x menor que .pt).',
     ],
   },
   {
@@ -126,9 +126,9 @@ const FAQ_ITEMS: FaqItem[] = [
     questionEn: 'Who created the Scar Architecture Ecosystem and how can labs or engineering teams get in touch?',
     questionPt: 'Quem criou o Ecossistema de Arquitetura de Cicatrizes e como entrar em contato?',
     directAnswerEn:
-      'The entire Scar Architecture Ecosystem (MoS, SCache O(1), VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0, PointScarFlow v1.0, and AURA / System One) is authored by Julio Cesar da Costa Reis Filho (Zenodo DOI 10.5281/zenodo.24172784). Reach out directly at reisfilho1116@gmail.com.',
+      'The entire Scar Architecture Ecosystem (MoS, SCache O(1), VQ4-Scar, ScarCodec v6.0, ScarNativeLM v6.0, ScarField v7.0, PointScarFlow v1.0, and AURA / System One) is authored by Julio Cesar da Costa Reis Filho (Zenodo DOI 10.5281/zenodo.24172784). Reach out directly at reisfilho1116@gmail.com.',
     directAnswerPt:
-      'Todo o Ecossistema de Arquitetura de Cicatrizes (MoS, SCache O(1), VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0, PointScarFlow v1.0 e AURA / System One) foi criado por Julio Cesar da Costa Reis Filho (Zenodo DOI 10.5281/zenodo.24172784). Contato direto em reisfilho1116@gmail.com.',
+      'Todo o Ecossistema de Arquitetura de Cicatrizes (MoS, SCache O(1), VQ4-Scar, ScarCodec v6.0, ScarNativeLM v6.0, ScarField v7.0, PointScarFlow v1.0 e AURA / System One) foi criado por Julio Cesar da Costa Reis Filho (Zenodo DOI 10.5281/zenodo.24172784). Contato direto em reisfilho1116@gmail.com.',
     detailsEn: [
       'Direct Email: reisfilho1116@gmail.com',
       'Canonical Open-Source Repository: https://github.com/byte-od/mixture-of-scars',

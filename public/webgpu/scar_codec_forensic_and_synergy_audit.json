@@ -1,0 +1,60 @@
+{
+  "suite": "scar_codec_forensic_and_scarfield_synergy_audit",
+  "version": "6.1.0",
+  "forensic_scar_codec_checks": {
+    "ligo_1e_minus_21_strain": {
+      "requested_abs_tolerance": 1e-20,
+      "measured_max_abs_error": 1.8276495049841626e-21,
+      "vacuum_max_abs_error": 0.0,
+      "global_scale_pow2": 8.470329472543003e-22,
+      "passed": true
+    },
+    "chandra_xray_1p5e8_counts": {
+      "requested_abs_tolerance": 250000.0,
+      "measured_max_abs_error": 249704.0,
+      "vacuum_max_abs_error": 0.0,
+      "global_scale_pow2": 67108864.0,
+      "passed": true
+    },
+    "spitzer_mmap_cold_open_plus_1block_us": 5284.83,
+    "spitzer_warm_c_simd_random_block_us": 0.388,
+    "spitzer_non64_tail_gather_padding_leak": 0.0,
+    "spitzer_scar_container_bytes": 178944
+  },
+  "scarcodec_to_scarfield_v7_synergy": {
+    "does_decoupling_benefit_scarfield": true,
+    "where_it_helps": [
+      "100% bit-identical canonical 256x8 Gosset E8 lattice shared across scar_codec and scar_field (fixed H8[0] index 241 ordering).",
+      "Fused C99/SIMD scar_e8_spherical_ternary_gemm_f32 eliminates 32x dense [O, I] FP32 weight materialization & per-step E8 argmax during CPU/Edge inference.",
+      "Zero-pickle CRC32 + OS mmap .sfield.scar container shrinks A100 checkpoint on disk from 18.36 MiB (.pt bundle) to 1.88 MiB with millisecond cold-start."
+    ],
+    "honest_boundary_where_it_does_not_apply": "Tabula-Rasa GPU pretraining (RiemannianMuon + Chunkwise WY backward autograd on NVIDIA A100) requires continuous tangent-space gradients in PyTorch CUDA Tensor Cores, not CPU C99/SIMD.",
+    "canonical_e8_lut256_max_abs_diff": 0.0,
+    "e8_operator_704x640_cpu_benchmark": {
+      "qat_unpacked_us": 8909.7,
+      "pytorch_packed_unpack_us": 298.8,
+      "scarcodec_c_simd_zero_alloc_us": 186.48,
+      "speedup_vs_qat_x": 47.78,
+      "speedup_vs_pytorch_packed_x": 1.6,
+      "transient_weight_dequant_heap_bytes_saved": 1847296,
+      "scarcodec_c_simd_heap_bytes": 0,
+      "cosine_parity_vs_qat": 0.9999999,
+      "max_abs_diff_vs_qat": 1e-07
+    },
+    "full_a100_scarfield_v7_engine_cpu_reflex": {
+      "e8_operators_ram_before_bytes": 34521392,
+      "e8_operators_ram_after_bytes": 1089600,
+      "e8_operators_ram_reduction_x": 31.68,
+      "total_model_ram_before_mib": 34.58,
+      "total_model_ram_after_mib": 2.697,
+      "legacy_torch_pt_bundle_mib": 18.359,
+      "scarcodec_sfield_scar_container_mib": 1.876,
+      "disk_footprint_reduction_vs_pt_bundle_x": 9.78,
+      "mmap_cold_start_load_ms": 12.07,
+      "s1_step_byte_ms_before_freeze": 472.673,
+      "s1_step_byte_ms_after_scarcodec_c_simd": 8.044,
+      "full_engine_s1_speedup_x": 58.76,
+      "forward_sequence_score_cosine": 1.0
+    }
+  }
+}

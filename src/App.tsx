@@ -97,8 +97,8 @@ export default function App() {
           <div className="max-w-3xl border-l-2 border-[#adff2f]/60 pl-6 my-7">
             <p className="text-base sm:text-lg text-zinc-300 leading-relaxed font-sans">
               {lang === 'pt'
-                ? 'Pesquisa aberta e motores WebGPU/PyTorch reais que substituem o KV Cache linear O(T) e matrizes densas monolíticas por decomposição vetorial em cicatrizes: Mixture of Scars (MoS), SCache Associativo O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0 (Tabula Rasa Shared-Stage MoS), PointScarFlow v1.0 e AURA / System One.'
-                : 'Open research and live WebGPU/PyTorch engines replacing linear O(T) KV Cache and monolithic dense matrices with directional scar decomposition: Mixture of Scars (MoS), Associative O(1) SCache (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0 (Tabula Rasa Shared-Stage MoS), PointScarFlow v1.0, and AURA / System One.'}
+                ? 'Pesquisa aberta e motores WebGPU/C99/PyTorch reais que substituem o KV Cache linear O(T) e matrizes densas monolíticas por decomposição vetorial em cicatrizes: Mixture of Scars (MoS), SCache Associativo O(1) (34.8 KB), ScarCodec v6.0 (Zero-PyTorch C99/SIMD 0,388 µs + Zarr + E8 21x), ScarNativeLM v6.0, ScarField v7.0 (Pós-Transformer E8 1.000 bpw), PointScarFlow v1.0 e AURA / System One.'
+                : 'Open research and live WebGPU/C99/PyTorch engines replacing linear O(T) KV Cache and monolithic dense matrices with directional scar decomposition: Mixture of Scars (MoS), Associative O(1) SCache (34.8 KB), ScarCodec v6.0 (Zero-PyTorch C99/SIMD 0.388 µs + Zarr + 21x E8), ScarNativeLM v6.0, ScarField v7.0 (Post-Transformer 1.000 bpw E8), PointScarFlow v1.0, and AURA / System One.'}
             </p>
           </div>
 

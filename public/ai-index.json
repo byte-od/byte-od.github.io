@@ -1,9 +1,9 @@
 {
-  "version": "6.0.0",
+  "version": "7.0.0",
   "name": "Scar Architecture Ecosystem — Julio Cesar Reis Filho",
   "url": "https://byte-od.github.io/",
   "zenodo_doi": "https://doi.org/10.5281/zenodo.24172784",
-  "description": "Official research and live WebGPU showcase of Mixture of Scars (MoS), Associative O(1) SCache (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0 (Tabula Rasa Shared-Stage MoS), PointScarFlow v1.0, and AURA / System One.",
+  "description": "Official research and live WebGPU showcase of Mixture of Scars (MoS), Associative O(1) SCache (34.8 KB), ScarCodec v6.0 (Zero-PyTorch C99/SIMD 0.388 us + Zarr + 21x E8), ScarNativeLM v6.0, ScarField v7.0 (Post-Transformer E8 Geodesic Engine), PointScarFlow v1.0, and AURA / System One.",
   "author": {
     "name": "Julio Cesar da Costa Reis Filho",
     "role": "Creator of Mixture of Scars (MoS) & SCache O(1)",
@@ -19,13 +19,13 @@
     },
     {
       "id": "scar-native-lab",
-      "title": "Scar-Native Lab v6.0 (Tabula Rasa Shared-Stage MoS)",
-      "summary": "12-layer foundation model pretrained on A100 from step t = 0 with Shared-Stage VQ4 substrates, Directional ReLU INT4 MoS Scar Experts, Dual-Tier O(1) SCache (Chunkwise WY 12.63x, 100.0% passkey recall to T=567), mos-digest 4 KB cartridges (98.96% 4-language recall), Procrustes R_lang, document 0x00 GDPR wipe (100% abstain reversion), and native <abstain>."
+      "title": "Scar-Native Lab v6.0 & Frontier ScarField v7.0 (NVIDIA A100)",
+      "summary": "12-layer Shared-Stage MoS (v6.0, 26 WGSL shaders, 98.96% polyglot mos-digest) plus Frontier ScarField v7.0 Post-Transformer Zero-Legacy Engine (0 ReLU/Softmax/RoPE/BPE/AdamW, 1.87 MiB E8 1bpw, 306.87x Chunkwise WY, 100% unseen PIN @ T=160 & 75% @ T=512 OOD, 58.76x ScarCodec C99/SIMD CPU reflex speedup)."
     },
     {
       "id": "physical-scar-lab",
-      "title": "Physical Scar Lab v4.0 (ScarCodec)",
-      "summary": "Applied mathematical physics & hardware scar operators: blind 1,000x radio-astronomy RFI excision (cos = 0.9753 at 8.67x), partial-cue 34.8 KB O(1) black-box telemetry (5/5 faults, 4 masked channels cos = 0.9999), and 12.05x Rusanov 2D Burgers shockwave PDE compression (188.2x lower RMSE vs byte-matched FP16 2D rFFT, 0.0 vacuum error)."
+      "title": "Physical Scar Lab v6.0 (ScarCodec Zero-PyTorch C99/SIMD, ZFP/fpack Audit & E8)",
+      "summary": "Standalone NumPy + C99/SIMD library (0.388 us O(1) mmap reads = 11,088x faster than zlib, .scar CRC32 + ScarZarrCodec, exact L_inf bound across 29 orders of magnitude, 21.0x Gosset E8, 3D ScarCodecND) verified on 5 SHA-256 NASA/NIH archives against ZFP (1,636x lower Spitzer peak error) and CFITSIO FITS fpack."
     },
     {
       "id": "aura-origin",

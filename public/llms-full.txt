@@ -31,12 +31,15 @@ Across language models, 3D point-cloud optimal-transport flow, embodied reinforc
    - Integrates `1,024` 3D points in `4` guided Euler steps (`86.45 ms` median on Apple M2 WebGPU) directly from `Qwen2.5-3B` `Layer 23` `P_perp_lang` latents.
    - `7.51x` held-out Chamfer-L2 reduction vs sphere baseline (`0.0621` vs `0.4663`); cross-lingual 3D shape cosine `PT<->EN = 0.9978`, `ES<->EN = 0.9977`, `FR<->EN = 0.9974`.
 
-4. **ScarCodec v4.0 (`src/lib/physicalScarCodec.ts` & `src/components/PhysicalScarLab.tsx`)**:
-   - Blind noisy-covariance Radio-Astronomy `1,000x` RFI excision (`cos = 0.9753` at `8.67x` on `[64, 4096]`; `cos = 0.9837` at `6.34x` live in browser; 2-bit VLBI `cos = 0.0252`).
-   - Aerospace Black-Box `34,816 B` `O(1)` telemetry (`5/5` faults retained across `50,000` frames, `Δ = 0 B`, `2/6` partial-cue -> `4` unseen masked channels `cos = 0.9999`).
-   - Rusanov 2D Burgers Shockwave PDE + `500x` HDR Field (`12.05x` compression, `188.2x` lower RMSE vs byte-matched `FP16` 2D `rFFT`, exact `0.0` vacuum error, `10.2x` faster `O(1)` block decode vs `zlib -9`).
+4. **ScarCodec v6.0 (`scar_codec/` C99/SIMD + `src/components/PhysicalScarLab.tsx`)**:
+   - Peer-review hardened on 5 SHA-256 public NASA/NIH archives against official `ZFP` (`1,636.2x` lower Spitzer peak error, `+4.50 dB` PhysioNet 64-ch EEG SNR) and `CFITSIO FITS fpack` (`15.3x` lower Bolocam Sgr A* peak error, `2.03x` lower 3D FCRAO peak error), plus `W_scar` orthogonal cortical superposition (`cos = 0.8826` vs `0.6917` `Min-Heap` ceiling).
+   - Zero-PyTorch `NumPy` + compiled C99/SIMD (`0.388 us` `O(1)` block decode = `11,088x` faster than `zlib -9`), `.scar` `CRC32` `mmap` + `ScarZarrCodec`, exact `L_inf` Dekker error bound (`10^-21` LIGO strain to `1.5e8` X-ray counts), `21.0x` Gosset `E_8` (`1.000 bpw`), and 3D `ScarCodecND`.
 
-5. **AURA / System One (`src/components/SystemOneHudDemo.tsx` & `https://github.com/byte-od/system_one`)**:
+5. **ScarField v7.0 (`scar_field/` & `public/webgpu/scar_field_v7_0_audit.json`)**:
+   - Post-Transformer Zero-Legacy architecture pretrained on `NVIDIA A100-SXM4-40GB` (`0 nn.Linear`, `0 ReLU/SwiGLU`, `0 Softmax/exp`, `0 RMSNorm`, `0 integer RoPE`, `0 static BPE`, `0 AdamW`): `1.87 MiB` `1.000 bpw` Gosset `E_8` (`9.22x` < FP16), `306.87x` `Chunkwise WY`, `11.65x` reversible Cayley VRAM savings, `100%` unseen PIN recall at `T=96, 160` & `75%` at `T=512` OOD (`0%` Dense), and `16/16 = 100%` `0x00` physical vacuum abstention.
+   - Accelerated `58.76x` on CPU (`8.04 ms/byte`, `31.68x` lower live `E8` RAM, `1.88 MiB` zero-pickle `.sfield.scar` `mmap` container) via decoupled `ScarCodec` C99/SIMD kernels.
+
+6. **AURA / System One (`src/components/SystemOneHudDemo.tsx` & `https://github.com/byte-od/system_one`)**:
    - Birthplace of `34.8 KB` `O(1)` `GradientScarMemory` (`Surprise = R_0 - V(s_0)`), Frontier Ghost-Jump Scouts (`> 2,000 FPS` lookahead), and `Tri-Compass`.
    - `0.23 ms` P50 bare-CPU `UniversalS1Agent` solving Rubik's Cube scrambles up to Depth 10 (`232.2B` states) with zero tree search.
 

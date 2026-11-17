@@ -1,0 +1,266 @@
+{
+  "suite": "scar_field_v7_0_tabula_rasa_audit",
+  "version": "7.0.0",
+  "mode": "full_scale",
+  "hardware": "NVIDIA A100-SXM4-40GB",
+  "elapsed_seconds": 2399.99,
+  "zero_legacy_guarantees": {
+    "nn_linear_count": 0,
+    "rmsnorm_layernorm_count": 0,
+    "relu_gelu_silu_swiglu_count": 0,
+    "softmax_exp_log_count": 0,
+    "integer_rope_count": 0,
+    "static_bpe_vocab": false,
+    "adamw_used_for_scarfield": false,
+    "vocab_utf8_bytes": 256
+  },
+  "hardware_benchmarks": {
+    "device": "cuda",
+    "gpu_name": "NVIDIA A100-SXM4-40GB",
+    "chunkwise_wy_scan": {
+      "seq_len": 512,
+      "batch_size": 24,
+      "chunk_size": 64,
+      "chunkwise_wy_fwd_bwd_ms": 25.087,
+      "sequential_fwd_bwd_ms": 7698.568,
+      "speedup_x": 306.87,
+      "forward_cosine": 0.99999994,
+      "backward_grad_cosine": 1.0
+    },
+    "reversible_cayley_activation_memory_mib": {
+      "reversible_o1_saved_mib": {
+        "K=2": 687.22,
+        "K=8": 687.09,
+        "K=16": 689.22
+      },
+      "unrolled_standard_saved_mib": {
+        "K=2": 1356.28,
+        "K=8": 4159.59,
+        "K=16": 8026.43
+      },
+      "k16_memory_savings_x": 11.65
+    }
+  },
+  "scarfield_v7_config": {
+    "vocab_size": 256,
+    "d_form": 192,
+    "d_world": 320,
+    "d_bus": 192,
+    "d_key": 128,
+    "num_subspaces": 8,
+    "ring_len": 16,
+    "repulsive_len": 8,
+    "base_rank": 8,
+    "num_scars": 32,
+    "s1_steps": 1,
+    "s2_steps": 4,
+    "s2_surprise_theta": 0.45,
+    "shock_write_theta": 0.5,
+    "vacuum_kappa": 0.36,
+    "uncertainty_margin_thresh": 0.24,
+    "ghost_jump_candidates": 3,
+    "ghost_jump_gamma": 0.35,
+    "wy_chunk_size": 64,
+    "enable_kalman_fast": true
+  },
+  "byte_budget": {
+    "e8_substrate_bytes": 1068032,
+    "ternary_scar_bytes": 21520,
+    "shared_e8_lut_bytes": 4096,
+    "spherical_poles_and_scalars_fp16_bytes": 869404,
+    "total_packed_model_bytes": 1963052,
+    "central_kalman_scache_o1_bytes": 132122,
+    "num_e8_operators": 6,
+    "e8_substrate_bits_per_weight": 1.0,
+    "packed_model_mib": 1.872,
+    "matched_dense_fp16_bytes": 18097920,
+    "matched_dense_fp16_mib": 17.26,
+    "weight_compression_vs_fp16_x": 9.22,
+    "memory_reduction_at_t2048_x": 142.86,
+    "memory_reduction_at_t32768_x": 2285.69
+  },
+  "passkey_horizon_sweep": {
+    "dense_fp16_ot": {
+      "T=96": {
+        "seq_len_bytes": 96,
+        "mean_pin_distance_bytes": 68.5,
+        "nonpad_byte_acc": 0.88823,
+        "unseen_pin_digit_acc": 0.10417,
+        "unseen_pin_exact_3digit_acc": 0.0
+      },
+      "T=160": {
+        "seq_len_bytes": 160,
+        "mean_pin_distance_bytes": 132.5,
+        "nonpad_byte_acc": 0.93275,
+        "unseen_pin_digit_acc": 0.09028,
+        "unseen_pin_exact_3digit_acc": 0.0
+      },
+      "T=288": {
+        "seq_len_bytes": 288,
+        "mean_pin_distance_bytes": 260.5,
+        "nonpad_byte_acc": 0.96198,
+        "unseen_pin_digit_acc": 0.09028,
+        "unseen_pin_exact_3digit_acc": 0.0
+      },
+      "T=512": {
+        "seq_len_bytes": 512,
+        "mean_pin_distance_bytes": 484.5,
+        "nonpad_byte_acc": 0.95821,
+        "unseen_pin_digit_acc": 0.08333,
+        "unseen_pin_exact_3digit_acc": 0.0
+      }
+    },
+    "dense_posthoc_e8_win16": {
+      "T=96": {
+        "seq_len_bytes": 96,
+        "mean_pin_distance_bytes": 68.5,
+        "nonpad_byte_acc": 0.61797,
+        "unseen_pin_digit_acc": 0.07639,
+        "unseen_pin_exact_3digit_acc": 0.0
+      },
+      "T=160": {
+        "seq_len_bytes": 160,
+        "mean_pin_distance_bytes": 132.5,
+        "nonpad_byte_acc": 0.59276,
+        "unseen_pin_digit_acc": 0.06944,
+        "unseen_pin_exact_3digit_acc": 0.0
+      },
+      "T=288": {
+        "seq_len_bytes": 288,
+        "mean_pin_distance_bytes": 260.5,
+        "nonpad_byte_acc": 0.56849,
+        "unseen_pin_digit_acc": 0.06944,
+        "unseen_pin_exact_3digit_acc": 0.0
+      },
+      "T=512": {
+        "seq_len_bytes": 512,
+        "mean_pin_distance_bytes": 484.5,
+        "nonpad_byte_acc": 0.56676,
+        "unseen_pin_digit_acc": 0.05556,
+        "unseen_pin_exact_3digit_acc": 0.0
+      }
+    },
+    "scarfield_v7_no_kalman": {
+      "T=96": {
+        "seq_len_bytes": 96,
+        "mean_pin_distance_bytes": 68.5,
+        "nonpad_byte_acc": 0.81569,
+        "unseen_pin_digit_acc": 0.06944,
+        "unseen_pin_exact_3digit_acc": 0.0
+      },
+      "T=160": {
+        "seq_len_bytes": 160,
+        "mean_pin_distance_bytes": 132.5,
+        "nonpad_byte_acc": 0.81988,
+        "unseen_pin_digit_acc": 0.08333,
+        "unseen_pin_exact_3digit_acc": 0.0
+      },
+      "T=288": {
+        "seq_len_bytes": 288,
+        "mean_pin_distance_bytes": 260.5,
+        "nonpad_byte_acc": 0.81686,
+        "unseen_pin_digit_acc": 0.04861,
+        "unseen_pin_exact_3digit_acc": 0.0
+      },
+      "T=512": {
+        "seq_len_bytes": 512,
+        "mean_pin_distance_bytes": 484.5,
+        "nonpad_byte_acc": 0.77803,
+        "unseen_pin_digit_acc": 0.03472,
+        "unseen_pin_exact_3digit_acc": 0.0
+      }
+    },
+    "scarfield_v7_full": {
+      "T=96": {
+        "seq_len_bytes": 96,
+        "mean_pin_distance_bytes": 68.5,
+        "nonpad_byte_acc": 0.85983,
+        "unseen_pin_digit_acc": 1.0,
+        "unseen_pin_exact_3digit_acc": 1.0
+      },
+      "T=160": {
+        "seq_len_bytes": 160,
+        "mean_pin_distance_bytes": 132.5,
+        "nonpad_byte_acc": 0.84725,
+        "unseen_pin_digit_acc": 1.0,
+        "unseen_pin_exact_3digit_acc": 1.0
+      },
+      "T=288": {
+        "seq_len_bytes": 288,
+        "mean_pin_distance_bytes": 260.5,
+        "nonpad_byte_acc": 0.83333,
+        "unseen_pin_digit_acc": 0.84722,
+        "unseen_pin_exact_3digit_acc": 0.75
+      },
+      "T=512": {
+        "seq_len_bytes": 512,
+        "mean_pin_distance_bytes": 484.5,
+        "nonpad_byte_acc": 0.77899,
+        "unseen_pin_digit_acc": 0.75694,
+        "unseen_pin_exact_3digit_acc": 0.75
+      }
+    }
+  },
+  "polyglot_and_epistemic_metrics": {
+    "cross_lingual_s_world_cosine_zero_procrustes": {
+      "pt_en": 0.98679,
+      "es_en": 0.98747,
+      "fr_en": 0.98632
+    },
+    "simplex_exact_zero_sparsity_pct": 98.25,
+    "adaptive_s1_s2_cayley_compute_savings_pct": 32.98,
+    "passive_forgetting_max_abs_after_1000_vacuum_steps": 0.0,
+    "unseen_out_of_cone_0x00_vacuum_abstention": "16/16",
+    "uscar_zero_sgd_en_mint_to_polyglot_96_hits": "86/96",
+    "uscar_per_language_24_hits": {
+      "pt": 23,
+      "en": 19,
+      "es": 23,
+      "fr": 21
+    },
+    "uscar_wiped_doc_01_cartridges": 6,
+    "uscar_post_0x00_gdpr_wipe_max_abs": 0.0
+  },
+  "ablation_summary": [
+    {
+      "model_id": "dense_fp16_ot",
+      "label": "DenseByteTransformer FP16 (6L, d=384, O(T) KV)",
+      "weight_bytes": 18097920,
+      "state_bytes_t2048": 18874368,
+      "state_delta_bytes": 9216,
+      "ptq_l1_shock": 0.19154,
+      "unseen_pin_recall_max_horizon": 0.0,
+      "vacuum_0x00_abstention_16": 0.0
+    },
+    {
+      "model_id": "dense_posthoc_e8_win16",
+      "label": "Dense + Post-Hoc E8 (1bpw) + Window (R=16)",
+      "weight_bytes": 1809792,
+      "state_bytes_t2048": 147456,
+      "state_delta_bytes": 0,
+      "ptq_l1_shock": 0.19154,
+      "unseen_pin_recall_max_horizon": 0.0,
+      "vacuum_0x00_abstention_16": 0.0
+    },
+    {
+      "model_id": "scarfield_v7_no_kalman",
+      "label": "ScarField v7.0 w/o Kalman-Bus (R=16 Ring Only)",
+      "weight_bytes": 1963052,
+      "state_bytes_t2048": 132122,
+      "state_delta_bytes": 0,
+      "ptq_l1_shock": 1.2e-07,
+      "unseen_pin_recall_max_horizon": 0.0,
+      "vacuum_0x00_abstention_16": 1.0
+    },
+    {
+      "model_id": "scarfield_v7_full",
+      "label": "ScarField v7.0 Full (E8 1bpw + Cayley + 1-Hop Kalman-Scar + Tsallis-1.5)",
+      "weight_bytes": 1963052,
+      "state_bytes_t2048": 132122,
+      "state_delta_bytes": 0,
+      "ptq_l1_shock": 1.2e-07,
+      "unseen_pin_recall_max_horizon": 0.75,
+      "vacuum_0x00_abstention_16": 1.0
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "suite": "scar_codec_v6_0_consolidation_audit",
+  "version": "6.0.0",
+  "zero_pytorch_verified": true,
+  "pillar_1_and_2_c_simd_mmap_and_zarr": {
+    "spitzer_scar_file_bytes": 178944,
+    "spitzer_compression_vs_fp32_x": 11.75,
+    "python_mmap_single_block_o1_us": 8.99,
+    "c_simd_pure_random_block_o1_us": 0.388,
+    "speedup_vs_pytorch_133_8us_x": 345.1,
+    "speedup_vs_zlib_4299us_x": 11088.4,
+    "zarr_codec_chunk_bytes": 178976,
+    "zarr_codec_rmse": 5.11552
+  },
+  "pillar_3_deterministic_linf_error_bound": {
+    "requested_abs_tolerance_mjy_sr": 12.0,
+    "relative_to_peak_3938_pct": 0.3047,
+    "measured_max_abs_error_mjy_sr": 11.99923,
+    "bound_strictly_satisfied": true,
+    "compression_vs_fp32_x": 7.35
+  },
+  "pillar_4_gosset_e8_and_3d_spectral_tucker": {
+    "spitzer_gosset_e8_1bpw": {
+      "bytes": 100160,
+      "compression_vs_fp32_x": 21.0,
+      "rmse": 11.6226,
+      "top32_peak_max_err": 0.9556
+    },
+    "fcrao_l1448_3d_spectral_tucker": {
+      "shape": [
+        53,
+        105,
+        105
+      ],
+      "bytes": 189768,
+      "compression_vs_fp32_x": 12.32,
+      "rmse": 0.10546,
+      "top32_peak_max_err": 0.0566,
+      "previous_2d_unfold_rmse": 0.06521,
+      "previous_2d_unfold_peak_err": 0.1902
+    }
+  }
+}

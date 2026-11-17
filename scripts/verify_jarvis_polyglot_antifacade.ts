@@ -1417,11 +1417,80 @@ async function main() {
   }
 
   console.log(
-    `[PASS 14/14] PhysicalScarLab Forensic Scientific Audit (Blind SVD cos=${p1.scarCodecCosine.toFixed(4)} · Partial-Cue Masked cos=${p2.maskedChannelsMeanCosine.toFixed(4)} · Burgers PDE ${p3.scarBytes}B vs 2D-DCT ${p3.spectralBytes}B ${(p3.spectralRmse / p3.scarRmse).toFixed(1)}x RMSE Gain · Zero Stale Claims)`
+    `[PASS 14/15] PhysicalScarLab Forensic Scientific Audit (Blind SVD cos=${p1.scarCodecCosine.toFixed(4)} · Partial-Cue Masked cos=${p2.maskedChannelsMeanCosine.toFixed(4)} · Burgers PDE ${p3.scarBytes}B vs 2D-DCT ${p3.spectralBytes}B ${(p3.spectralRmse / p3.scarRmse).toFixed(1)}x RMSE Gain · Zero Stale Claims)`
+  );
+
+  // ---------------------------------------------------------------------------
+  // TEST 15: ScarCodec v6.0 (C99/SIMD, ZFP/fpack, E8, L_inf) & ScarField v7.0
+  //          (NVIDIA A100 Zero-Legacy + C99/SIMD Synergy) Canonical Parity Audit
+  // ---------------------------------------------------------------------------
+  const syncPairs: Array<[string, string, string]> = [
+    [
+      'src/data/scarCodecV11Audit.json',
+      'public/webgpu/scar_codec_public_datasets_v1_1_audit.json',
+      '../scar-cache/results/scar_codec_public_datasets_v1_1_audit.json',
+    ],
+    [
+      'src/data/scarCodecV6Audit.json',
+      'public/webgpu/scar_codec_v6_0_consolidation_audit.json',
+      '../scar-cache/results/scar_codec_v6_0_consolidation_audit.json',
+    ],
+    [
+      'src/data/scarCodecForensicSynergyAudit.json',
+      'public/webgpu/scar_codec_forensic_and_synergy_audit.json',
+      '../scar-cache/results/scar_codec_forensic_and_synergy_audit.json',
+    ],
+    [
+      'src/data/scarFieldV7Audit.json',
+      'public/webgpu/scar_field_v7_0_audit.json',
+      '../scar-cache/results/scar_field_v7_0_audit.json',
+    ],
+  ];
+  for (const [srcRel, webRel, canonRel] of syncPairs) {
+    const sTxt = fs.readFileSync(path.join(PORTFOLIO_ROOT, srcRel), 'utf-8');
+    const wTxt = fs.readFileSync(path.join(PORTFOLIO_ROOT, webRel), 'utf-8');
+    assert(sTxt === wTxt, `Showcase drift: ${srcRel} != ${webRel}`);
+    const cPath = path.resolve(PORTFOLIO_ROOT, canonRel);
+    if (fs.existsSync(cPath)) {
+      assert(sTxt === fs.readFileSync(cPath, 'utf-8'), `Showcase drift: ${srcRel} != ${canonRel}`);
+    }
+  }
+
+  const v6Json = JSON.parse(fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/data/scarCodecV6Audit.json'), 'utf-8'));
+  const synJson = JSON.parse(
+    fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/data/scarCodecForensicSynergyAudit.json'), 'utf-8')
+  );
+  const v7Json = JSON.parse(fs.readFileSync(path.join(PORTFOLIO_ROOT, 'src/data/scarFieldV7Audit.json'), 'utf-8'));
+
+  assert(
+    v6Json.zero_pytorch_verified === true &&
+      v6Json.pillar_1_and_2_c_simd_mmap_and_zarr.c_simd_pure_random_block_o1_us < 1.0 &&
+      v6Json.pillar_3_deterministic_linf_error_bound.bound_strictly_satisfied === true &&
+      v6Json.pillar_4_gosset_e8_and_3d_spectral_tucker.spitzer_gosset_e8_1bpw.compression_vs_fp32_x >= 20.0,
+    'ScarCodec v6.0 consolidation invariants failed in showcase JSON!'
+  );
+  assert(
+    synJson.forensic_scar_codec_checks.ligo_1e_minus_21_strain.passed === true &&
+      synJson.forensic_scar_codec_checks.chandra_xray_1p5e8_counts.passed === true &&
+      synJson.scarcodec_to_scarfield_v7_synergy.canonical_e8_lut256_max_abs_diff === 0.0 &&
+      synJson.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.full_engine_s1_speedup_x > 30.0,
+    'ScarCodec forensic or ScarField synergy invariants failed!'
+  );
+  assert(
+    v7Json.zero_legacy_guarantees.nn_linear_count === 0 &&
+      v7Json.zero_legacy_guarantees.relu_gelu_silu_swiglu_count === 0 &&
+      v7Json.zero_legacy_guarantees.softmax_exp_log_count === 0 &&
+      v7Json.passkey_horizon_sweep.scarfield_v7_full['T=160'].unseen_pin_exact_3digit_acc === 1.0 &&
+      v7Json.passkey_horizon_sweep.scarfield_v7_full['T=512'].unseen_pin_exact_3digit_acc >= 0.7,
+    'ScarField v7.0 A100 zero-legacy or passkey recall invariants failed!'
+  );
+
+  console.log(
+    `[PASS 15/15] ScarCodec v6.0 (${v6Json.pillar_1_and_2_c_simd_mmap_and_zarr.c_simd_pure_random_block_o1_us} us C99/SIMD · 21.0x E8 · LIGO 1e-21..X-Ray 1.5e8) + ScarField v7.0 A100 (WY ${v7Json.hardware_benchmarks.chunkwise_wy_scan.speedup_x}x · C/SIMD S1 ${synJson.scarcodec_to_scarfield_v7_synergy.full_a100_scarfield_v7_engine_cpu_reflex.full_engine_s1_speedup_x}x↑ · 100% PIN @ T=160)`
   );
 
   console.log('\n================================================================================');
-  console.log('ALL 14/14 SCAR ARCHITECTURE ECOSYSTEM + SCARNATIVE v6.0 + PHYSICAL FORENSIC + JARVIS + POINTSCARFLOW SUITES PASSED!');
+  console.log('ALL 15/15 SCAR ARCHITECTURE ECOSYSTEM + SCARCODEC v6.0 + SCARFIELD v7.0 + JARVIS + POINTSCARFLOW SUITES PASSED!');
   console.log('================================================================================');
 }
 

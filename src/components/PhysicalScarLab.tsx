@@ -18,6 +18,9 @@ import {
   runRadioTelescopeRfiProof,
 } from '../lib/physicalScarCodec';
 import publicAudit from '../data/scarCodecPublicAudit.json';
+import v11Audit from '../data/scarCodecV11Audit.json';
+import v6Audit from '../data/scarCodecV6Audit.json';
+import forensicAudit from '../data/scarCodecForensicSynergyAudit.json';
 
 type ProofTab = 'rfi' | 'blackbox' | 'cfd_o1' | 'public_archives';
 type PublicDatasetKey =
@@ -752,8 +755,8 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-xs font-mono text-[#adff2f] uppercase tracking-wider">
             {lang === 'pt'
-              ? '00. Biblioteca Independente ScarCodec (v4.0) · Física Matemática Aplicada & Dados Públicos Reais'
-              : '00. Domain-Independent ScarCodec (v4.0) · Applied Mathematical Physics & Real Public Data'}
+              ? '00. Biblioteca Independente ScarCodec (v6.0 C/SIMD · Zero-PyTorch) · Física Aplicada & Dados Públicos'
+              : '00. Standalone ScarCodec (v6.0 C/SIMD · Zero-PyTorch) · Applied Physics & Public Archives'}
           </span>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -764,21 +767,30 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
               </span>
             )}
             <a
-              href="/webgpu/scarcodec_public_datasets_v1_0_audit.json"
+              href="/webgpu/scar_codec_public_datasets_v1_1_audit.json"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs font-mono text-emerald-300 hover:text-white inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/30"
             >
-              <span>{lang === 'pt' ? 'JSON SHA-256 Público' : 'Public SHA-256 JSON'}</span>
+              <span>{lang === 'pt' ? 'JSON SHA-256 (ZFP/fpack)' : 'SHA-256 JSON (ZFP/fpack)'}</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
             <a
-              href="https://github.com/byte-od/mixture-of-scars"
+              href="/webgpu/scar_codec_v6_0_consolidation_audit.json"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-mono text-[#38bdf8] hover:text-white inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-sky-500/10 border border-sky-500/30"
+            >
+              <span>{lang === 'pt' ? 'JSON v6.0 (0.388 µs C/E8)' : 'v6.0 JSON (0.388 µs C/E8)'}</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+            <a
+              href="https://github.com/byte-od/mixture-of-scars/tree/main/scar_codec"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs font-mono text-zinc-400 hover:text-white inline-flex items-center gap-1"
             >
-              <span>scar_codec v4.0.0</span>
+              <span>scar_codec v6.0.0</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
@@ -1708,6 +1720,71 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
                 ))}
               </div>
 
+              {/* v1.1 Peer-Review Benchmarks vs Official ZFP, CFITSIO FITS fpack & Min-Heap + v6.0 C99/SIMD/E8 */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-1">
+                <div className="p-3.5 rounded-xl bg-zinc-900/75 border border-emerald-500/30 space-y-2 text-xs font-mono">
+                  <div className="font-bold text-emerald-300 uppercase tracking-wide">
+                    {lang === 'pt'
+                      ? 'Duelo Pareado em Bytes vs. ZFP (LLNL), FITS fpack (NASA) & Min-Heap'
+                      : 'Byte-Matched Audit vs. Official ZFP (LLNL), FITS fpack (NASA) & Min-Heap'}
+                  </div>
+                  <div className="space-y-1.5 text-[11px] text-zinc-300 font-sans leading-relaxed">
+                    <div>
+                      <span className="font-mono font-bold text-[#adff2f]">NASA Spitzer IRAC (~178 KB):</span>{' '}
+                      {lang === 'pt'
+                        ? `${v11Audit.experiment_3_fits_vs_zfp_fpack_rfft_zlib.nasa_spitzer_irac.scar_peak_gain_over_zfp_x}x menor erro estelar e ${v11Audit.experiment_3_fits_vs_zfp_fpack_rfft_zlib.nasa_spitzer_irac.scar_rmse_ratio_vs_zfp_x.toFixed(2)}x menor RMSE que ZFP; ${v11Audit.experiment_3_fits_vs_zfp_fpack_rfft_zlib.nasa_spitzer_irac.scar_peak_gain_over_fpack_x}x menor erro estelar que FITS fpack (fpack lidera no céu difuso suave).`
+                        : `${v11Audit.experiment_3_fits_vs_zfp_fpack_rfft_zlib.nasa_spitzer_irac.scar_peak_gain_over_zfp_x}x lower stellar peak error & ${v11Audit.experiment_3_fits_vs_zfp_fpack_rfft_zlib.nasa_spitzer_irac.scar_rmse_ratio_vs_zfp_x.toFixed(2)}x lower RMSE than ZFP; ${v11Audit.experiment_3_fits_vs_zfp_fpack_rfft_zlib.nasa_spitzer_irac.scar_peak_gain_over_fpack_x}x lower peak error than FITS fpack (fpack leads diffuse background RMSE).`}
+                    </div>
+                    <div>
+                      <span className="font-mono font-bold text-[#38bdf8]">Bolocam Sgr A* & PhysioNet 64-Ch:</span>{' '}
+                      {lang === 'pt'
+                        ? `Vence ZFP e FITS fpack juntos em RMSE (0,0365 vs 0,0518 / 0,0407) e erro de pico (204,4x < ZFP, 15,3x < fpack); +${(v11Audit.experiment_1_physionet_64ch_vs_zfp.scar_p_perp_array_snr_db - v11Audit.experiment_1_physionet_64ch_vs_zfp.zfp_with_p_perp_array_snr_db).toFixed(2)} dB sobre ZFP no EEG 64-ch.`
+                        : `Beats BOTH ZFP and FITS fpack on Bolocam in global RMSE (0.0365 vs 0.0518 / 0.0407) and peak error (204.4x < ZFP, 15.3x < fpack); +${(v11Audit.experiment_1_physionet_64ch_vs_zfp.scar_p_perp_array_snr_db - v11Audit.experiment_1_physionet_64ch_vs_zfp.zfp_with_p_perp_array_snr_db).toFixed(2)} dB over ZFP on 64-ch EEG.`}
+                    </div>
+                    <div>
+                      <span className="font-mono font-bold text-[#c4b5fd]">W_scar vs. Min-Heap (Superposição Ortogonal):</span>{' '}
+                      {lang === 'pt'
+                        ? `Quando 2 modos corticais reais ortogonais (|cos|=0,0012) coativam, W_scar reconstrói 32 canais cegos em ${v11Audit.experiment_2_minheap_vs_wscar_telemetry_ablation.minheap_vs_wscar_ablation.w_scar_single_gemv_query_us} µs com cos=${v11Audit.experiment_2_minheap_vs_wscar_telemetry_ablation.minheap_vs_wscar_ablation.orthogonal_dual_mode_32odd_cosine_w_scar.toFixed(4)} vs teto 1/√2 do Min-Heap (cos=${v11Audit.experiment_2_minheap_vs_wscar_telemetry_ablation.minheap_vs_wscar_ablation.orthogonal_dual_mode_32odd_cosine_minheap_nn.toFixed(4)}).`
+                        : `Under simultaneous orthogonal real cortical modes (|cos|=0.0012), W_scar reconstructs 32 blind channels in ${v11Audit.experiment_2_minheap_vs_wscar_telemetry_ablation.minheap_vs_wscar_ablation.w_scar_single_gemv_query_us} µs at cos=${v11Audit.experiment_2_minheap_vs_wscar_telemetry_ablation.minheap_vs_wscar_ablation.orthogonal_dual_mode_32odd_cosine_w_scar.toFixed(4)} vs Min-Heap 1/√2 ceiling (cos=${v11Audit.experiment_2_minheap_vs_wscar_telemetry_ablation.minheap_vs_wscar_ablation.orthogonal_dual_mode_32odd_cosine_minheap_nn.toFixed(4)}).`}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-zinc-900/75 border border-[#38bdf8]/30 space-y-2 text-xs font-mono">
+                  <div className="font-bold text-[#38bdf8] uppercase tracking-wide">
+                    {lang === 'pt'
+                      ? 'Consolidação Industrial v6.0 (Zero-PyTorch C99/SIMD · .scar/Zarr · E8 21x · 3D)'
+                      : 'v6.0 Industrial Consolidation (Zero-PyTorch C99/SIMD · .scar/Zarr · 21x E8 · 3D)'}
+                  </div>
+                  <div className="space-y-1.5 text-[11px] text-zinc-300 font-sans leading-relaxed">
+                    <div>
+                      <span className="font-mono font-bold text-[#adff2f]">
+                        {v6Audit.pillar_1_and_2_c_simd_mmap_and_zarr.c_simd_pure_random_block_o1_us} µs C99/SIMD O(1) + .scar mmap & Zarr:
+                      </span>{' '}
+                      {lang === 'pt'
+                        ? `Zero PyTorch (apenas NumPy) · ${v6Audit.pillar_1_and_2_c_simd_mmap_and_zarr.speedup_vs_pytorch_133_8us_x}x mais rápido que PyTorch e ${v6Audit.pillar_1_and_2_c_simd_mmap_and_zarr.speedup_vs_zlib_4299us_x.toLocaleString()}x mais rápido que zlib -9, com container CRC32 e plugin ScarZarrCodec (codec_id="scar").`
+                        : `Zero PyTorch (NumPy only) · ${v6Audit.pillar_1_and_2_c_simd_mmap_and_zarr.speedup_vs_pytorch_133_8us_x}x faster than PyTorch & ${v6Audit.pillar_1_and_2_c_simd_mmap_and_zarr.speedup_vs_zlib_4299us_x.toLocaleString()}x faster than zlib -9, with CRC32 .scar mmap & ScarZarrCodec (codec_id="scar").`}
+                    </div>
+                    <div>
+                      <span className="font-mono font-bold text-emerald-300">
+                        Gosset E8 1.000 bpw ({v6Audit.pillar_4_gosset_e8_and_3d_spectral_tucker.spitzer_gosset_e8_1bpw.compression_vs_fp32_x.toFixed(1)}x) & Cubos 3D ScarCodecND:
+                      </span>{' '}
+                      {lang === 'pt'
+                        ? `Comprime Spitzer em 21,0x (100,2 KB) com erro estelar de ${v6Audit.pillar_4_gosset_e8_and_3d_spectral_tucker.spitzer_gosset_e8_1bpw.top32_peak_max_err} MJy/sr (1.710x < ZFP); no cubo 3D FCRAO [53×105×105] reduz o erro de pico para ${v6Audit.pillar_4_gosset_e8_and_3d_spectral_tucker.fcrao_l1448_3d_spectral_tucker.top32_peak_max_err} K (2,03x < FITS fpack).`
+                        : `Compresses Spitzer 21.0x (100.2 KB) at ${v6Audit.pillar_4_gosset_e8_and_3d_spectral_tucker.spitzer_gosset_e8_1bpw.top32_peak_max_err} MJy/sr peak error (1,710x < ZFP); 3D Spectral-Tucker on FCRAO [53×105×105] cuts peak error to ${v6Audit.pillar_4_gosset_e8_and_3d_spectral_tucker.fcrao_l1448_3d_spectral_tucker.top32_peak_max_err} K (2.03x < FITS fpack).`}
+                    </div>
+                    <div>
+                      <span className="font-mono font-bold text-amber-300">
+                        Cota Exata L_∞ (abs_tolerance) de 10⁻²¹ (LIGO) a 1,5×10⁸ (Raios-X):
+                      </span>{' '}
+                      {lang === 'pt'
+                        ? `Escala IEEE-754 2^E sem perdas + splitting de Dekker (FP16+FP16) garante max |X - X̂| <= ε (${v6Audit.pillar_3_deterministic_linf_error_bound.measured_max_abs_error_mjy_sr} <= 12,0 MJy/sr no Spitzer; erro 0,0 no vácuo validado em ${forensicAudit.forensic_scar_codec_checks.ligo_1e_minus_21_strain.passed && forensicAudit.forensic_scar_codec_checks.chandra_xray_1p5e8_counts.passed ? '29 ordens de grandeza' : 'escala real'}).`
+                        : `Lossless 2^E IEEE-754 scaling + Dekker FP16+FP16 splitting strictly enforces max |X - X̂| <= ε (${v6Audit.pillar_3_deterministic_linf_error_bound.measured_max_abs_error_mjy_sr} <= 12.0 MJy/sr on Spitzer; exact 0.0 vacuum verified across ${forensicAudit.forensic_scar_codec_checks.ligo_1e_minus_21_strain.passed && forensicAudit.forensic_scar_codec_checks.chandra_xray_1p5e8_counts.passed ? '29 orders of magnitude' : 'full float32'}).`}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Official Provenance, Citation & SHA-256 Verification Footer */}
               {prov && (
                 <div className="p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] font-mono text-zinc-400">
@@ -1740,8 +1817,8 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
           <span className="inline-flex items-center gap-1.5">
             <Cpu className="w-3.5 h-3.5 text-[#adff2f]" />
             {lang === 'pt'
-              ? 'Auditado em Dupla Camada: (1) Bancada EDP Burgers 512×512 (RMSE 188,2x < rFFT FP16, vácuo 0.0) · (2) 5 Arquivos Públicos Reais SHA-256 (Spitzer 2.093,6x < erro estelar, Space Shuttle 6/6 panes em O(1), PhysioNet 32->32 cos=0,9967)'
-              : 'Dual-Layer Audited: (1) 512×512 Burgers PDE Testbed (188.2x < FP16 rFFT RMSE, 0.0 vacuum) · (2) 5 Real SHA-256 Public Archives (Spitzer 2,093.6x < peak star error, Space Shuttle 6/6 faults in O(1), PhysioNet 32->32 cos=0.9967)'}
+              ? 'Auditado em Tripla Camada: (1) EDP Burgers 512×512 (RMSE 188,2x < rFFT FP16) · (2) 5 Arquivos SHA-256 vs ZFP & FITS fpack (Spitzer 1.636x < ZFP, Shuttle 6/6 panes) · (3) ScarCodec v6.0 C99/SIMD (0,388 µs mmap, E8 21,0x, Zarr & cota L_∞)'
+              : 'Triple-Layer Audited: (1) 512×512 Burgers PDE (188.2x < FP16 rFFT RMSE) · (2) 5 SHA-256 Archives vs ZFP & FITS fpack (Spitzer 1,636x < ZFP, Shuttle 6/6 faults) · (3) ScarCodec v6.0 C99/SIMD (0.388 µs mmap, 21.0x E8, Zarr & L_∞ bound)'}
           </span>
           <span className="inline-flex items-center gap-1 text-zinc-500">
             <Activity className="w-3.5 h-3.5 text-[#38bdf8]" />

@@ -33,7 +33,7 @@ export const PORTFOLIO_INFO_EN: PortfolioInfo = {
   name: 'Julio Cesar da Costa Reis Filho',
   title: 'Creator of the Scar Architecture Ecosystem (MoS & SCache O(1))',
   subtitle:
-    'Independent AI Architecture Researcher & Principal Systems Engineer. Author of Mixture of Scars (MoS), Associative SCache O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0 (Tabula Rasa Shared-Stage MoS), PointScarFlow v1.0, and AURA / System One (GradientScarMemory).',
+    'Independent AI Architecture Researcher & Principal Systems Engineer. Author of Mixture of Scars (MoS), Associative SCache O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v6.0 (Zero-PyTorch C99/SIMD + Zarr + E8), ScarNativeLM v6.0, ScarField v7.0 (Post-Transformer E8 Geodesic Engine), PointScarFlow v1.0, and AURA / System One.',
   email: 'reisfilho1116@gmail.com',
   location: 'Global / Remote',
   github: 'https://github.com/byte-od',
@@ -48,7 +48,7 @@ export const PORTFOLIO_INFO_PT: PortfolioInfo = {
   name: 'Julio Cesar da Costa Reis Filho',
   title: 'Criador do Ecossistema de Arquitetura de Cicatrizes (MoS & SCache O(1))',
   subtitle:
-    'Pesquisador de Arquiteturas Neurais e Arquiteto Principal de Sistemas. Autor do Mixture of Scars (MoS), SCache Associativo O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v4.0, ScarNativeLM v6.0 (Tabula Rasa Shared-Stage MoS), PointScarFlow v1.0 e AURA / System One (GradientScarMemory).',
+    'Pesquisador de Arquiteturas Neurais e Arquiteto Principal de Sistemas. Autor do Mixture of Scars (MoS), SCache Associativo O(1) (34.8 KB), D4-LUT256 VQ4-Scar, ScarCodec v6.0 (Zero-PyTorch C99/SIMD + Zarr + E8), ScarNativeLM v6.0, ScarField v7.0 (Motor Geodésico Pós-Transformer E8), PointScarFlow v1.0 e AURA / System One.',
   email: 'reisfilho1116@gmail.com',
   location: 'Global / Remoto',
   github: 'https://github.com/byte-od',
@@ -60,6 +60,30 @@ export const PORTFOLIO_INFO_PT: PortfolioInfo = {
 };
 
 export const PROJECTS_EN: ProjectData[] = [
+  {
+    id: 'scarfield-v7',
+    title: 'ScarField v7.0 — Post-Transformer Zero-Legacy Geodesic Engine (E8 1.000 bpw)',
+    badge: '🪐 Frontier R&D · Zero ReLU/Softmax/RoPE',
+    category: 'foundation_llm',
+    featured: true,
+    specs: '1.87 MiB E8 (9.22x↓) · Chunkwise WY 306.9x · Cayley O(1) 11.65x↓ · 100% Unseen PIN',
+    summary:
+      'Pure Post-Transformer foundation architecture pretrained Tabula Rasa on NVIDIA A100-SXM4-40GB with zero legacy Transformer components (0 nn.Linear, 0 ReLU/SwiGLU, 0 Softmax/exp, 0 RMSNorm, 0 integer RoPE, 0 static BPE, 0 AdamW), accelerated 58.76x on CPU via decoupled ScarCodec C99/SIMD.',
+    details: [
+      'Gosset E8 1.000 bpw Lattice + Ternary {-1,0,+1} Atomic Scars: Packs 240 minimal E8 roots + 0x00 vacuum + 15 Hadamard shells into 4 KB L1 SRAM (1.87 MiB total vs 17.26 MiB Dense FP16 = 9.22x smaller, 1.2e-7 PTQ shock).',
+      'Reversible Symplectic Cayley-Woodbury ODE + Chunkwise WY Scan: Achieves 306.87x parallel scan speedup (25.09 ms vs 7,698.57 ms) and 11.65x CUDA activation VRAM savings on A100, plus 32.98% adaptive S1/S2 compute savings.',
+      '1-Hop Causal Kalman-Scar Bus (129.0 KB, Δ = +0 B): Recalls unseen 3-digit PINs at 100.0% (T=96, 160) and 75.0% out-of-distribution (T=512 = 32x ring_len=16), where matched DenseByteTransformer FP16 scores 0.0%.',
+      'Tsallis-1.5 Zero-Softmax Simplex & 0x00 Vacuum Abstention: Produces 98.25% exact 0.0 sparsity, 16/16 (100%) out-of-cone 0x00 abstention (0/16 Dense), > 0.986 PT/ES/FR <-> EN S_world alignment (0 Procrustes), and 86/96 Zero-SGD .uscar routing.',
+      'Decoupled ScarCodec C99/SIMD Synergy: Zero-pickle .sfield.scar mmap container (1.88 MiB vs 18.36 MiB .pt, 12.1 ms cold-start) cuts E8 live RAM 31.68x and accelerates interactive CPU S1 reflex 58.76x (cos = 1.0).',
+    ],
+    techStack: ['ScarField v7.0', 'Gosset E8 1bpw', 'Reversible Cayley', '1-Hop Kalman-Scar', 'Tsallis-1.5', 'RiemannianMuon'],
+    githubUrl: 'https://github.com/byte-od/mixture-of-scars/tree/main/scar_field',
+    labAnchor: '#scar-native-lab',
+    metrics: [
+      { label: 'Unseen PIN @ T=160 / 512', value: '100% / 75% (vs 0% Dense)' },
+      { label: 'A100 WY / CPU C-SIMD', value: '306.9x / 58.8x Faster' },
+    ],
+  },
   {
     id: 'scarnative-v6',
     title: 'ScarNativeLM v6.0 — Shared-Stage MoS & Dual-Tier O(1) Foundation Engine',
@@ -134,25 +158,27 @@ export const PROJECTS_EN: ProjectData[] = [
     ],
   },
   {
-    id: 'scarcodec-v4',
-    title: 'ScarCodec v4.0 — Physical & Hardware Signal/Tensor Codec',
-    badge: '📡 5 Public NASA/NIH Archives + Live Lab',
+    id: 'scarcodec-v6',
+    title: 'ScarCodec v6.0 — Zero-PyTorch C99/SIMD Physical, FITS/Zarr & E8 Codec',
+    badge: '📡 0.388 µs C/SIMD · Beats ZFP · 21x E8',
     category: 'spatial_physical',
-    specs: 'Spitzer 2,094x HDR · NASA Shuttle 6/6 Faults · PhysioNet 64-Ch · 34.8 KB O(1)',
+    featured: true,
+    specs: '0.388 µs mmap O(1) · Spitzer 1,636x < ZFP · 21.0x Gosset E8 · Zarr + L_∞ Bound',
     summary:
-      'Neural-network-free mathematical physics & hardware compression suite validated both live in-browser on controlled PDE/array phantoms and unmodified on 5 SHA-256-verified public observational & spacecraft archives (NASA Spitzer IRAC, NASA Space Shuttle, CSO Bolocam Sgr A*, FCRAO 14-m Radio, and NIH/PhysioNet 64-Ch).',
+      'Standalone neural-network-free NumPy + C99/SIMD scientific compression & constant-memory telemetry library verified on 5 SHA-256 public NASA/NIH archives against official ZFP, CFITSIO FITS fpack, zlib, and Min-Heap.',
     details: [
-      'Real Public Astronomy FITS Archives (NASA Spitzer IRAC, CSO Bolocam Sgr A*, FCRAO 14-m 13CO): Compresses IEEE-754 floats by 11.77x–12.27x (where zlib -9 stalls at 1.10x–1.14x), decodes random 64-float blocks 23.2x–34.7x faster (Δ = 0.0), and discovers an empirical HDR contrast scaling law over byte-matched FP16 2D rFFT (4.6x -> 45.9x -> 2,093.6x lower stellar peak photometry error).',
-      'Real NASA Space Shuttle & NIH/PhysioNet 64-Channel O(1) Telemetry: Retains 6/6 (100%) ultra-rare 0.0414% Bypass Valve faults in NASA Space Shuttle radiator telemetry (0/6 in equal-byte circular ring) and reconstructs 32 masked odd electrodes from 32 even electrodes at cos = 0.9967 inside exact 34,816 B (Δ = +0 B), plus +13.25 dB raw C3 motor-cortex Laplacian SNR gain via cross-run blind P_⊥.',
-      'Controlled Live Browser Proofs (Zero Oracle): Blind noisy-covariance RFI excision under 1,000x (-60 dB) interference (cos = 0.9753 native / 0.9837 browser), 2-of-6 partial-cue black-box recall (cos = 0.9999), and conservative Rusanov 2D Burgers shockwave PDE (188.2x lower RMSE than byte-matched FP16 2D rFFT, exact 0.000000 vacuum).',
+      'Peer-Review Hardened vs. Official ZFP & FITS fpack: Beats byte-matched ZFP across all 4 archives (1,636.2x lower Spitzer stellar peak error, 4.05x lower RMSE, +4.50 dB on 64-ch PhysioNet EEG) and beats BOTH ZFP and FITS fpack on CSO Bolocam Sgr A* (15.3x lower peak error).',
+      '0.388 µs Zero-PyTorch C99/SIMD + .scar mmap & ScarZarrCodec: Runs with NumPy only (0 torch dependency), decoding random 64-float blocks off SSD mmap in 388 ns (345x faster than PyTorch, 11,088x faster than zlib -9) with CRC32 verification and Zarr/numcodecs plugin.',
+      '21.0x Gosset E8 (1.000 bpw), 3D ScarCodecND & Exact L_∞ Bound: Compresses Spitzer 21.0x at 0.9556 MJy/sr peak error, cuts 3D FCRAO [53×105×105] peak error to 0.0566 K (2.03x < FITS fpack), and enforces max |X - X̂| <= ε from 10⁻²¹ LIGO strain to 1.5×10⁸ X-ray counts.',
+      '34.8 KB O(1) Telemetry (NASA Space Shuttle & Orthogonal W_scar): Retains 6/6 (100%) rare Shuttle bypass-valve faults in 3,120 B (0/6 in circular ring) and reconstructs superposed orthogonal cortical modes at cos = 0.8826 in 5.2 µs (exceeding the 0.6917 1/√2 Min-Heap ceiling).',
     ],
-    techStack: ['ScarCodec v4.0', 'NASA Spitzer & Shuttle', 'PhysioNet 64-Ch P_⊥', 'LUT256 Exact Vacuum', '34.8 KB SCache O(1)'],
-    githubUrl: 'https://github.com/byte-od/mixture-of-scars',
+    techStack: ['ScarCodec v6.0 C99/SIMD', 'Zero-PyTorch NumPy', '.scar mmap + Zarr', 'Gosset E8 21x', '3D Spectral-Tucker', 'L_∞ Dekker Bound'],
+    githubUrl: 'https://github.com/byte-od/mixture-of-scars/tree/main/scar_codec',
     paperUrl: 'https://doi.org/10.5281/zenodo.24172784',
     labAnchor: '#physical-scar-lab',
     metrics: [
-      { label: 'Spitzer IRAC Peak Error', value: '2,093.6x < FP16 rFFT' },
-      { label: 'NASA Shuttle Bpv Faults', value: '6/6 (100%) in O(1)' },
+      { label: 'C99/SIMD O(1) Block Read', value: '0.388 µs (11,088x > zlib)' },
+      { label: 'Spitzer Peak vs ZFP / E8', value: '1,636x < ZFP · 21.0x E8' },
     ],
   },
   {
@@ -180,6 +206,30 @@ export const PROJECTS_EN: ProjectData[] = [
 ];
 
 export const PROJECTS_PT: ProjectData[] = [
+  {
+    id: 'scarfield-v7',
+    title: 'ScarField v7.0 — Motor Geodésico Pós-Transformer Zero-Legado (E8 1.000 bpw)',
+    badge: '🪐 P&D de Fronteira · Zero ReLU/Softmax/RoPE',
+    category: 'foundation_llm',
+    featured: true,
+    specs: '1.87 MiB E8 (9.22x↓) · Chunkwise WY 306.9x · Cayley O(1) 11.65x↓ · 100% PIN Inédito',
+    summary:
+      'Arquitetura fundacional Pós-Transformer pura pré-treinada Tabula Rasa em NVIDIA A100-SXM4-40GB sem nenhum componente legado de Transformers (0 nn.Linear, 0 ReLU/SwiGLU, 0 Softmax/exp, 0 RMSNorm, 0 RoPE inteiro, 0 BPE fixo, 0 AdamW), acelerada 58,76x em CPU via ScarCodec C99/SIMD desacoplado.',
+    details: [
+      'Reticulado Gosset E8 de 1,000 bpw + Cicatrizes Atômicas Ternárias {-1,0,+1}: Empacota 240 raízes mínimas de E8 + vácuo 0x00 + 15 âncoras Hadamard em 4 KB L1 (1,87 MiB vs 17,26 MiB Dense FP16 = 9,22x menor, choque PTQ 1,2e-7).',
+      'EDO Simplética Reversível de Cayley-Woodbury + Scan Chunkwise WY: Atinge 306,87x de speedup no scan paralelo (25,09 ms vs 7.698,57 ms) e 11,65x menos VRAM de ativação na A100, além de 32,98% de economia adaptativa S1/S2.',
+      'Barramento Central Kalman-Scar Causal de 1 Salto (129,0 KB, Δ = +0 B): Copia PINs inéditos de 3 dígitos com 100,0% (T=96, 160) e 75,0% fora da distribuição (T=512 = 32x o anel local R=16), onde o DenseByteTransformer FP16 marca 0,0%.',
+      'Simplex Tsallis-1.5 Sem Softmax & Abstenção 0x00: Gera 98,25% de zeros exatos, 16/16 (100%) de abstenção por vácuo 0x00 fora do cone (0/16 Dense), alinhamento S_world PT/ES/FR <-> EN > 0,986 (0 Procrustes) e 86/96 em cartuchos .uscar Zero-SGD.',
+      'Sinergia ScarCodec C99/SIMD Desacoplado: Container zero-pickle .sfield.scar mmap (1,88 MiB vs 18,36 MiB .pt, cold-start de 12,1 ms) reduz a RAM viva dos operadores E8 em 31,68x e acelera o reflexo interativo S1 em CPU em 58,76x (cos = 1.0).',
+    ],
+    techStack: ['ScarField v7.0', 'Gosset E8 1bpw', 'Cayley Reversível', '1-Hop Kalman-Scar', 'Tsallis-1.5', 'RiemannianMuon'],
+    githubUrl: 'https://github.com/byte-od/mixture-of-scars/tree/main/scar_field',
+    labAnchor: '#scar-native-lab',
+    metrics: [
+      { label: 'PIN Inédito @ T=160 / 512', value: '100% / 75% (vs 0% Dense)' },
+      { label: 'WY A100 / C-SIMD CPU', value: '306,9x / 58,8x Mais Rápido' },
+    ],
+  },
   {
     id: 'scarnative-v6',
     title: 'ScarNativeLM v6.0 — Motor Fundacional Shared-Stage MoS & Dual-Tier O(1)',
@@ -254,25 +304,27 @@ export const PROJECTS_PT: ProjectData[] = [
     ],
   },
   {
-    id: 'scarcodec-v4',
-    title: 'ScarCodec v4.0 — Codec Físico & de Hardware por Cicatrizes',
-    badge: '📡 5 Arquivos Reais NASA/NIH + Lab Ao Vivo',
+    id: 'scarcodec-v6',
+    title: 'ScarCodec v6.0 — Codec Científico Zero-PyTorch C99/SIMD, FITS/Zarr & E8',
+    badge: '📡 0,388 µs C/SIMD · Vence ZFP · E8 21x',
     category: 'spatial_physical',
-    specs: 'Spitzer 2.094x HDR · NASA Shuttle 6/6 Panes · PhysioNet 64-Ch · 34.8 KB O(1)',
+    featured: true,
+    specs: '0,388 µs mmap O(1) · Spitzer 1.636x < ZFP · Gosset E8 21,0x · Zarr + Cota L_∞',
     summary:
-      'Suíte de física matemática aplicada e compressão de hardware sem redes neurais, validada tanto ao vivo no navegador em bancadas controladas de EDPs/antenas quanto sem modificações em 5 bases científicas públicas verificadas por SHA-256 (NASA Spitzer IRAC, Ônibus Espacial da NASA, CSO Bolocam Sgr A*, Radiotelescópio FCRAO 14-m e NIH/PhysioNet 64 canais).',
+      'Biblioteca independente em NumPy + C99/SIMD (sem redes neurais e sem PyTorch) para compressão científica e telemetria constante O(1), validada em 5 arquivos públicos SHA-256 da NASA/NIH contra ZFP, CFITSIO FITS fpack, zlib e Min-Heap.',
     details: [
-      'Arquivos Astronômicos Públicos FITS Reais (NASA Spitzer IRAC, CSO Bolocam Sgr A*, FCRAO 14-m 13CO): Comprime floats IEEE-754 em 11.77x–12.27x (onde zlib -9 trava em 1.10x–1.14x), lê blocos aleatórios de 64 amostras 23.2x–34.7x mais rápido (Δ = 0.0) e comprova uma lei empírica monotônica de contraste HDR sobre rFFT 2D FP16 pareada em bytes (4.6x -> 45.9x -> 2.093,6x menor erro fotométrico estelar).',
-      'Telemetria Real O(1) no Ônibus Espacial da NASA & NIH/PhysioNet 64 Canais: Retém 6/6 (100%) das falhas críticas raras (0.0414%) de Válvula de Bypass nos radiadores do Space Shuttle (0/6 no buffer circular de mesmo tamanho) e reconstrói 32 eletrodos ímpares ocultos a partir dos 32 pares com cos = 0.9967 em exatos 34.816 B (Δ = +0 B), além de +13.25 dB de ganho SNR no Laplaciano motor C3 bruto via P_⊥ entre sessões.',
-      'Bancadas Controladas Ao Vivo no Navegador (Zero Oráculo): Excisão cega de RFI 1.000x (-60 dB) por covariância ruidosa (cos = 0.9753 nativo / 0.9837 navegador), evocação parcial 2-de-6 na caixa-preta (cos = 0.9999) e EDP conservativa de Burgers 2D via Rusanov (RMSE 188.2x menor que rFFT 2D FP16 pareada em bytes, erro 0.000000 no vácuo).',
+      'Duelo Auditado contra ZFP & FITS fpack: Supera o ZFP pareado em bytes nos 4 arquivos (1.636,2x menor erro estelar no Spitzer, 4,05x menor RMSE e +4,50 dB no EEG 64-ch PhysioNet) e vence ZFP e FITS fpack juntos no CSO Bolocam Sgr A* (15,3x menor erro de pico).',
+      '0,388 µs Zero-PyTorch C99/SIMD + .scar mmap & ScarZarrCodec: Roda apenas com NumPy (0 dependência de torch), lendo blocos aleatórios de 64 floats direto do SSD via mmap em 388 ns (345x mais rápido que PyTorch, 11.088x mais rápido que zlib -9) com CRC32 e plugin Zarr.',
+      'Gosset E8 21,0x (1,000 bpw), Cubos 3D ScarCodecND & Cota Exata L_∞: Comprime o Spitzer em 21,0x com erro estelar de 0,9556 MJy/sr, reduz o erro de pico no cubo 3D FCRAO [53×105×105] para 0,0566 K (2,03x < FITS fpack) e garante max |X - X̂| <= ε de 10⁻²¹ (LIGO) a 1,5×10⁸ (Raios-X).',
+      'Telemetria 34,8 KB O(1) (Ônibus Espacial NASA & W_scar Ortogonal): Retém 6/6 (100%) das panes raras da válvula de bypass em 3.120 B (0/6 no anel circular) e reconstrói modos corticais ortogonais superpostos com cos = 0,8826 em 5,2 µs (acima do teto 0,6917 1/√2 do Min-Heap).',
     ],
-    techStack: ['ScarCodec v4.0', 'NASA Spitzer & Shuttle', 'PhysioNet 64-Ch P_⊥', 'LUT256 Vácuo Exato', 'SCache 34.8 KB O(1)'],
-    githubUrl: 'https://github.com/byte-od/mixture-of-scars',
+    techStack: ['ScarCodec v6.0 C99/SIMD', 'Zero-PyTorch NumPy', '.scar mmap + Zarr', 'Gosset E8 21x', '3D Spectral-Tucker', 'Cota L_∞ Dekker'],
+    githubUrl: 'https://github.com/byte-od/mixture-of-scars/tree/main/scar_codec',
     paperUrl: 'https://doi.org/10.5281/zenodo.24172784',
     labAnchor: '#physical-scar-lab',
     metrics: [
-      { label: 'Erro Estelar Spitzer IRAC', value: '2.093,6x < rFFT FP16' },
-      { label: 'Panes NASA Space Shuttle', value: '6/6 (100%) em O(1)' },
+      { label: 'Leitura O(1) C99/SIMD', value: '0,388 µs (11.088x > zlib)' },
+      { label: 'Spitzer vs ZFP / Modo E8', value: '1.636x < ZFP · 21,0x E8' },
     ],
   },
   {
