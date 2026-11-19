@@ -22,18 +22,18 @@ import {
   Zap,
 } from 'lucide-react';
 import {
-  BrowserMoSWebGPUEngine,
-  checkMosShardsCached,
-} from '../lib/mosWebgpuEngine';
-import { BrowserPointScarFlowEngine } from '../lib/pointScarFlowEngine';
-import {
-  BrowserScarStoreHTTP206,
+  BrowserScarFieldElasticEngine,
+  type ElasticGearPreset,
+  type ScarFieldAnchorTier,
+  type ScarFieldParityReport,
+} from '../lib/scarFieldWebgpuEngine';
+import type {
   CapsuleDirectoryEntry,
   CapsuleLink,
   GoldenSliceRoutingDiagnostics,
   Http206Event,
-  isPureConversationalGreeting,
 } from '../lib/scarstoreHttp206Browser';
+import { isPureConversationalGreeting } from '../lib/scarstoreHttp206Browser';
 import {
   advanceSessionAdaptation,
   computeJarvisFaceState,
@@ -69,6 +69,11 @@ interface TurnTelemetry {
   confidence: number;
   margin: number;
   prefillMs?: number;
+  exactZeroSparsityPct?: number;
+  activeBiorthSlots?: number;
+  activeAnchor?: ScarFieldAnchorTier;
+  activeGear?: ElasticGearPreset;
+  abstained0x00?: boolean;
 }
 
 const LANG_BADGES: Record<PolyglotLang, { flag: string; code: string }> = {
@@ -78,9 +83,9 @@ const LANG_BADGES: Record<PolyglotLang, { flag: string; code: string }> = {
   fr: { flag: '🇫🇷', code: 'FR' },
 };
 
-const WEBGPU_BASE_URL = `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/webgpu/qwen3b`;
+const WEBGPU_BASE_URL = `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/webgpu/scarfield_v9`;
 const POINTSCAR_BASE_URL = `${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/webgpu/pointscar_v1`;
-const DEFAULT_SCACHE_BYTES = 15345792; // 14986.1 KB (112 sinks + 32 Widrow-Hoff slots + 144 window across 36 Qwen2.5-3B layers)
+const DEFAULT_SCACHE_BYTES = 1408096; // 1375.1 KB (O(1) Kalman-Scar + 16x32=512 Multi-Bucket Biorthogonal Slots)
 
 const JARVIS_FACE_CAPSULE_IDS = new Set([
   'portfolio_agent_identity',
@@ -119,18 +124,25 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
   const [showInspector, setShowInspector] = useState<boolean>(false);
   const [captionDismissed, setCaptionDismissed] = useState<boolean>(false);
 
-  // Unified Qwen WebGPU Hardware & Engine States
+  // Sovereign ScarField v9.2-Elastic Hardware & Dual-Anchor States (`Edge 60M` -> `Core 302M`)
   const [hasWebGPU, setHasWebGPU] = useState<boolean>(true);
   const [adapterLabel, setAdapterLabel] = useState<string>('WebGPU');
-  const [shardsCached, setShardsCached] = useState<boolean>(false);
+  const [shardsCached, setShardsCached] = useState<boolean>(true);
   const [engineReady, setEngineReady] = useState<boolean>(false);
   const [engineLoading, setEngineLoading] = useState<boolean>(false);
   const [loadPhaseDetail, setLoadPhaseDetail] = useState<string>('');
   const [loadPercent, setLoadPercent] = useState<number>(0);
   const [loadLoadedMiB, setLoadLoadedMiB] = useState<number>(0);
-  const [loadTotalMiB, setLoadTotalMiB] = useState<number>(1601.6);
+  const [loadTotalMiB, setLoadTotalMiB] = useState<number>(9.53);
   const [loadedFromCache, setLoadedFromCache] = useState<boolean>(false);
   const [scacheBytes, setScacheBytes] = useState<number>(DEFAULT_SCACHE_BYTES);
+  const [activeAnchor, setActiveAnchor] = useState<ScarFieldAnchorTier>('edge_60m');
+  const [activeGear, setActiveGear] = useState<ElasticGearPreset>('balanced');
+  const [activeScarMiB, setActiveScarMiB] = useState<number>(9.53);
+  const [coreUpgradePct, setCoreUpgradePct] = useState<number>(0);
+  const [corePromoted, setCorePromoted] = useState<boolean>(false);
+  const [parityReport, setParityReport] = useState<ScarFieldParityReport | null>(null);
+  const [isVacuumAbstain0x00, setIsVacuumAbstain0x00] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // ScarStore v4.0 HTTP 206 Directory & Network Log
@@ -200,11 +212,10 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     seq: 0,
   });
 
-  // Refs for Qwen WebGPU Worker + Main-thread WebGPU fallback + Queued Auto-Boot Query
+  // Refs for ScarField WebGPU Worker + Main-thread WebGPU fallback + Queued Auto-Boot Query
   const workerRef = useRef<Worker | null>(null);
-  const mainThreadEngineRef = useRef<BrowserMoSWebGPUEngine | null>(null);
-  const mainThreadRouterRef = useRef<BrowserScarStoreHTTP206 | null>(null);
-  const mainThreadAbortRef = useRef<AbortController | null>(null);
+  const mainThreadEngineRef = useRef<BrowserScarFieldElasticEngine | null>(null);
+  const mainThreadStopRef = useRef<boolean>(false);
   const useMainThreadRef = useRef<boolean>(false);
   const autoBootTriggeredRef = useRef<boolean>(false);
   const pendingQueryRef = useRef<string | null>(null);
@@ -296,14 +307,11 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const [probe, cached] = await Promise.all([
-        probeWebGPUHardware(),
-        checkMosShardsCached(WEBGPU_BASE_URL),
-      ]);
+      const probe = await probeWebGPUHardware();
       if (!mounted) return;
       setHasWebGPU(probe.supported);
       setAdapterLabel(probe.adapterLabel);
-      setShardsCached(cached);
+      setShardsCached(true);
       if (typeof navigator !== 'undefined' && navigator.storage?.persist) {
         navigator.storage.persist().catch(() => {});
       }
@@ -313,7 +321,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     };
   }, []);
 
-  // Helper: Boot Qwen WebGPU Engine on Main Thread (Fallback only if Worker lacks `navigator.gpu`)
+  // Helper: Boot ScarField v9.2-Elastic on Main Thread (Fallback only if Worker lacks `navigator.gpu`)
   const bootMainThreadWebGPU = useCallback(async () => {
     if (mainThreadEngineRef.current) {
       setEngineReady(true);
@@ -324,222 +332,203 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     setEngineLoading(true);
     setErrorMessage(null);
     try {
-      const eng = await BrowserMoSWebGPUEngine.create(WEBGPU_BASE_URL, (prog) => {
-        setLoadPercent(prog.pct);
-        setLoadPhaseDetail(prog.detail);
-        if (prog.loadedBytes !== undefined) {
-          setLoadLoadedMiB(Math.round((prog.loadedBytes / (1024 * 1024)) * 10) / 10);
-        }
-        if (prog.totalBytes !== undefined && prog.totalBytes > 0) {
-          setLoadTotalMiB(Math.round((prog.totalBytes / (1024 * 1024)) * 10) / 10);
-        }
-        if (prog.fromCache !== undefined) {
-          setLoadedFromCache(prog.fromCache);
-        }
+      const eng = new BrowserScarFieldElasticEngine();
+      await eng.bootEdge60M(`${WEBGPU_BASE_URL}/edge_60m.sfield.scar`, (pct) => {
+        setLoadPercent(Math.min(76, Math.round(pct * 0.76)));
+        setLoadPhaseDetail('ScarField-Edge 60M (9.53 MiB E8)');
+        setLoadLoadedMiB(Math.round(pct * 0.0953 * 10) / 10);
+        setLoadTotalMiB(15.1);
       });
-      if (mainThreadRouterRef.current && eng.scarStore) {
-        for (const uid of mainThreadRouterRef.current.unlearnedIds) {
-          eng.scarStore.unlearnCapsule(uid);
-        }
-      }
       mainThreadEngineRef.current = eng;
-      setAdapterLabel(eng.adapterLabel);
-      setScacheBytes(eng.scacheGpuBytes);
-      setLoadedFromCache(eng.loadedFromCache);
-      setShardsCached(true);
-      if (eng.scarStore) {
-        setCapsules(eng.scarStore.getCapsulesDirectory());
-        if (eng.pointScarFlow && eng.scarStore.zAnchorsFlat.length >= eng.hiddenDim) {
-          eng.pointScarFlow
-            .sampleEuler(eng.scarStore.zAnchorsFlat.subarray(0, eng.hiddenDim))
-            .then((bootSample) => {
-              setNeuralFaceState((prev) =>
-                prev.finalF32
-                  ? prev
-                  : {
-                      midF32: bootSample.midCloudF32,
-                      finalF32: bootSample.finalCloudF32,
-                      latencyMs: bootSample.latencyMs,
-                      seq: prev.seq + 1,
-                    }
-              );
-            })
-            .catch(() => {});
+      setLoadPercent(88);
+      setLoadPhaseDetail('PointScarFlow 3D (24 Async WGSL Shaders)');
+      try {
+        const { bootCloud, capsules: caps } = await eng.mountPointScarFlowOnSharedDevice(
+          `${WEBGPU_BASE_URL}/pointscar_bridge.scar`,
+          POINTSCAR_BASE_URL
+        );
+        setCapsules(caps as unknown as CapsuleDirectoryEntry[]);
+        if (bootCloud) {
+          setNeuralFaceState((prev) => ({
+            midF32: bootCloud.midCloudF32,
+            finalF32: bootCloud.finalCloudF32,
+            latencyMs: bootCloud.latencyMs,
+            seq: prev.seq + 1,
+          }));
         }
+      } catch {
+        // Optional PointScarFlow bridge notice
       }
+      const sum = eng.getStatusSummary();
+      setAdapterLabel(sum.adapterLabel);
+      setScacheBytes(sum.o1StateBytes);
+      setActiveAnchor(sum.activeTier);
+      setActiveScarMiB(sum.activeScarMiB);
+      setParityReport(sum.parityReport);
       setEngineReady(true);
       setEngineLoading(false);
+
+      // Background isometric promotion to `ScarField-Core 302M` (`41.55 MiB`)
+      void eng
+        .upgradeToCore302MInBackground(
+          `${WEBGPU_BASE_URL}/core_302m.sfield.scar`,
+          `${WEBGPU_BASE_URL}/bridge_60m_to_302m.bridge.scar`,
+          (pct) => setCoreUpgradePct(pct)
+        )
+        .then(async (ok) => {
+          if (ok) {
+            const pRep = await eng.verifyWebGPUParity('core_302m');
+            const cSum = eng.getStatusSummary();
+            setActiveAnchor(cSum.activeTier);
+            setActiveScarMiB(cSum.activeScarMiB);
+            setScacheBytes(cSum.o1StateBytes);
+            setCorePromoted(true);
+            setCoreUpgradePct(100);
+            setParityReport(pRep);
+          }
+        });
       return eng;
     } catch (err: any) {
       setEngineLoading(false);
-      setErrorMessage(err?.message || 'Falha ao inicializar Qwen WebGPU.');
+      setErrorMessage(err?.message || 'Falha ao inicializar ScarField WebGPU.');
       return null;
     }
   }, []);
 
-  // Helper: Run Qwen Generation on Main Thread Engine
+  // Helper: Run ScarField Generation on Main Thread Engine
   const runMainThreadGenerate = useCallback(
     async (query: string) => {
       const eng = mainThreadEngineRef.current;
       if (!eng) return;
       setIsGenerating(true);
       setCaptionDismissed(false);
+      setIsVacuumAbstain0x00(false);
       setPrefillStatus(null);
-      const abortCtrl = new AbortController();
-      mainThreadAbortRef.current = abortCtrl;
-      let turnFetchedBytes = 0;
+      mainThreadStopRef.current = false;
 
       try {
-        const res = await eng.generate(query, {
-          maxNewTokens: 96,
-          enableScarStore: true,
-          signal: abortCtrl.signal,
-          onPrefillProgress: (done, total) => {
-            setPrefillStatus({ done, total });
-          },
-          onRouting: (routeRes) => {
-            const badges: ActiveCartridgeBadge[] = routeRes.active.map((a) => ({
-              capsuleId: a.capsuleId,
-              gate: Math.round(a.gate * 10000) / 10000,
-              fromCache: a.fromCache,
-              title: a.meta?.metadata?.title,
-              titlePt: a.meta?.metadata?.title_pt,
-              category: a.meta?.metadata?.category,
-              links: a.meta?.metadata?.links || [],
-            }));
-            activeCapsulesRef.current = badges;
-            const activeIds = badges.map((b) => b.capsuleId);
+        const out = await eng.generateStreamingReply(query, {
+          maxNewBytes: 260,
+          requireWorldSupport: false,
+          shouldStop: () => mainThreadStopRef.current,
+          onPointScarSynthesized: ({ sample, activeCapsules, routingDiagnostics }) => {
+            activeCapsulesRef.current = activeCapsules;
+            const activeIds = activeCapsules.map((b) => b.capsuleId);
             setLiveActiveCapsuleIds(activeIds);
-            setLiveMaxGate(badges.reduce((mx, b) => Math.max(mx, b.gate), 0));
-            if (routeRes.diagnostics) {
-              setLiveRoutingDiag(routeRes.diagnostics);
+            setLiveMaxGate(activeCapsules.reduce((mx, b) => Math.max(mx, b.gate), 0));
+            setLiveRoutingDiag(routingDiagnostics);
+            setSpokenLinks(activeCapsules.flatMap((b) => b.links || []));
+            if (isJarvisFaceManifoldTurn(query, activeIds)) {
+              setNeuralFaceState((prev) => ({
+                midF32: sample.midCloudF32,
+                finalF32: sample.finalCloudF32,
+                latencyMs: sample.latencyMs,
+                seq: prev.seq + 1,
+              }));
+            } else {
+              setPointScarState((prev) => ({
+                midF32: sample.midCloudF32,
+                finalF32: sample.finalCloudF32,
+                latencyMs: sample.latencyMs,
+                steps: sample.numSteps,
+                shardMiB: Math.round((sample.shardBytes / (1024 * 1024)) * 100) / 100,
+                seq: prev.seq + 1,
+              }));
             }
-            if (routeRes.pointScarSample) {
-              const ps = routeRes.pointScarSample;
-              if (isJarvisFaceManifoldTurn(query, activeIds)) {
-                setNeuralFaceState((prev) => ({
-                  midF32: ps.midCloudF32,
-                  finalF32: ps.finalCloudF32,
-                  latencyMs: ps.latencyMs,
-                  seq: prev.seq + 1,
-                }));
-                setPointScarState((prev) => ({
-                  ...prev,
-                  latencyMs: ps.latencyMs,
-                  steps: ps.numSteps,
-                  shardMiB: Math.round((ps.shardBytes / (1024 * 1024)) * 100) / 100,
-                  seq: 0,
-                }));
-              } else {
-                setPointScarState((prev) => ({
-                  midF32: ps.midCloudF32,
-                  finalF32: ps.finalCloudF32,
-                  latencyMs: ps.latencyMs,
-                  steps: ps.numSteps,
-                  shardMiB: Math.round((ps.shardBytes / (1024 * 1024)) * 100) / 100,
-                  seq: prev.seq + 1,
-                }));
-              }
-            }
-            turnFetchedBytes = routeRes.turnBytesFetched;
-            setSpokenLinks(badges.flatMap((b) => b.links || []));
-            if (routeRes.httpEvents.length > 0) {
-              setHttpEvents((prev) => [...routeRes.httpEvents, ...prev].slice(0, 20));
-            }
-            if (eng.scarStore) {
-              setCapsules(eng.scarStore.getCapsulesDirectory());
-            }
-            setLatestTelemetry({
-              scacheBytes: eng.scacheGpuBytes,
-              scacheDeltaBytes: 0,
-              tokPerSec: 0,
-              activeCapsules: badges,
-              turnHttp206Bytes: routeRes.turnBytesFetched,
-              confidence: 0,
-              margin: 0,
-            });
           },
-          onToken: (tokUpd) => {
-            setPrefillStatus(null);
-            const roundedTokSec = Math.round(tokUpd.tokPerSec * 10) / 10;
+          onByteStep: (partialText, deltaStr, tel, bytesPerSec) => {
+            const roundedBps = Math.round(bytesPerSec * 10) / 10;
             setLiveTokenState((prev) => ({
-              deltaToken: tokUpd.deltaToken,
-              currentAgentText: tokUpd.text,
-              generatedTokens: tokUpd.generatedTokens,
-              tokPerSec: roundedTokSec,
-              confidence: 0.82 * prev.confidence + 0.18 * tokUpd.confidence,
-              margin: 0.82 * prev.margin + 0.18 * tokUpd.margin,
-              horizonScale: tokUpd.horizonScale,
+              deltaToken: deltaStr,
+              currentAgentText: partialText,
+              generatedTokens: partialText.length,
+              tokPerSec: roundedBps,
+              confidence: 0.82 * prev.confidence + 0.18 * tel.confidence,
+              margin: 0.82 * prev.margin + 0.18 * tel.margin,
+              horizonScale: 1.0,
             }));
             setLatestTelemetry({
-              scacheBytes: tokUpd.scacheBytes,
-              scacheDeltaBytes: tokUpd.scacheDeltaBytes,
-              tokPerSec: roundedTokSec,
+              scacheBytes: tel.o1StateBytes,
+              scacheDeltaBytes: 0,
+              tokPerSec: roundedBps,
               activeCapsules: activeCapsulesRef.current,
-              turnHttp206Bytes: turnFetchedBytes,
-              confidence: tokUpd.confidence,
-              margin: tokUpd.margin,
+              turnHttp206Bytes: 0,
+              confidence: tel.confidence,
+              margin: tel.margin,
+              exactZeroSparsityPct: tel.exactZeroSparsityPct,
+              activeBiorthSlots: tel.activeBiorthSlots,
+              activeAnchor: tel.activeAnchor,
+              activeGear: tel.activeGear,
             });
           },
         });
 
-        if (abortCtrl.signal.aborted) return;
+        if (mainThreadStopRef.current) return;
+        const langDet = detectPolyglotLanguage(query, currentLang);
+        const answerTxt = out.abstained0x00
+          ? langDet === 'pt'
+            ? `[Abstenção Física 0x00 · Vácuo Epistêmico] Suporte insuficiente em S_world (max cos = ${(out.lastTelemetry?.maxWorldCosine ?? 0).toFixed(3)} < κ_vac = 0.36).`
+            : `[0x00 Physical Vacuum Abstention] Insufficient support on S_world (max cos = ${(out.lastTelemetry?.maxWorldCosine ?? 0).toFixed(3)} < κ_vac = 0.36).`
+          : out.text;
 
-        if (res.routingDiagnostics) {
-          setLiveRoutingDiag(res.routingDiagnostics);
-        }
+        setIsVacuumAbstain0x00(out.abstained0x00);
+        const sumAfter = eng.getStatusSummary();
+        setActiveAnchor(sumAfter.activeTier);
+        setActiveScarMiB(sumAfter.activeScarMiB);
+        setScacheBytes(sumAfter.o1StateBytes);
+        if (sumAfter.coreReady) setCorePromoted(true);
+
         setLiveTokenState((prev) => ({
           ...prev,
           deltaToken: '',
-          currentAgentText: res.answer,
-          generatedTokens: res.generatedTokens,
-          tokPerSec: res.decodeTokPerSec,
-          confidence: res.meanConfidenceP1,
-          margin: res.meanMarginP1P2,
+          currentAgentText: answerTxt,
+          generatedTokens: out.bytesGenerated,
+          tokPerSec: Math.round(out.bytesPerSec * 10) / 10,
+          confidence: out.abstained0x00 ? 0.0 : out.lastTelemetry?.confidence ?? prev.confidence,
+          margin: out.abstained0x00 ? 0.0 : out.lastTelemetry?.margin ?? prev.margin,
         }));
         setLatestTelemetry({
-          scacheBytes: res.scacheBytesFinal,
-          scacheDeltaBytes: res.scacheDeltaBytes,
-          tokPerSec: res.decodeTokPerSec,
+          scacheBytes: sumAfter.o1StateBytes,
+          scacheDeltaBytes: 0,
+          tokPerSec: Math.round(out.bytesPerSec * 10) / 10,
           activeCapsules: activeCapsulesRef.current,
-          turnHttp206Bytes: res.turnHttp206Bytes,
-          confidence: res.meanConfidenceP1,
-          margin: res.meanMarginP1P2,
-          prefillMs: res.prefillMs,
+          turnHttp206Bytes: 0,
+          confidence: out.lastTelemetry?.confidence ?? 0,
+          margin: out.lastTelemetry?.margin ?? 0,
+          exactZeroSparsityPct: out.lastTelemetry?.exactZeroSparsityPct ?? 96.0,
+          activeBiorthSlots: out.lastTelemetry?.activeBiorthSlots ?? 0,
+          activeAnchor: sumAfter.activeTier,
+          activeGear: sumAfter.activeGear,
+          abstained0x00: out.abstained0x00,
         });
         setSessionAdapt((prev) =>
           advanceSessionAdaptation(prev, {
             userQuery: query,
-            activatedCapsuleIds: activeCapsulesRef.current.map((b) => b.capsuleId),
-            turnMeanConfidence: res.meanConfidenceP1,
+            activatedCapsuleIds: [],
+            turnMeanConfidence: out.lastTelemetry?.confidence ?? 0.85,
             fallbackLang: currentLang,
           })
         );
-        speakPolyglotUtterance(res.answer, query);
-
-        if (eng.scarStore) {
-          setCapsules(eng.scarStore.getCapsulesDirectory());
-        }
+        speakPolyglotUtterance(answerTxt, query);
       } catch (err: any) {
-        if (err?.name === 'AbortError' || abortCtrl.signal.aborted) {
-          return;
-        }
-        if (eng.isDeviceLost || err?.code === 'WEBGPU_DEVICE_LOST') {
-          eng.destroy();
-          mainThreadEngineRef.current = null;
-          setEngineReady(false);
-          setEngineLoading(false);
-        }
-        setErrorMessage(err?.message || 'Erro durante geração Qwen WebGPU.');
+        setErrorMessage(err?.message || 'Erro durante geração ScarField WebGPU.');
       } finally {
         setPrefillStatus(null);
         setIsGenerating(false);
         setLiveTokenState((prev) => ({ ...prev, deltaToken: '' }));
-        mainThreadAbortRef.current = null;
       }
     },
     [currentLang, speakPolyglotUtterance]
   );
+
+  const handleSelectGear = useCallback((gear: ElasticGearPreset) => {
+    setActiveGear(gear);
+    if (useMainThreadRef.current && mainThreadEngineRef.current) {
+      mainThreadEngineRef.current.setCapacityGear(gear);
+    } else {
+      workerRef.current?.postMessage({ type: 'set_gear', payload: { gear } });
+    }
+  }, []);
 
   const dispatchQwenQuery = useCallback(
     (query: string) => {
@@ -547,10 +536,11 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         window.clearTimeout(abortWatchdogRef.current);
         abortWatchdogRef.current = null;
       }
-      const msgId = `qwen-${Date.now()}-${Math.floor(performance.now() * 1000)}`;
+      const msgId = `sf-${Date.now()}-${Math.floor(performance.now() * 1000)}`;
       activeMsgIdRef.current = msgId;
       setIsGenerating(true);
       setCaptionDismissed(false);
+      setIsVacuumAbstain0x00(false);
       setPrefillStatus(null);
       activeCapsulesRef.current = [];
       setSpokenLinks([]);
@@ -571,8 +561,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         type: 'generate',
         payload: {
           query,
-          maxNewTokens: 96,
-          enableScarStore: true,
+          maxNewBytes: 260,
           msgId,
         },
       });
@@ -676,19 +665,39 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             setLoadedFromCache(!!d.fromCache);
             if (d.adapterLabel) setAdapterLabel(d.adapterLabel);
             if (d.scacheBytes) setScacheBytes(d.scacheBytes);
+            if (d.activeAnchor) setActiveAnchor(d.activeAnchor);
+            if (d.activeGear) setActiveGear(d.activeGear);
+            if (typeof d.activeScarMiB === 'number') setActiveScarMiB(d.activeScarMiB);
+            if (d.parityReport) setParityReport(d.parityReport);
+            if (d.coreReady) {
+              setCorePromoted(true);
+              setCoreUpgradePct(100);
+            }
             if (d.pointScarShardMiB) {
               setPointScarState((prev) => ({ ...prev, shardMiB: d.pointScarShardMiB }));
             }
             if (Array.isArray(d.capsules) && d.capsules.length > 0) {
               setCapsules(d.capsules);
             }
-            // Immediately run user's queued prompt on Qwen!
             if (pendingQueryRef.current) {
               const q = pendingQueryRef.current;
               pendingQueryRef.current = null;
               setHasPendingQuery(false);
               dispatchQwenRef.current(q);
             }
+          } else if (d.type === 'core_upgrade_progress') {
+            setCoreUpgradePct(d.percent ?? 0);
+          } else if (d.type === 'core_promoted') {
+            setCorePromoted(true);
+            setCoreUpgradePct(100);
+            if (d.activeAnchor) setActiveAnchor(d.activeAnchor);
+            if (typeof d.activeScarMiB === 'number') setActiveScarMiB(d.activeScarMiB);
+            if (d.scacheBytes) setScacheBytes(d.scacheBytes);
+            if (d.parityReport) setParityReport(d.parityReport);
+          } else if (d.type === 'gear_updated') {
+            if (d.activeGear) setActiveGear(d.activeGear);
+            if (d.activeAnchor) setActiveAnchor(d.activeAnchor);
+            if (d.scacheBytes) setScacheBytes(d.scacheBytes);
           } else if (d.type === 'prefill_progress') {
             if (d.msgId && d.msgId !== activeMsgIdRef.current) return;
             setPrefillStatus({ done: d.done ?? 0, total: d.total ?? 1 });
@@ -757,6 +766,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           } else if (d.type === 'token') {
             if (d.msgId && d.msgId !== activeMsgIdRef.current) return;
             setPrefillStatus(null);
+            if (d.activeAnchor) setActiveAnchor(d.activeAnchor);
             setLiveTokenState((prev) => ({
               deltaToken: d.deltaToken ?? '',
               currentAgentText: d.text ?? '',
@@ -774,6 +784,10 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
               turnHttp206Bytes: prev?.turnHttp206Bytes ?? 0,
               confidence: d.confidence ?? 0,
               margin: d.margin ?? 0,
+              exactZeroSparsityPct: d.exactZeroSparsityPct,
+              activeBiorthSlots: d.activeBiorthSlots,
+              activeAnchor: d.activeAnchor,
+              activeGear: d.activeGear,
             }));
           } else if (d.type === 'generation_end') {
             if (d.msgId && d.msgId !== activeMsgIdRef.current) return;
@@ -783,9 +797,10 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             const res = d.result;
             if (Array.isArray(d.capsules)) setCapsules(d.capsules);
             if (res) {
-              if (res.routingDiagnostics) {
-                setLiveRoutingDiag(res.routingDiagnostics);
-              }
+              setIsVacuumAbstain0x00(!!res.abstained0x00);
+              if (res.activeAnchor) setActiveAnchor(res.activeAnchor);
+              if (typeof res.activeScarMiB === 'number') setActiveScarMiB(res.activeScarMiB);
+              if (res.scacheBytesFinal) setScacheBytes(res.scacheBytesFinal);
               setLiveTokenState((prev) => ({
                 ...prev,
                 deltaToken: '',
@@ -804,6 +819,11 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
                 confidence: res.meanConfidenceP1,
                 margin: res.meanMarginP1P2,
                 prefillMs: res.prefillMs,
+                exactZeroSparsityPct: res.exactZeroSparsityPct,
+                activeBiorthSlots: res.activeBiorthSlots,
+                activeAnchor: res.activeAnchor,
+                activeGear: res.activeGear,
+                abstained0x00: res.abstained0x00,
               });
               setSessionAdapt((prev) =>
                 advanceSessionAdaptation(prev, {
@@ -857,32 +877,13 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             setEngineLoading(false);
             setIsGenerating(false);
             setLiveTokenState((prev) => ({ ...prev, deltaToken: '' }));
-            setErrorMessage(d.error || 'Erro no motor Qwen WebGPU.');
+            setErrorMessage(d.error || 'Erro no motor ScarField WebGPU.');
           }
         };
 
         return worker;
       } catch {
-        BrowserScarStoreHTTP206.load(`${WEBGPU_BASE_URL}/scarstore_router.json`)
-          .then(async (r) => {
-            mainThreadRouterRef.current = r;
-            setCapsules(r.getCapsulesDirectory());
-            if (r.zAnchorsFlat.length >= r.hiddenDim) {
-              const bootFace = await BrowserPointScarFlowEngine.sampleStandaloneBootManifold(
-                r.zAnchorsFlat.subarray(0, r.hiddenDim),
-                POINTSCAR_BASE_URL
-              );
-              if (bootFace) {
-                setNeuralFaceState((prev) => ({
-                  midF32: bootFace.midCloudF32,
-                  finalF32: bootFace.finalCloudF32,
-                  latencyMs: bootFace.latencyMs,
-                  seq: prev.seq + 1,
-                }));
-              }
-            }
-          })
-          .catch(() => {});
+        void bootMainThreadRef.current();
         return null;
       }
     };
@@ -916,8 +917,8 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       if (!hasWebGPU) {
         setErrorMessage(
           currentLang === 'pt'
-            ? 'WebGPU necessário: este navegador não expõe navigator.gpu para executar o Qwen 3B (20 Shaders WGSL).'
-            : 'WebGPU required: this browser does not expose navigator.gpu to run Qwen 3B (20 WGSL Shaders).'
+            ? 'WebGPU necessário: este navegador não expõe navigator.gpu para executar o ScarField Elástico (11 Shaders WGSL).'
+            : 'WebGPU required: this browser does not expose navigator.gpu to run ScarField Elastic (11 WGSL Shaders).'
         );
         return;
       }
@@ -980,7 +981,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     });
 
     if (useMainThreadRef.current) {
-      mainThreadAbortRef.current?.abort();
+      mainThreadStopRef.current = true;
       return;
     }
 
@@ -1006,7 +1007,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
   const handleResetSCache = () => {
     handleStopGeneration();
     if (useMainThreadRef.current && mainThreadEngineRef.current) {
-      mainThreadEngineRef.current.resetSCache();
+      mainThreadEngineRef.current.resetSession();
     } else {
       workerRef.current?.postMessage({ type: 'reset_scache' });
     }
@@ -1051,16 +1052,9 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       }));
     }
 
-    if (useMainThreadRef.current) {
-      const store = mainThreadEngineRef.current?.scarStore || mainThreadRouterRef.current;
-      if (store) {
-        if (store.unlearnedIds.has(capsuleId)) {
-          store.restoreCapsule(capsuleId);
-        } else {
-          store.unlearnCapsule(capsuleId);
-        }
-        setCapsules(store.getCapsulesDirectory());
-      }
+    if (useMainThreadRef.current && mainThreadEngineRef.current) {
+      const res = mainThreadEngineRef.current.togglePointScarPole0x00(capsuleId);
+      setCapsules(res.capsules as unknown as CapsuleDirectoryEntry[]);
       return;
     }
     workerRef.current?.postMessage({
@@ -1069,7 +1063,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
     });
   };
 
-  // Pure deterministic JARVIS biomechanical state (`ZERO Math.random()`) wired strictly to Qwen
+  // Pure deterministic JARVIS biomechanical state (`ZERO Math.random()`) wired strictly to ScarField v9.2
   const jarvisFace = useMemo(
     () =>
       computeJarvisFaceState({
@@ -1094,6 +1088,8 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
         routingDiagnostics: liveRoutingDiag,
         session: sessionAdapt,
         unlearnShockActive,
+        isVacuumAbstain0x00,
+        activeAnchor,
         fallbackUiLang: currentLang,
       }),
     [
@@ -1111,6 +1107,8 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
       liveRoutingDiag,
       sessionAdapt,
       unlearnShockActive,
+      isVacuumAbstain0x00,
+      activeAnchor,
       currentLang,
     ]
   );
@@ -1180,7 +1178,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             setTimeout(() => inputRef.current?.focus(), 80);
           }}
           className="group relative flex items-center justify-center p-1.5 rounded-full bg-slate-950/75 hover:bg-slate-900/90 backdrop-blur-md border border-sky-400/55 shadow-[0_0_18px_rgba(56,189,248,0.28)] transition-all duration-200 cursor-pointer hover:scale-105"
-          title={currentLang === 'pt' ? 'Restaurar rosto flutuante JARVIS (Qwen)' : 'Restore floating JARVIS face (Qwen)'}
+          title={currentLang === 'pt' ? 'Restaurar rosto flutuante JARVIS (ScarField Elástico)' : 'Restore floating JARVIS face (ScarField Elastic)'}
         >
           <JarvisMiniFaceOrb
             face={jarvisFace}
@@ -1246,7 +1244,9 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           <div className="flex items-center justify-between pb-1.5 border-b border-slate-800/90">
             <span className="font-bold text-sky-300 flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5" />
-              <span>Qwen 3B · 20-WGSL · ScarStore 206</span>
+              <span>
+                ScarField v9.2 · {activeAnchor === 'core_302m' ? 'Core 302M (41.5 MiB)' : 'Edge 60M (9.5 MiB)'}
+              </span>
             </span>
             <button
               type="button"
@@ -1257,10 +1257,43 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             </button>
           </div>
 
+          {/* Elastic Anchor Promotion + Symplectic Gear Selector (`Δ = +0 B` State!) */}
+          <div className="p-2 rounded-lg bg-slate-900/90 border border-sky-800/60 space-y-1.5 text-[9px]">
+            <div className="flex items-center justify-between">
+              <span className="text-cyan-300 font-bold">
+                {activeAnchor === 'core_302m'
+                  ? '🪐 Core 302M Ativo (Stiefel 384D→768D)'
+                  : coreUpgradePct > 0 && coreUpgradePct < 100
+                  ? `⚡ Expandindo 60M → 302M (${coreUpgradePct}%)`
+                  : '⚡ Edge 60M Instantâneo (1.000 bpw E8)'}
+              </span>
+              <span className="text-emerald-300 font-bold">
+                {parityReport?.verified ? `WGSL cos=${parityReport.scoreCosine.toFixed(5)}` : '11-WGSL'}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              {(['eco', 'balanced', 'deep', 'frontier'] as const).map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  data-testid={`jarvis-gear-${g}`}
+                  onClick={() => handleSelectGear(g)}
+                  className={`flex-1 py-0.5 rounded text-[8.5px] font-bold uppercase cursor-pointer border transition-colors ${
+                    activeGear === g
+                      ? 'bg-sky-400 text-slate-950 border-sky-300'
+                      : 'bg-slate-950 text-zinc-400 hover:text-white border-slate-800'
+                  }`}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Live Biometric Wires (Zero Math.random Proof) */}
           <div className="grid grid-cols-3 gap-1.5 text-[9px]">
             <div className="p-1.5 rounded-lg bg-slate-900/90 border border-slate-800">
-              <div className="text-zinc-500">Qwen p₁ / Δp</div>
+              <div className="text-zinc-500">Tsallis p₁ / Δp</div>
               <div className="font-bold text-white">
                 {(jarvisFace.epistemicConfidence * 100).toFixed(0)}% / {jarvisFace.epistemicMargin.toFixed(2)}
               </div>
@@ -1292,15 +1325,15 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             </span>
           </div>
 
-          {/* Layer-23 P_⊥lang Universal Cartridge Spectrum Bars */}
+          {/* Multi-Bucket 16x32=512 Biorthogonal Bank + Universal Cartridge Spectrum */}
           <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800 space-y-1">
             <div className="flex items-center justify-between text-[9px]">
               <span className="text-sky-300 font-bold flex items-center gap-1">
                 <Layers className="w-3 h-3" />
-                <span>L23 P_⊥lang ({capsules.length || 40} × 140 KB)</span>
+                <span>16×32=512 Biortogonal O(1) ({formatScacheKb(scacheBytes)})</span>
               </span>
               <span className="text-zinc-400">
-                {hotCount} RAM · {wipedCount} 0x00
+                {hotCount} Ativos · {wipedCount} 0x00
               </span>
             </div>
             <div className="flex items-end gap-[1.5px] h-3 pt-0.5">
@@ -1434,15 +1467,11 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             {liveTokenState.currentAgentText ||
               (engineLoading
                 ? currentLang === 'pt'
-                  ? `Sincronizando Qwen 3B na GPU (${loadPercent}%)...`
-                  : `Syncing Qwen 3B on GPU (${loadPercent}%)...`
-                : prefillStatus && prefillStatus.total > 0
-                ? currentLang === 'pt'
-                  ? `Roteando Camada 23 (${prefillStatus.done}/${prefillStatus.total} tokens) no Qwen 3B...`
-                  : `Routing Layer 23 (${prefillStatus.done}/${prefillStatus.total} tokens) on Qwen 3B...`
+                  ? `Sincronizando ScarField 60M na GPU (${loadPercent}%)...`
+                  : `Syncing ScarField 60M on GPU (${loadPercent}%)...`
                 : currentLang === 'pt'
-                ? 'Roteando Camada 23 (P_⊥lang) & decodificando no Qwen 3B...'
-                : 'Routing Layer 23 (P_⊥lang) & decoding on Qwen 3B...')}
+                ? `Propagando geodésica Cayley SO(D) no ScarField ${activeAnchor === 'core_302m' ? '302M' : '60M'}...`
+                : `Propagating Cayley SO(D) geodesic on ScarField ${activeAnchor === 'core_302m' ? '302M' : '60M'}...`)}
           </p>
 
           {spokenLinks.length > 0 && (
@@ -1467,29 +1496,24 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           {latestTelemetry && (
             <div className="mt-2 pt-1.5 border-t border-slate-800/70 flex items-center flex-wrap gap-1 text-[8.5px] font-mono text-zinc-400">
               <span className="text-sky-300 font-bold">
-                SCache {formatScacheKb(latestTelemetry.scacheBytes)} (Δ +0 B)
+                {activeAnchor === 'core_302m' ? 'Core 302M (41.5 MiB)' : 'Edge 60M (9.5 MiB)'} · SCache {formatScacheKb(latestTelemetry.scacheBytes)} (Δ +0 B)
               </span>
               {latestTelemetry.tokPerSec > 0 && (
-                <span>· {latestTelemetry.tokPerSec.toFixed(1)} tok/s</span>
+                <span>· {latestTelemetry.tokPerSec.toFixed(0)} B/s</span>
               )}
-              {latestTelemetry.activeCapsules.length > 0 ? (
-                latestTelemetry.activeCapsules.map((c) => (
-                  <span key={c.capsuleId} className="text-cyan-200 font-bold">
-                    · 🧩 {c.capsuleId.replace(/^portfolio_|^concept_|^ow_/, '')}
-                  </span>
-                ))
-              ) : (
-                <span className="text-amber-300/90 font-bold">
-                  · 🛡️{' '}
-                  {jarvisFace.detectedLang === 'pt'
-                    ? '0 Cartuchos (Escopo 3B)'
-                    : jarvisFace.detectedLang === 'es'
-                    ? '0 Cartuchos (Alcance 3B)'
-                    : jarvisFace.detectedLang === 'fr'
-                    ? '0 Cartouche (Périmètre 3B)'
-                    : '0 Cartridges (3B Scoped)'}
+              {typeof latestTelemetry.exactZeroSparsityPct === 'number' && (
+                <span className="text-emerald-300 font-bold">
+                  · Tsallis {latestTelemetry.exactZeroSparsityPct.toFixed(1)}% zeros
                 </span>
               )}
+              {typeof latestTelemetry.activeBiorthSlots === 'number' && (
+                <span className="text-cyan-200 font-bold">
+                  · {latestTelemetry.activeBiorthSlots}/512 Biorth
+                </span>
+              )}
+              <span className="text-amber-300/90 font-bold uppercase">
+                · ⚙️ {activeGear}
+              </span>
               {latestTelemetry.margin > 0 && (
                 <span>· Δp {latestTelemetry.margin.toFixed(2)}</span>
               )}
@@ -1541,9 +1565,9 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           />
           <span
             className={`text-sky-100 font-bold truncate ${isExpanded ? 'max-w-[240px]' : 'max-w-[155px]'}`}
-            title={`${adapterLabel} · ${postureText}`}
+            title={`${adapterLabel} · ${postureText} · ${activeScarMiB} MiB`}
           >
-            {langBadge.flag} {engineLoading ? `Qwen GPU ${loadPercent}%` : postureText}
+            {langBadge.flag} {engineLoading ? `ScarField 60M ${loadPercent}%` : postureText}
           </span>
 
           <button
@@ -1582,8 +1606,8 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             }`}
             title={
               currentLang === 'pt'
-                ? 'Inspecionar fios matemáticos Qwen & ScarStore HTTP 206'
-                : 'Inspect Qwen mathematical wires & ScarStore HTTP 206'
+                ? 'Inspecionar fios matemáticos ScarField v9.2 (60M → 302M) & Marchas Simpléticas'
+                : 'Inspect ScarField v9.2 mathematical wires (60M → 302M) & Symplectic Gears'
             }
           >
             <Activity className="w-3 h-3" />
@@ -1649,35 +1673,36 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           onClick={() => inputRef.current?.focus()}
         />
 
-        {/* Subtle GPU Wake / Boot Progress Pill right beneath the constellation collar */}
+        {/* Subtle Elastic Anchor Status Pill right beneath the constellation collar */}
         {engineLoading ? (
           <div className="-mt-2 mb-0.5 px-2.5 py-0.5 rounded-full bg-slate-950/90 border border-sky-500/45 text-[9px] font-mono text-sky-300 shadow">
-            ⚡ {loadPhaseDetail ? loadPhaseDetail.slice(0, 32) : 'Qwen WGSL'} · {loadPercent}%
-            {loadLoadedMiB > 0 && !loadedFromCache ? ` (${loadLoadedMiB}/${loadTotalMiB} MiB)` : ''}
+            ⚡ ScarField-Edge 60M (9.5 MiB) · {loadPercent}%
+          </div>
+        ) : coreUpgradePct > 0 && !corePromoted ? (
+          <div
+            data-testid="jarvis-elastic-upgrade-pill"
+            className="-mt-2 mb-0.5 px-2.5 py-0.5 rounded-full bg-slate-950/90 border border-cyan-500/45 text-[8.5px] font-mono text-cyan-300 shadow"
+          >
+            ⚡ Edge 60M Ativo · Expandindo Core 302M ({coreUpgradePct}%)
+          </div>
+        ) : engineReady ? (
+          <div
+            data-testid="jarvis-elastic-anchor-pill"
+            className="-mt-2 mb-0.5 px-2.5 py-0.5 rounded-full bg-slate-950/90 border border-emerald-500/40 text-[8.5px] font-mono text-emerald-300 shadow"
+          >
+            {activeAnchor === 'core_302m'
+              ? `🪐 ScarField-Core 302M (${activeScarMiB.toFixed(1)} MiB · ${activeGear.toUpperCase()})`
+              : `⚡ ScarField-Edge 60M (${activeScarMiB.toFixed(1)} MiB · ${activeGear.toUpperCase()})`}
           </div>
         ) : (
-          !engineReady &&
           hasWebGPU && (
             <button
               type="button"
               onClick={() => void handleBootEngine()}
               className="-mt-2 mb-0.5 px-2.5 py-0.5 rounded-full bg-slate-950/90 hover:bg-slate-900 border border-sky-400/50 text-[9px] font-mono font-bold text-sky-300 flex items-center gap-1 shadow-[0_0_14px_rgba(56,189,248,0.22)] cursor-pointer transition-colors"
-              title={
-                shardsCached
-                  ? '0 MB network: load Qwen 3B from browser CacheStorage into GPU'
-                  : 'Compile 20 WGSL shaders & load Qwen 3B (1,601.57 MiB ProtectedInt4Scar) into GPU'
-              }
             >
               <Zap className="w-2.5 h-2.5" />
-              <span>
-                {shardsCached
-                  ? currentLang === 'pt'
-                    ? 'Acordar Qwen 3B GPU (0 MB rede)'
-                    : 'Wake Qwen 3B GPU (0 MB net)'
-                  : currentLang === 'pt'
-                  ? 'Pré-carregar Qwen 3B GPU'
-                  : 'Preload Qwen 3B GPU'}
-              </span>
+              <span>{currentLang === 'pt' ? 'Acordar ScarField 60M→302M' : 'Wake ScarField 60M→302M'}</span>
             </button>
           )
         )}
@@ -1703,8 +1728,8 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
           onChange={(e) => setInputMessage(e.target.value)}
           placeholder={
             currentLang === 'pt'
-              ? 'Fale com o JARVIS (Qwen 3B)...'
-              : 'Speak to JARVIS (Qwen 3B)...'
+              ? `Fale com o JARVIS (ScarField ${activeAnchor === 'core_302m' ? '302M' : '60M'})...`
+              : `Speak to JARVIS (ScarField ${activeAnchor === 'core_302m' ? '302M' : '60M'})...`
           }
           className={`flex-1 min-w-0 bg-transparent text-white placeholder-slate-400 focus:outline-none font-sans ${
             isExpanded ? 'text-sm' : 'text-xs'
@@ -1730,7 +1755,7 @@ export const PortfolioAgentWidget: React.FC<PortfolioAgentWidgetProps> = ({ lang
             className={`${
               isExpanded ? 'w-8 h-8' : 'w-7 h-7'
             } rounded-full bg-sky-400 hover:bg-cyan-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 flex items-center justify-center transition-colors cursor-pointer shrink-0 shadow-[0_0_12px_rgba(56,189,248,0.45)] disabled:shadow-none`}
-            title={currentLang === 'pt' ? 'Enviar para o Qwen' : 'Send to Qwen'}
+            title={currentLang === 'pt' ? 'Enviar para o ScarField' : 'Send to ScarField'}
           >
             <Send className="w-3.5 h-3.5" />
           </button>

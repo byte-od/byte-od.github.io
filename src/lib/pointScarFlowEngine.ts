@@ -236,7 +236,8 @@ export class BrowserPointScarFlowEngine {
     device: any,
     manifest: PointScarManifest,
     shardArrayBuf: ArrayBuffer,
-    wgslCode: string
+    shaderMod: any,
+    precompiledPipelines?: Record<string, any>
   ) {
     this.device = device;
     this.manifest = manifest;
@@ -245,17 +246,20 @@ export class BrowserPointScarFlowEngine {
     this.recommendedSteps = manifest.training_metadata?.recommended_inference?.num_steps ?? 4;
     this.recommendedGuidance = manifest.training_metadata?.recommended_inference?.guidance_scale ?? 1.0;
 
-    this.shaderMod = this.device.createShaderModule({
-      label: 'point_scar_flow_wgsl_v1',
-      code: wgslCode,
-    });
+    this.shaderMod = shaderMod;
 
-    for (const ep of PSF_ENTRY_POINTS) {
-      this.pipelines[ep] = this.device.createComputePipeline({
-        label: `pipe_${ep}`,
-        layout: 'auto',
-        compute: { module: this.shaderMod, entryPoint: ep },
-      });
+    if (precompiledPipelines) {
+      for (const ep of PSF_ENTRY_POINTS) {
+        this.pipelines[ep] = precompiledPipelines[ep];
+      }
+    } else {
+      for (const ep of PSF_ENTRY_POINTS) {
+        this.pipelines[ep] = this.device.createComputePipeline({
+          label: `pipe_${ep}`,
+          layout: 'auto',
+          compute: { module: this.shaderMod, entryPoint: ep },
+        });
+      }
     }
 
     const c = this.cfg;
@@ -368,7 +372,32 @@ export class BrowserPointScarFlowEngine {
         return null;
       }
       const shardBuf = await shardResp.arrayBuffer();
-      return new BrowserPointScarFlowEngine(device, manifest, shardBuf, wgslCode);
+      const shaderMod = device.createShaderModule({
+        label: 'point_scar_flow_wgsl_v1',
+        code: wgslCode,
+      });
+      // Compile all 12 WGSL compute pipelines asynchronously on OS worker threads (`0 ms` GPU IPC freeze!)
+      const precompiled: Record<string, any> = {};
+      if (typeof device.createComputePipelineAsync === 'function') {
+        const built = await Promise.all(
+          PSF_ENTRY_POINTS.map(async (ep) => [
+            ep,
+            await device.createComputePipelineAsync({
+              label: `pipe_${ep}`,
+              layout: 'auto',
+              compute: { module: shaderMod, entryPoint: ep },
+            }),
+          ] as const)
+        );
+        for (const [ep, pipe] of built) precompiled[ep] = pipe;
+      }
+      return new BrowserPointScarFlowEngine(
+        device,
+        manifest,
+        shardBuf,
+        shaderMod,
+        Object.keys(precompiled).length === PSF_ENTRY_POINTS.length ? precompiled : undefined
+      );
     } catch (err) {
       console.warn('[PointScarFlow] Optional 3D generator load skipped:', err);
       return null;

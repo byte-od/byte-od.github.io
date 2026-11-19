@@ -1959,12 +1959,19 @@ export class ScarNativeV6WebGpuBrowserEngine {
         'vec_add_inplace_f32',
         'apply_script_subspace_gate',
       ];
-      for (const ep of entryPoints) {
-        this.pipelines[ep] = dev.createComputePipeline({
-          layout: 'auto',
-          compute: { module: mod, entryPoint: ep },
-        });
-      }
+      await Promise.all(
+        entryPoints.map(async (ep) => {
+          this.pipelines[ep] = dev.createComputePipelineAsync
+            ? await dev.createComputePipelineAsync({
+                layout: 'auto',
+                compute: { module: mod, entryPoint: ep },
+              })
+            : dev.createComputePipeline({
+                layout: 'auto',
+                compute: { module: mod, entryPoint: ep },
+              });
+        })
+      );
 
       const c = this.cpuRef.cfg;
       const m = this.cpuRef.manifest;

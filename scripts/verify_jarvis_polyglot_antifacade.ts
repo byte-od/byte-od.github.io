@@ -197,8 +197,8 @@ async function main() {
   });
 
   assert(
-    refState.neuralSource === 'qwen_wgsl_20_active',
-    `Expected qwen_wgsl_20_active source, got ${refState.neuralSource}`
+    refState.neuralSource === 'scarfield_v9_edge60m' || refState.neuralSource === 'scarfield_v9_core302m',
+    `Expected scarfield_v9 source, got ${refState.neuralSource}`
   );
 
   for (let i = 0; i < 200; i++) {
@@ -248,7 +248,7 @@ async function main() {
     session: baseSession,
   });
   assert(
-    listeningState.neuralSource === 'qwen_wgsl_20_listening' &&
+    listeningState.neuralSource === 'scarfield_v9_listening' &&
       listeningState.posture === 'ATTENTIVE_LISTENING' &&
       listeningState.gazeY > 0.2,
     `Expected downward cursor-tracking gaze in ATTENTIVE_LISTENING, got ${JSON.stringify(listeningState)}`
@@ -550,8 +550,8 @@ async function main() {
     session: baseSession,
   });
   assert(
-    bootState.neuralSource === 'qwen_wgsl_20_booting' && bootState.posture === 'GPU_BOOT_SYNC',
-    `Expected GPU_BOOT_SYNC during Qwen shader compilation, got ${bootState.posture}`
+    bootState.neuralSource === 'scarfield_v9_booting' && bootState.posture === 'GPU_BOOT_SYNC',
+    `Expected GPU_BOOT_SYNC during ScarField shader compilation, got ${bootState.posture}`
   );
   console.log(
     '[PASS 5/7] Multilingual Qwen 3B Token Visemes (PT/EN/ES/FR Romance nasals, bilabials, sibilants, formants) & Boot Sync'

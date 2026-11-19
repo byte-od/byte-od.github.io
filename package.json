@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test:jarvis": "tsx scripts/verify_jarvis_polyglot_antifacade.ts"
+    "test:jarvis": "tsx --import ./scripts/wgsl_raw_loader.mjs scripts/verify_scarfield_v9_jarvis_antifacade.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

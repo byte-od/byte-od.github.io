@@ -1,13 +1,13 @@
 /**
- * Sovereign JARVIS Neural-Motor Face Controller (Unified Qwen2.5-3B MoS + SCache O(1) v4.2)
+ * Sovereign JARVIS Neural-Motor Face Controller (ScarField v9.2-Elastic: Edge 60M -> Core 302M)
  *
  * STRICT ARCHITECTURAL INTEGRITY & ANTI-FACADE GUARANTEE (`AGENTS.md`):
- * - Unified Single Engine: JARVIS is wired strictly to the live Qwen2.5-3B WebGPU engine
- *   (`20 WGSL 1.0 Shaders` + `VQ4-Scar` + `ProtectedInt4Scar` + `SCache O(1)` + `Layer-23 P_⊥lang HTTP 206 ScarStore`).
- *   There is NO separation between System 1 and System 2, and NO hardcoded CPU script fallback.
+ * - Unified Post-Transformer Engine: JARVIS is wired strictly to the live ScarField v9.2 WebGPU engine
+ *   (`11 WGSL 1.0 Shaders` + `1.000 bpw Gosset E8` + `Cayley-Woodbury` + `16x32 Biorthogonal O(1) SCache` +
+ *   `Tsallis-1.5 Spherical-Cap Simplex` + live Stiefel `Edge 60M -> Core 302M` expansion).
  * - ZERO `Math.random()` anywhere in this module.
- * - Identical Qwen neural inputs (`GoldenSliceRoutingDiagnostics`, GPU `logits_top2_reduce_stage2`
- *   epistemic `confidence p₁` & `margin p₁−p₂`, decoded BPE `deltaToken`, and session state)
+ * - Identical ScarField neural inputs (`Tsallis-1.5` epistemic `confidence p₁` & `margin p₁−p₂`,
+ *   `0x00` physical vacuum abstention, decoded UTF-8 `deltaToken`, and session state)
  *   MUST produce bit-identical `JarvisFaceState` outputs (`0.00000000` variance).
  */
 
@@ -20,10 +20,11 @@ import {
 export { detectPolyglotLanguage, type PolyglotLang };
 
 export type JarvisNeuralSource =
-  | 'qwen_wgsl_20_active'
-  | 'qwen_wgsl_20_listening'
-  | 'qwen_wgsl_20_booting'
-  | 'qwen_wgsl_20_standby'
+  | 'scarfield_v9_core302m'
+  | 'scarfield_v9_edge60m'
+  | 'scarfield_v9_listening'
+  | 'scarfield_v9_booting'
+  | 'scarfield_v9_standby'
   | 'webgpu_unavailable';
 
 export type JarvisPosture =
@@ -91,6 +92,8 @@ export interface JarvisNeuralInput {
   routingDiagnostics?: GoldenSliceRoutingDiagnostics | null;
   session: SessionAdaptationState;
   unlearnShockActive?: boolean;
+  isVacuumAbstain0x00?: boolean;
+  activeAnchor?: 'edge_60m' | 'core_302m';
   fallbackUiLang?: 'pt' | 'en';
 }
 
@@ -148,58 +151,58 @@ function round4(v: number): number {
 
 export const POSTURE_LABELS: Record<JarvisPosture, Record<PolyglotLang, string>> = {
   SENTINEL_IDLE: {
-    pt: 'Sentinela Qwen 3B · Pronto',
-    en: 'Qwen 3B Sentinel · Ready',
-    es: 'Centinela Qwen 3B · Listo',
-    fr: 'Sentinelle Qwen 3B · Prêt',
+    pt: 'ScarField Elástico · Pronto',
+    en: 'ScarField Elastic · Ready',
+    es: 'ScarField Elástico · Listo',
+    fr: 'ScarField Élastique · Prêt',
   },
   GPU_BOOT_SYNC: {
-    pt: 'Sincronizando 20 Shaders WGSL',
-    en: 'Syncing 20 WGSL Shaders',
-    es: 'Sincronizando 20 Shaders WGSL',
-    fr: 'Synchronisation 20 Shaders WGSL',
+    pt: 'Sincronizando 11 Shaders WGSL',
+    en: 'Syncing 11 WGSL Shaders',
+    es: 'Sincronizando 11 Shaders WGSL',
+    fr: 'Synchronisation 11 Shaders WGSL',
   },
   ATTENTIVE_LISTENING: {
-    pt: 'Escuta Ativa · Acompanhando Entrada',
-    en: 'Active Listening · Tracking Input',
-    es: 'Escucha Activa · Siguiendo Entrada',
-    fr: 'Écoute Active · Suivi de Saisie',
+    pt: 'Escuta Ativa · Onda UTF-8',
+    en: 'Active Listening · UTF-8 Wave',
+    es: 'Escucha Activa · Onda UTF-8',
+    fr: 'Écoute Active · Onde UTF-8',
   },
   ARCHITECT_PRECISION: {
-    pt: 'Precisão Arquitetural · MoS & SCache',
-    en: 'Architectural Precision · MoS & SCache',
-    es: 'Precisión Arquitectónica · MoS & SCache',
-    fr: 'Précision Architecturale · MoS & SCache',
+    pt: 'Precisão Geodésica · Gosset E8',
+    en: 'Geodesic Precision · Gosset E8',
+    es: 'Precisión Geodésica · Gosset E8',
+    fr: 'Précision Géodésique · Gosset E8',
   },
   KINETIC_FOCUS: {
-    pt: 'Foco Cinético · RL & Percepção',
-    en: 'Kinetic Focus · RL & Perception',
-    es: 'Foco Cinético · RL y Percepción',
-    fr: 'Focus Cinétique · RL & Perception',
+    pt: 'Fluxo Simplético · Cayley SO(D)',
+    en: 'Symplectic Flow · Cayley SO(D)',
+    es: 'Flujo Simpléctico · Cayley SO(D)',
+    fr: 'Flux Symplectique · Cayley SO(D)',
   },
   DEEP_SCIENCE_SYNTHESIS: {
-    pt: 'Síntese Científica · Física & Complexidade',
-    en: 'Deep Science Synthesis · Physics & Complexity',
-    es: 'Síntesis Científica · Física y Complejidad',
-    fr: 'Synthèse Scientifique · Physique & Complexité',
+    pt: 'Síntese Científica · 512 Biortogonal',
+    en: 'Science Synthesis · 512 Biorthogonal',
+    es: 'Síntesis Científica · 512 Biortogonal',
+    fr: 'Synthèse Scientifique · 512 Biorthogonal',
   },
   EMPATHIC_RAPPORT: {
-    pt: 'Sintonia Dialógica · Qwen Poliglota',
-    en: 'Dialogic Rapport · Polyglot Qwen',
-    es: 'Sintonía Dialógica · Qwen Políglota',
-    fr: 'Syntonie Dialogique · Qwen Polyglotte',
+    pt: 'Sintonia Dialógica · ScarField Poliglota',
+    en: 'Dialogic Rapport · Polyglot ScarField',
+    es: 'Sintonía Dialógica · ScarField Políglota',
+    fr: 'Syntonie Dialogique · ScarField Polyglotte',
   },
   OUT_OF_CONE_GUARD: {
-    pt: 'Tronco 3B · 0 Cartuchos (Escopo)',
-    en: '3B Trunk · 0 Cartridges (Scoped)',
-    es: 'Tronco 3B · 0 Cartuchos (Alcance)',
-    fr: 'Tronc 3B · 0 Cartouche (Périmètre)',
+    pt: 'Vácuo Físico 0x00 · Abstenção',
+    en: '0x00 Physical Vacuum · Abstention',
+    es: 'Vacío Físico 0x00 · Abstención',
+    fr: 'Vide Physique 0x00 · Abstention',
   },
   EPISTEMIC_ALERT_SHOCK: {
-    pt: 'Análise Cautelosa · Alta Entropia',
-    en: 'Cautious Analysis · High Entropy',
-    es: 'Análisis Cauteloso · Alta Entropía',
-    fr: 'Analyse Prudente · Haute Entropie',
+    pt: 'Deliberação S2 · Choque de Surpresa',
+    en: 'S2 Deliberation · Surprise Shock',
+    es: 'Deliberación S2 · Choque de Sorpresa',
+    fr: 'Délibération S2 · Choc de Surprise',
   },
 };
 
@@ -401,16 +404,16 @@ export function computeJarvisFaceState(input: JarvisNeuralInput): JarvisFaceStat
   );
   const isTypingLive = input.liveInputText.trim().length > 0 && !input.isGenerating;
 
-  // Honest Unified Qwen 3B Pipeline State Attribution
-  let neuralSource: JarvisNeuralSource = 'qwen_wgsl_20_standby';
+  // Honest ScarField v9.2-Elastic Pipeline State Attribution
+  let neuralSource: JarvisNeuralSource = 'scarfield_v9_standby';
   if (!webgpuSupported) {
     neuralSource = 'webgpu_unavailable';
   } else if (input.engineLoading) {
-    neuralSource = 'qwen_wgsl_20_booting';
-  } else if (input.isGenerating || (input.engineReady && hasGpuDiagnostics && !isTypingLive)) {
-    neuralSource = 'qwen_wgsl_20_active';
+    neuralSource = 'scarfield_v9_booting';
+  } else if (input.isGenerating || (input.engineReady && !isTypingLive)) {
+    neuralSource = input.activeAnchor === 'core_302m' ? 'scarfield_v9_core302m' : 'scarfield_v9_edge60m';
   } else if (isTypingLive) {
-    neuralSource = 'qwen_wgsl_20_listening';
+    neuralSource = 'scarfield_v9_listening';
   }
 
   // Extract genuine Qwen Layer-23 `P_⊥lang` routing telemetry (never faked on CPU)
@@ -447,14 +450,16 @@ export function computeJarvisFaceState(input: JarvisNeuralInput): JarvisFaceStat
   // Determine Cognitive Posture deterministically from Qwen's state & Layer-23 capsule activation
   let posture: JarvisPosture = 'SENTINEL_IDLE';
 
-  if (input.unlearnShockActive || (input.isGenerating && rawMargin <= 0.12)) {
+  if (input.isVacuumAbstain0x00) {
+    posture = 'OUT_OF_CONE_GUARD';
+  } else if (input.unlearnShockActive || (input.isGenerating && rawMargin <= 0.12)) {
     posture = 'EPISTEMIC_ALERT_SHOCK';
   } else if (input.engineLoading) {
     posture = 'GPU_BOOT_SYNC';
   } else if (isTypingLive) {
     posture = 'ATTENTIVE_LISTENING';
   } else if (hasGpuDiagnostics && input.activeCapsuleIds.length === 0) {
-    posture = 'OUT_OF_CONE_GUARD';
+    posture = 'EMPATHIC_RAPPORT';
   } else if (
     dominantCapsuleId === 'concept_landauer_principle' ||
     dominantCapsuleId === 'concept_immerman_szelepcsenyi' ||

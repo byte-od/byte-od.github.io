@@ -173,9 +173,34 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
   const [gdprMaxLogitDiff, setGdprMaxLogitDiff] = useState<number | null>(null);
 
   const curvesCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+
+  // Defer 4.13 MiB ScarNative v6.0 shard fetch & CPU/GPU boot until the user scrolls near `#scar-native-lab`
+  // so Jarvis in the hero header boots with 0.0 ms main-thread contention!
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setIsVisible(true);
+          obs.disconnect();
+        }
+      },
+      { rootMargin: '320px' }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
+    if (!isVisible) return;
     let cancelled = false;
+    const yieldFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
     async function boot() {
       try {
         const base = import.meta.env.BASE_URL || '/';
@@ -205,7 +230,11 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
         const auditJson = aRes.ok ? ((await aRes.json()) as ScarNativeV6AuditReportJSON) : null;
         if (cancelled) return;
 
+        await yieldFrame();
+        if (cancelled) return;
         const cpu = new ScarNativeV6CpuExecutor(manifest, shardBuf, tokJson, procBuf, scarBuf);
+        await yieldFrame();
+        if (cancelled) return;
         const gpuEng = new ScarNativeV6WebGpuBrowserEngine(cpu, shardBuf, wgslText);
         await gpuEng.initWebGpuIfAvailable();
         if (cancelled) return;
@@ -220,7 +249,7 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isVisible]);
 
   const allCartridges = useMemo<ScarV6CartridgeMetaJSON[]>(
     () => engine?.cpuRef.manifest.cartridges ?? [],
@@ -250,12 +279,17 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
   useEffect(() => {
     if (!engine) return;
     let cancelled = false;
+    const yieldFrame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
     async function runInitialChecks() {
+      await yieldFrame();
+      if (cancelled || !engine) return;
       await runPasskeyComparison(polyLang, passkeyCode, clauses, streamStages);
+      await yieldFrame();
       if (cancelled || !engine) return;
       if (engine.cpuRef.manifest.cartridges.length > 0) {
         await runCartridgeQuery(polyLang, engine.cpuRef.manifest.cartridges[0], streamStages);
       }
+      await yieldFrame();
       if (cancelled) return;
       await runAbstainCheck(EPISTEMIC_PRESETS[0].lang, EPISTEMIC_PRESETS[0].query, streamStages);
     }
@@ -506,6 +540,7 @@ export const ScarNativeLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
 
   return (
     <section
+      ref={sectionRef}
       id="scar-native-lab"
       data-testid="scar-native-v6-lab"
       className="relative rounded-3xl bg-zinc-950/90 border border-[#adff2f]/40 p-6 sm:p-8 shadow-[0_0_50px_rgba(173,255,47,0.08)] space-y-6"

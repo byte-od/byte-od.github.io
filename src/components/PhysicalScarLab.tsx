@@ -129,9 +129,31 @@ export const PhysicalScarLab: React.FC<{ lang: 'en' | 'pt' }> = ({ lang }) => {
   const cfdBlockCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const publicCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const realLiveCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setIsVisible(true);
+          obs.disconnect();
+        }
+      },
+      { rootMargin: '420px' }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   // Optional live WebGPU WGSL `FWHT-64` hardware parity check in browser
   useEffect(() => {
+    if (!isVisible) return;
     let cancelled = false;
     async function verifyWebGpuButterfly() {
       const nav = navigator as unknown as { gpu?: any };
@@ -165,10 +187,15 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
   data[tid] = smem[tid] * 0.125;
 }`;
         const mod = device.createShaderModule({ code: wgslSafe });
-        const pipe = device.createComputePipeline({
-          layout: 'auto',
-          compute: { module: mod, entryPoint: 'main' },
-        });
+        const pipe = device.createComputePipelineAsync
+          ? await device.createComputePipelineAsync({
+              layout: 'auto',
+              compute: { module: mod, entryPoint: 'main' },
+            })
+          : device.createComputePipeline({
+              layout: 'auto',
+              compute: { module: mod, entryPoint: 'main' },
+            });
         const input = new Float32Array(64);
         for (let i = 0; i < 64; i++) input[i] = Math.sin(i * 0.37) + 0.5 * Math.cos(i * 1.13);
         const cpuRef = new Float32Array(input);
@@ -219,13 +246,24 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isVisible]);
 
+  const cfdCacheRef = useRef<ReturnType<typeof buildCfdHdrShockFieldProof> | null>(null);
   const rfiProof = useMemo(() => runRadioTelescopeRfiProof(rfiRatio), [rfiRatio]);
-  const blackboxProof = useMemo(() => runBlackBoxSCacheProof(blackoutFrames), [blackoutFrames]);
-  const cfdProof = useMemo(() => buildCfdHdrShockFieldProof(), []);
+  const blackboxProof = useMemo(
+    () => (activeTab === 'blackbox' ? runBlackBoxSCacheProof(blackoutFrames) : null),
+    [activeTab, blackoutFrames]
+  );
+  const cfdProof = useMemo(() => {
+    if (activeTab !== 'cfd_o1') return cfdCacheRef.current;
+    if (!cfdCacheRef.current) {
+      cfdCacheRef.current = buildCfdHdrShockFieldProof();
+    }
+    return cfdCacheRef.current;
+  }, [activeTab]);
 
   const liveRealAudit = useMemo(() => {
+    if (activeTab !== 'live_real') return null;
     const sl = realSlicesBundle.slices;
     let rawArr: number[] = [];
     let rows = 16;
@@ -267,6 +305,7 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
   }, [liveSliceKey, liveCodecMode, liveEpsBySlice, liveInspectRow, liveInspectBlk]);
 
   const o1BlockInspection = useMemo(() => {
+    if (!cfdProof) return null;
     const t0 = performance.now();
     const res = cfdProof.codec.decodeBlockO1(cfdProof.pkg, selectedBlock.row, selectedBlock.block);
     const elapsedUs = Math.max(0.4, (performance.now() - t0) * 1000.0);
@@ -385,7 +424,7 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
 
   // Draw Proof 2 Canvas
   useEffect(() => {
-    if (activeTab !== 'blackbox' || !blackboxCanvasRef.current) return;
+    if (activeTab !== 'blackbox' || !blackboxProof || !blackboxCanvasRef.current) return;
     const canvas = blackboxCanvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -492,7 +531,7 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
 
   // Draw Proof 3 Field + Selected O(1) Block Canvas
   useEffect(() => {
-    if (activeTab !== 'cfd_o1') return;
+    if (activeTab !== 'cfd_o1' || !cfdProof || !o1BlockInspection) return;
     if (cfdFieldCanvasRef.current) {
       const canvas = cfdFieldCanvasRef.current;
       const ctx = canvas.getContext('2d');
@@ -1007,7 +1046,7 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
 
   // Draw Tab 5 Canvas: Live Real-Data Forensic Workbench (Top: Selected O(1) Row/Block Waveform · Bottom: 4,096-Sample Pointwise Error vs ε)
   useEffect(() => {
-    if (activeTab !== 'live_real' || !realLiveCanvasRef.current) return;
+    if (activeTab !== 'live_real' || !liveRealAudit || !realLiveCanvasRef.current) return;
     const canvas = realLiveCanvasRef.current;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -1184,6 +1223,7 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
 
   return (
     <section
+      ref={sectionRef}
       id="physical-scar-lab"
       data-testid="physical-scar-lab"
       className="space-y-6 scroll-mt-24"
@@ -1577,7 +1617,7 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
           </>
         )}
 
-        {activeTab === 'blackbox' && (
+        {activeTab === 'blackbox' && blackboxProof && (
           <>
             {/* Layman 3-Step Storyboard for Proof 2 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
@@ -1706,7 +1746,7 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
           </>
         )}
 
-        {activeTab === 'cfd_o1' && (
+        {activeTab === 'cfd_o1' && cfdProof && o1BlockInspection && (
           <>
             {/* Layman 3-Step Storyboard for Proof 3 */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
@@ -2693,7 +2733,7 @@ fn main(@builtin(local_invocation_id) lid: vec3<u32>) {
           );
         })()}
 
-        {activeTab === 'live_real' && (() => {
+        {activeTab === 'live_real' && liveRealAudit && (() => {
           const preset = REAL_SLICE_TOLERANCE_PRESETS[liveSliceKey];
           const curEps = liveEpsBySlice[liveSliceKey];
           const nBlocksPerRow = Math.floor(liveRealAudit.cols / 64);
