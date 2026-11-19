@@ -96,11 +96,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   const navItems = [
     {
       href: '#overview',
-      label: lang === 'pt' ? 'Visão Geral & JARVIS 3D' : 'Overview & JARVIS 3D',
+      label: lang === 'pt' ? 'Visão Geral & Arquitetura' : 'Overview & Architecture',
       desc:
         lang === 'pt'
-          ? 'MoS 72.7B, SCache O(1), PointScarFlow 3D & Qwen 3B WebGPU'
-          : 'MoS 72.7B, SCache O(1), PointScarFlow 3D & Qwen 3B WebGPU',
+          ? 'MoS 72.7B, SCache O(1), ScarNative v6.0 & PointScarFlow 3D'
+          : 'MoS 72.7B, SCache O(1), ScarNative v6.0 & PointScarFlow 3D',
       icon: Compass,
       tag: '01',
     },
@@ -352,20 +352,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               AURA 34.8 KB
             </a>
           </div>
-
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent('open-jarvis-agent'))}
-            className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-sky-950/60 border border-sky-400/40 hover:border-sky-300 text-xs font-mono text-sky-200 hover:text-white transition-colors cursor-pointer"
-            title={
-              lang === 'pt'
-                ? 'Focar JARVIS Qwen 3B + PointScarFlow 3D (34 Shaders WGSL)'
-                : 'Focus JARVIS Qwen 3B + PointScarFlow 3D (34 WGSL Shaders)'
-            }
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#38bdf8]" />
-            <span className="font-bold">JARVIS 3D</span>
-          </button>
 
           {/* Language Toggle */}
           <button

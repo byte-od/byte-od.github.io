@@ -10,6 +10,8 @@ import { HostIntegrityBanner } from './components/HostIntegrityBanner';
 import { PortfolioAgentWidget } from './components/PortfolioAgentWidget';
 import { PhysicalScarLab } from './components/PhysicalScarLab';
 import { ScarNativeLab } from './components/ScarNativeLab';
+
+const ENABLE_JARVIS_WIDGET = false;
 import {
   Github,
   Mail,
@@ -140,30 +142,28 @@ export default function App() {
 
           {/* Primary Action Bar */}
           <div className="flex flex-wrap items-center gap-3.5 pt-2">
-            <button
-              type="button"
-              data-testid="hero-open-jarvis-btn"
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('open-jarvis-agent'));
-              }}
-              className="px-5 py-2.5 bg-[#adff2f] hover:bg-lime-300 text-black text-xs font-mono font-extrabold rounded-lg transition-all flex items-center gap-2 shadow-[0_0_24px_rgba(173,255,47,0.3)] hover:shadow-[0_0_34px_rgba(173,255,47,0.5)] cursor-pointer"
-              title={
-                lang === 'pt'
-                  ? 'Focar JARVIS Qwen 3B + PointScarFlow 3D (38 Shaders WGSL + SCache O(1))'
-                  : 'Focus JARVIS Qwen 3B + PointScarFlow 3D (38 WGSL Shaders + SCache O(1))'
-              }
-            >
-              <Bot className="w-4 h-4" />
-              <span>
-                {lang === 'pt'
-                  ? 'JARVIS + PointScarFlow 3D (Qwen 3B · 38 WGSL)'
-                  : 'JARVIS + PointScarFlow 3D (Qwen 3B · 38 WGSL)'}
-              </span>
-            </button>
+            {ENABLE_JARVIS_WIDGET && (
+              <button
+                type="button"
+                data-testid="hero-open-jarvis-btn"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('open-jarvis-agent'));
+                }}
+                className="px-5 py-2.5 bg-[#adff2f] hover:bg-lime-300 text-black text-xs font-mono font-extrabold rounded-lg transition-all flex items-center gap-2 shadow-[0_0_24px_rgba(173,255,47,0.3)] hover:shadow-[0_0_34px_rgba(173,255,47,0.5)] cursor-pointer"
+                title={
+                  lang === 'pt'
+                    ? 'Focar JARVIS + PointScarFlow 3D'
+                    : 'Focus JARVIS + PointScarFlow 3D'
+                }
+              >
+                <Bot className="w-4 h-4" />
+                <span>JARVIS + PointScarFlow 3D</span>
+              </button>
+            )}
 
             <a
               href="#scar-native-lab"
-              className="px-5 py-2.5 bg-zinc-900 hover:bg-zinc-850 text-[#adff2f] text-xs font-mono font-bold rounded-lg border border-[#adff2f]/50 hover:border-[#adff2f] transition-all flex items-center gap-2 cursor-pointer"
+              className="px-5 py-2.5 bg-[#adff2f] hover:bg-lime-300 text-black text-xs font-mono font-extrabold rounded-lg transition-all flex items-center gap-2 shadow-[0_0_24px_rgba(173,255,47,0.28)] cursor-pointer"
             >
               <Cpu className="w-4 h-4" />
               <span>Scar-Native Lab v6.0</span>
@@ -248,8 +248,8 @@ export default function App() {
 
                 <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
                   {lang === 'pt'
-                    ? 'Quando você conversa com o JARVIS (Qwen2.5-3B Track 2.5 ProtectedInt4Scar + SCache O(1)), o estado oculto invariante a idioma na Camada 23 (P_⊥lang) alimenta diretamente o PointScarFlow v1.0 (11.85M params ScarNativeLinear em 3.87 MiB, zero nn.Linear, zero catálogo pré-definido), integrando 1.024 pontos 3D em tela cheia via 12 compute shaders WGSL com cosseno multilíngue > 0.997 (PT/EN/ES/FR).'
-                    : 'When you speak to JARVIS (Qwen2.5-3B Track 2.5 ProtectedInt4Scar + O(1) SCache), the language-invariant hidden state at Layer 23 (P_⊥lang) directly conditions PointScarFlow v1.0 (11.85M ScarNativeLinear params in 3.87 MiB, zero nn.Linear, zero preset catalog), integrating 1,024 full-viewport 3D points via 12 WGSL compute shaders with > 0.997 cross-lingual shape cosine (PT/EN/ES/FR).'}
+                    ? 'O subespaço oculto invariante a idioma (P_⊥lang) condiciona diretamente o PointScarFlow v1.0 (11.85M params ScarNativeLinear em 3.87 MiB, zero nn.Linear, zero catálogo pré-definido), integrando 1.024 pontos 3D via 12 compute shaders WGSL com cosseno multilíngue > 0.997 (PT/EN/ES/FR) e desaprendizagem instantânea 0x00 GDPR.'
+                    : 'Language-invariant hidden subspace projections (P_⊥lang) directly condition PointScarFlow v1.0 (11.85M ScarNativeLinear params in 3.87 MiB, zero nn.Linear, zero preset catalog), integrating 1,024 3D points via 12 WGSL compute shaders with > 0.997 cross-lingual shape cosine (PT/EN/ES/FR) and instantaneous 0x00 GDPR unlearning.'}
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
@@ -566,8 +566,8 @@ export default function App() {
         initialTab={agentModalInitialTab}
       />
 
-      {/* Sovereign JARVIS + PointScarFlow v1.0 3D Stage (Qwen2.5-3B · 34 WGSL Shaders · SCache O(1)) */}
-      <PortfolioAgentWidget lang={lang} />
+      {/* Sovereign JARVIS + PointScarFlow v1.0 3D Stage (disabled while ScarField v10 Tabula-Rasa matures) */}
+      {ENABLE_JARVIS_WIDGET && <PortfolioAgentWidget lang={lang} />}
     </div>
   );
 }
